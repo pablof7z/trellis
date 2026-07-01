@@ -53,6 +53,17 @@ fn debug_dump_is_deterministic() {
             "  NodeId(1) -> NodeId(2)\n",
             "  NodeId(1) -> NodeId(3)\n",
             "  NodeId(2) -> NodeId(3)\n",
+            "Resources:\n",
+            "Outputs:\n",
+            "Audit:\n",
+            "  tx=TransactionId(1) revision=Revision(1) event=ScopeCreated(ScopeId(1))\n",
+            "  tx=TransactionId(1) revision=Revision(1) event=ScopeCreated(ScopeId(2))\n",
+            "  tx=TransactionId(1) revision=Revision(1) event=NodeCreated(NodeId(1))\n",
+            "  tx=TransactionId(1) revision=Revision(1) event=NodeCreated(NodeId(2))\n",
+            "  tx=TransactionId(1) revision=Revision(1) event=NodeCreated(NodeId(3))\n",
+            "  tx=TransactionId(1) revision=Revision(1) event=NodeAttached { node: NodeId(2), scope: ScopeId(2) }\n",
+            "  tx=TransactionId(1) revision=Revision(1) event=NodeAttached { node: NodeId(3), scope: ScopeId(2) }\n",
+            "  tx=TransactionId(1) revision=Revision(1) event=DerivedChanged(NodeId(2))\n",
         )
     );
 }

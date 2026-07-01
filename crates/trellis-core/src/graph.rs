@@ -1,7 +1,7 @@
 use crate::{
-    DependencyList, DerivedNode, GraphError, GraphResult, InputNode, NodeHandle, NodeId, NodeKind,
-    NodeMeta, OutputKey, OutputMeta, Revision, ScopeId, ScopeMeta, Transaction, TransactionId,
-    TransactionOptions,
+    AuditState, DependencyList, DerivedNode, GraphError, GraphResult, InputNode, NodeHandle,
+    NodeId, NodeKind, NodeMeta, OutputKey, OutputMeta, Revision, ScopeId, ScopeMeta, Transaction,
+    TransactionId, TransactionOptions,
     collection::{CollectionSpec, StoredCollection, StoredDiff},
     derive::DerivedSpec,
     input::{StoredInput, value_type},
@@ -31,6 +31,7 @@ pub struct Graph<C = (), O = ()> {
     pub(crate) output_specs: BTreeMap<OutputKey, OutputSpec<C, O>>,
     pub(crate) output_values: BTreeMap<OutputKey, O>,
     pub(crate) outputs: BTreeMap<OutputKey, OutputMeta>,
+    pub(crate) audit: AuditState,
     pub(crate) transaction_open: bool,
 }
 
@@ -57,6 +58,7 @@ impl<C, O> Graph<C, O> {
             output_specs: BTreeMap::new(),
             output_values: BTreeMap::new(),
             outputs: BTreeMap::new(),
+            audit: AuditState::default(),
             transaction_open: false,
         }
     }
