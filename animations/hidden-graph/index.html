@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Animation showing a hidden resource graph becoming an explicit Trellis transaction.">
+  <title>Hidden graph becomes explicit - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+  <style>
+    :root { --loop: 14s; }
+    body.animation-page { overflow: hidden; }
+    .animation-stage {
+      min-height: 620px;
+      height: 100vh;
+      max-height: 740px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 0.7rem;
+      padding: 0.85rem;
+    }
+    .story-head, .status-strip, .app-top, .row, .resource, .pipeline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+    }
+    .story-head h1 { margin: 0.2rem 0 0; font-size: clamp(1.35rem, 4vw, 2rem); }
+    .story-head p { margin: 0.25rem 0 0; color: var(--muted); max-width: 54rem; }
+    .status-strip { justify-content: flex-start; flex-wrap: wrap; font-size: 0.76rem; }
+    .scene {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(230px, 0.42fr);
+      gap: 0.75rem;
+      min-height: 0;
+    }
+    .app, .resources, .step {
+      position: relative;
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(13, 17, 23, 0.92);
+      box-shadow: 0 16px 36px var(--shadow);
+      overflow: hidden;
+    }
+    .app { display: grid; grid-template-rows: auto minmax(0, 1fr); animation: appDim var(--loop) linear infinite; }
+    .app-top { border-bottom: 1px solid var(--border); padding: 0.7rem 0.8rem; background: var(--panel); }
+    .workspace { display: grid; gap: 0.15rem; }
+    .swap { position: relative; min-height: 1.15rem; min-width: 12rem; }
+    .old-workspace, .new-workspace { position: absolute; inset: 0 auto auto 0; }
+    .old-workspace { color: var(--blue); animation: oldOut var(--loop) linear infinite; }
+    .new-workspace { color: var(--green); opacity: 0; animation: newIn var(--loop) linear infinite; }
+    .app-body {
+      position: relative;
+      display: grid;
+      grid-template-columns: 11rem minmax(0, 1fr);
+      min-height: 0;
+    }
+    .side, .table { position: relative; z-index: 2; padding: 0.75rem; }
+    .side { border-right: 1px solid var(--border); background: rgba(22, 27, 34, 0.68); }
+    .side-item, .row, .resource {
+      border: 1px solid rgba(48, 54, 61, 0.8);
+      border-radius: 7px;
+      background: rgba(22, 27, 34, 0.82);
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .side-item { margin-top: 0.45rem; padding: 0.45rem 0.5rem; }
+    .side-item.active { border-color: rgba(63, 185, 80, 0.7); color: var(--text); }
+    .table { display: grid; align-content: start; gap: 0.45rem; }
+    .row { min-height: 2.55rem; padding: 0.45rem 0.55rem; }
+    .row strong, .resource strong, .step strong { color: var(--text); }
+    .row.add { animation: addRow var(--loop) linear infinite; }
+    .row.stale { animation: staleRow var(--loop) linear infinite; }
+    .badge { border-radius: 999px; padding: 0.18rem 0.42rem; font-size: 0.68rem; }
+    .badge.ok { border-color: rgba(63, 185, 80, 0.6); color: var(--green); }
+    .badge.warn { border-color: rgba(210, 153, 34, 0.7); color: var(--amber); }
+    .badge.bad { border-color: rgba(248, 81, 73, 0.7); color: var(--red); }
+    .resource-haze {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      opacity: 0.18;
+      animation: haze var(--loop) linear infinite;
+      pointer-events: none;
+    }
+    .wire {
+      position: absolute;
+      height: 2px;
+      width: var(--w);
+      left: var(--x);
+      top: var(--y);
+      background: linear-gradient(90deg, transparent, var(--c), transparent);
+      transform: rotate(var(--r));
+      transform-origin: left center;
+      box-shadow: 0 0 16px var(--c);
+    }
+    .resources { display: grid; align-content: start; gap: 0.55rem; padding: 0.75rem; animation: resourceFocus var(--loop) linear infinite; }
+    .resources h2 { font-size: 0.9rem; }
+    .resource { position: relative; min-height: 3.2rem; padding: 0.5rem; }
+    .resource .after { position: absolute; right: 0.5rem; bottom: 0.45rem; opacity: 0; animation: fixIn var(--loop) linear infinite; }
+    .resource .before { animation: badOut var(--loop) linear infinite; }
+    .wildcard {
+      position: absolute;
+      right: 0.75rem;
+      bottom: 0.75rem;
+      border: 1px solid rgba(210, 153, 34, 0.75);
+      border-radius: 8px;
+      padding: 0.5rem 0.6rem;
+      background: rgba(210, 153, 34, 0.13);
+      color: var(--amber);
+      opacity: 0;
+      animation: wildcard var(--loop) linear infinite;
+      z-index: 3;
+    }
+    .rewind {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.18), transparent);
+      color: var(--blue);
+      opacity: 0;
+      animation: rewind var(--loop) linear infinite;
+      pointer-events: none;
+    }
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.55rem;
+    }
+    .step {
+      min-height: 6.2rem;
+      padding: 0.6rem;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: step1 var(--loop) linear infinite;
+    }
+    .step:nth-child(2) { animation-name: step2; }
+    .step:nth-child(3) { animation-name: step3; }
+    .step:nth-child(4) { animation-name: step4; }
+    .step:nth-child(5) { animation-name: step5; }
+    .step p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.76rem; }
+    .step::before {
+      content: attr(data-phase);
+      color: var(--muted);
+      font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.68rem;
+    }
+    .step.output { border-color: rgba(63, 185, 80, 0.75); background: rgba(63, 185, 80, 0.08); }
+    .step.output strong { color: var(--green); }
+    @keyframes oldOut { 0%, 18% { opacity: 1; } 22%, 100% { opacity: 0; } }
+    @keyframes newIn { 0%, 18% { opacity: 0; } 23%, 100% { opacity: 1; } }
+    @keyframes addRow { 0%, 22% { opacity: 0.2; transform: translateX(10px); } 30%, 100% { opacity: 1; transform: none; } }
+    @keyframes staleRow { 0%, 28% { opacity: 0; } 34%, 54% { opacity: 1; } 70%, 100% { opacity: 0.18; } }
+    @keyframes haze {
+      0%, 22% { opacity: 0.16; filter: none; }
+      33%, 54% { opacity: 0.9; filter: hue-rotate(130deg) saturate(1.8); }
+      70%, 100% { opacity: 0.28; filter: none; }
+    }
+    @keyframes wildcard { 0%, 32% { opacity: 0; transform: translateY(8px); } 38%, 55% { opacity: 1; transform: none; } 70%, 100% { opacity: 0; } }
+    @keyframes rewind { 0%, 50% { opacity: 0; transform: translateX(-80%); } 56%, 62% { opacity: 1; transform: translateX(0); } 68%, 100% { opacity: 0; transform: translateX(80%); } }
+    @keyframes appDim { 0%, 48% { opacity: 1; } 62%, 100% { opacity: 0.58; } }
+    @keyframes resourceFocus { 0%, 48% { transform: none; } 62%, 100% { transform: translateY(-2px); } }
+    @keyframes badOut { 0%, 58% { opacity: 1; } 70%, 100% { opacity: 0; } }
+    @keyframes fixIn { 0%, 58% { opacity: 0; } 70%, 100% { opacity: 1; } }
+    @keyframes step1 { 0%, 58% { opacity: 0; transform: translateY(10px); } 65%, 96% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+    @keyframes step2 { 0%, 61% { opacity: 0; transform: translateY(10px); } 68%, 96% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+    @keyframes step3 { 0%, 64% { opacity: 0; transform: translateY(10px); } 71%, 96% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+    @keyframes step4 { 0%, 67% { opacity: 0; transform: translateY(10px); } 74%, 96% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+    @keyframes step5 { 0%, 70% { opacity: 0; transform: translateY(10px); } 77%, 96% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+    @media (max-width: 720px) {
+      body.animation-page { overflow: auto; }
+      .animation-stage { height: auto; max-height: none; padding: 0.7rem; }
+      .story-head { align-items: flex-start; flex-direction: column; }
+      .scene { grid-template-columns: 1fr; }
+      .app-body { grid-template-columns: 1fr; }
+      .side { display: none; }
+      .resources { grid-template-columns: 1fr; }
+      .pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .step { min-height: 5.4rem; }
+      .story-head p { font-size: 0.92rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      body.animation-page { overflow: auto; }
+      .animation-stage { height: auto; max-height: none; }
+      .old-workspace, .wildcard, .rewind, .resource .before { opacity: 0; }
+      .row.stale { display: none; }
+      .new-workspace, .row.add, .resource .after, .step { opacity: 1; transform: none; }
+      .app { opacity: 0.58; }
+      .resource-haze { opacity: 0.28; }
+    }
+  </style>
+</head>
+<body class="animation-page">
+  <main class="animation-stage" aria-label="Hidden resource graph animation">
+    <header class="story-head">
+      <div>
+        <span class="eyebrow">Animation 01</span>
+        <h1>Hidden graph becomes explicit.</h1>
+        <p>A normal app view changes workspaces, exposes stale hidden resources, then rewinds into an inspectable Trellis transaction.</p>
+      </div>
+      <div class="chip mono">loop / transaction #88</div>
+    </header>
+
+    <section class="scene" aria-label="App state and resource ownership">
+      <article class="app">
+        <div class="app-top">
+          <div class="workspace">
+            <span class="label">workspace</span>
+            <span class="swap mono"><span class="old-workspace">alpha-lab</span><span class="new-workspace">beta-yard</span></span>
+          </div>
+          <span class="chip mono">normal app UI</span>
+        </div>
+        <div class="app-body">
+          <div class="resource-haze" aria-hidden="true">
+            <span class="wire" style="--x: 8%; --y: 30%; --w: 54%; --r: 14deg; --c: rgba(88, 166, 255, 0.8);"></span>
+            <span class="wire" style="--x: 17%; --y: 58%; --w: 68%; --r: -10deg; --c: rgba(248, 81, 73, 0.85);"></span>
+            <span class="wire" style="--x: 38%; --y: 42%; --w: 46%; --r: 23deg; --c: rgba(210, 153, 34, 0.86);"></span>
+            <span class="wire" style="--x: 28%; --y: 73%; --w: 52%; --r: -18deg; --c: rgba(163, 113, 247, 0.78);"></span>
+          </div>
+          <aside class="side" aria-label="Project list">
+            <span class="label">projects</span>
+            <div class="side-item">alpha-api</div>
+            <div class="side-item active">beta-sync</div>
+            <div class="side-item">docs-runtime</div>
+          </aside>
+          <div class="table" aria-label="Issue rows">
+            <div class="row"><strong>sync window</strong><span class="badge ok">kept</span></div>
+            <div class="row add"><strong>yard board</strong><span class="badge ok">new</span></div>
+            <div class="row stale"><strong>alpha row</strong><span class="badge bad">stale</span></div>
+            <div class="row stale"><strong>deleted file</strong><span class="badge warn">still visible</span></div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="resources" aria-label="Runtime resources">
+        <h2>Runtime resources</h2>
+        <div class="resource"><strong>watch:alpha-api</strong><span class="before badge bad">still open</span><span class="after badge ok">closed</span></div>
+        <div class="resource"><strong>sub:issue:42</strong><span class="before badge warn">old rows</span><span class="after badge ok">diffed</span></div>
+        <div class="resource"><strong>watch:beta-sync</strong><span class="before badge ok">opening</span><span class="after badge ok">open</span></div>
+      </aside>
+      <div class="wildcard mono">sub:* opened from empty demand</div>
+      <div class="rewind mono">rewind into explicit graph</div>
+    </section>
+
+    <section class="pipeline" aria-label="Trellis transaction pipeline">
+      <article class="step" data-phase="01"><strong>Input</strong><p class="mono">workspace = beta-yard</p></article>
+      <article class="step" data-phase="02"><strong>Derive</strong><p class="mono">visible = beta-sync, yard-board</p></article>
+      <article class="step" data-phase="03"><strong>Diff</strong><p class="mono">- alpha-api, + yard-board</p></article>
+      <article class="step" data-phase="04"><strong>Plan</strong><p class="mono">close old, open new, no wildcard</p></article>
+      <article class="step output" data-phase="05"><strong>Output</strong><p class="mono">rev=88 stale=false</p></article>
+    </section>
+  </main>
+</body>
+</html>
