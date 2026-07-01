@@ -31,6 +31,10 @@ Confirm any touched invariants:
 - [ ] This does not add pre-1.0 backwards-compatibility shims.
 - [ ] This chooses the right long-term shape over a temporary workaround.
 
+## Merge Readiness
+
+- [ ] This PR should be merged when ready, unless explicitly marked hold.
+
 ## File Size
 
 - [ ] Code files are under the 300 line soft limit, or the issue explains why

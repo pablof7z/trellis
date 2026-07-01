@@ -28,6 +28,8 @@ short-term compatibility or temporary fixes.
 
 - Everything except trivial changes must be delivered through a pull request
   against a GitHub issue.
+- When a pull request is ready, merge it. Do not leave ready work open unless
+  the user explicitly asks to hold it.
 - PR descriptions should link the issue, state the intended behavior change, and
   list the validation performed.
 - Trivial changes are limited to typo fixes, formatting-only edits, or tiny
