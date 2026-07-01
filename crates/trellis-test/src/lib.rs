@@ -9,13 +9,13 @@
 #![deny(missing_docs)]
 
 mod conformance;
+mod host_status;
 mod output_ledger;
 mod resource_ledger;
 mod scenario;
 
 pub use conformance::{ConformanceLevel, ConformanceReport};
+pub use host_status::{HostStatusClass, HostStatusEvent, HostStatusRecord};
 pub use output_ledger::{OutputLedger, OutputLedgerError, OutputSnapshot};
-pub use resource_ledger::{
-    HostStatusClass, HostStatusEvent, ResourceLedger, ResourceLedgerError, ResourceSnapshot,
-};
+pub use resource_ledger::{ResourceLedger, ResourceLedgerError, ResourceSnapshot};
 pub use scenario::{Scenario, ScenarioError, ScenarioStep};

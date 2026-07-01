@@ -48,8 +48,8 @@ Preferred locations:
 checks. It currently provides:
 
 - `Scenario` for named transaction trace recording and deterministic replay;
-- `ResourceLedger` for scoped lifecycle assertions, forbidden broad demand, and
-  host-status classification;
+- `ResourceLedger` for scoped lifecycle assertions, forbidden broad demand,
+  structural command-order assertions, and host-status classification;
 - `OutputLedger` for output revision and clear/rebaseline coherence;
 - `ConformanceReport` for explicit supported/unsupported conformance levels.
 

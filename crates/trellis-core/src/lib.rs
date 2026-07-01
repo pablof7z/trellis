@@ -30,6 +30,7 @@ mod derive;
 mod error;
 mod graph;
 mod graph_support;
+mod host_status;
 mod ids;
 mod input;
 mod model;
@@ -59,10 +60,10 @@ pub use collection_diff::{Added, MapDiff, Removed, SetDiff, Unchanged, Updated};
 pub use dependency::DependencyList;
 pub use derive::{DeriveContext, DeriveError};
 pub use error::{
-    ErrorAuditEvent, ErrorCategory, ErrorTarget, GraphError, GraphResult, HostResourceStatus,
-    OutputError, PlanError,
+    ErrorAuditEvent, ErrorCategory, ErrorTarget, GraphError, GraphResult, OutputError, PlanError,
 };
 pub use graph::Graph;
+pub use host_status::{HostResourceOutcome, HostResourceStatus};
 pub use ids::{NodeId, OutputKey, Revision, ScopeId, TransactionId};
 pub use node::{CollectionNode, DerivedNode, InputNode, NodeHandle, NodeKind, NodeMeta};
 pub use oracle::FullRecomputeCheck;
@@ -74,7 +75,7 @@ pub use resource::{PlanContext, ResourceCommand, ResourceKey, ResourcePlan};
 pub use scope::ScopeMeta;
 pub use trace::{
     OutputFrameKindTrace, OutputFrameTrace, ResourceCommandKind, ResourceCommandTrace,
-    TraceMismatch, TransactionTrace, assert_transaction_traces_match,
+    ResourceTransitionPolicy, TraceMismatch, TransactionTrace, assert_transaction_traces_match,
 };
 pub use transaction::Transaction;
 pub use transaction_types::{

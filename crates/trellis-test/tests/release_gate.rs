@@ -1,8 +1,9 @@
 use std::collections::BTreeSet;
 
 use trellis_core::{
-    DependencyList, Graph, InputNode, MaterializedOutput, OutputFrameKind, ResourceKey,
-    ResourcePlan, Revision, ScopeId,
+    DependencyList, Graph, HostResourceOutcome, InputNode, MaterializedOutput, OutputFrameKind,
+    ResourceCommandKind, ResourceCommandTrace, ResourceKey, ResourcePlan, ResourceTransitionPolicy,
+    Revision, ScopeId,
 };
 use trellis_test::{
     ConformanceLevel, ConformanceReport, HostStatusClass, HostStatusEvent, OutputLedger,
@@ -128,20 +129,44 @@ fn resource_ledger_detects_lifecycle_and_status_classes() {
     ledger.apply_result(&shrink);
     ledger.assert_resource_not_open(&key(2)).unwrap();
     ledger.assert_no_duplicate_close().unwrap();
+    ledger
+        .assert_command_order(&[
+            ResourceCommandTrace {
+                key: key(1),
+                scope: target.scope,
+                kind: ResourceCommandKind::Open,
+                transition: ResourceTransitionPolicy::Open,
+            },
+            ResourceCommandTrace {
+                key: key(2),
+                scope: target.scope,
+                kind: ResourceCommandKind::Open,
+                transition: ResourceTransitionPolicy::Open,
+            },
+            ResourceCommandTrace {
+                key: key(2),
+                scope: target.scope,
+                kind: ResourceCommandKind::Close,
+                transition: ResourceTransitionPolicy::Close,
+            },
+        ])
+        .unwrap();
 
     let status = HostStatusEvent {
-        key: key(1),
+        resource_key: key(1),
         scope: target.scope,
         command_revision: Revision::new(0),
         status_revision: Revision::new(100),
+        status: HostResourceOutcome::Open,
     };
     assert_eq!(ledger.classify_status(status), HostStatusClass::Stale);
 
     let current = HostStatusEvent {
-        key: key(1),
+        resource_key: key(1),
         scope: target.scope,
         command_revision: initial.revision,
         status_revision: Revision::new(101),
+        status: HostResourceOutcome::Open,
     };
     assert_eq!(
         ledger.classify_status(current.clone()),
@@ -149,13 +174,47 @@ fn resource_ledger_detects_lifecycle_and_status_classes() {
     );
     assert_eq!(ledger.classify_status(current), HostStatusClass::Duplicate);
 
+    let failed = HostStatusEvent {
+        resource_key: key(1),
+        scope: target.scope,
+        command_revision: initial.revision,
+        status_revision: Revision::new(102),
+        status: HostResourceOutcome::Failed("host failed".to_owned()),
+    };
+    assert_eq!(ledger.classify_status(failed), HostStatusClass::Current);
+
     let future = HostStatusEvent {
-        key: key(1),
+        resource_key: key(1),
         scope: target.scope,
         command_revision: Revision::new(10),
-        status_revision: Revision::new(102),
+        status_revision: Revision::new(103),
+        status: HostResourceOutcome::Open,
     };
     assert_eq!(ledger.classify_status(future), HostStatusClass::Future);
+
+    let late = HostStatusEvent {
+        resource_key: key(2),
+        scope: target.scope,
+        command_revision: shrink.revision,
+        status_revision: Revision::new(104),
+        status: HostResourceOutcome::Closed,
+    };
+    assert_eq!(ledger.classify_status(late), HostStatusClass::Late);
+    assert_eq!(
+        ledger
+            .status_records()
+            .iter()
+            .map(|record| record.class)
+            .collect::<Vec<_>>(),
+        vec![
+            HostStatusClass::Stale,
+            HostStatusClass::Current,
+            HostStatusClass::Duplicate,
+            HostStatusClass::Current,
+            HostStatusClass::Future,
+            HostStatusClass::Late,
+        ]
+    );
 }
 
 #[test]
