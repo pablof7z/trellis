@@ -13,15 +13,19 @@
 
 mod audit;
 mod conformance;
+mod harness;
 mod host;
 mod host_status;
 mod oracle;
 mod output_ledger;
+mod output_ledger_dump;
 mod resource_assertions;
 mod resource_error;
 mod resource_ledger;
+mod resource_ledger_dump;
 mod resource_state;
 mod scenario;
+mod script;
 
 pub use audit::{
     AuditAssertionError, OutputAuditContext, ResourceAuditContext, assert_dependency_path_exists,
@@ -33,6 +37,7 @@ pub use conformance::{
     ConformanceCheckReport, ConformanceCheckResult, ConformanceFailure, ConformanceLevel,
     ConformanceReport, ConformanceRunner, ConformanceSuite, conformance,
 };
+pub use harness::{HarnessStep, ScenarioTarget, TrellisHarness};
 pub use host::{FakeHost, FakeHostEvent};
 pub use host_status::{HostStatusClass, HostStatusEvent, HostStatusRecord};
 pub use oracle::{
@@ -43,6 +48,9 @@ pub use resource_error::{ResourceCommandContext, ResourceLedgerError, ResourceSt
 pub use resource_ledger::ResourceLedger;
 pub use resource_state::{ResourceCommandRecord, ResourceSnapshot};
 pub use scenario::{NoRedaction, Scenario, ScenarioError, ScenarioStep, TraceRedactor};
+pub use script::{TransactionScript, TransactionScriptStep, TransactionScriptStepBuilder};
+
+pub(crate) use script::StageOperation;
 
 #[cfg(feature = "proptest")]
 pub mod proptest;

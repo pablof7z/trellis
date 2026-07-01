@@ -1,4 +1,4 @@
-use crate::collection::StoredDiff;
+use crate::{CollectionDiffKind, CollectionDiffTrace, NodeId, collection::StoredDiff};
 use core::any::Any;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -83,6 +83,17 @@ where
         Box::new(self.clone())
     }
 
+    fn trace(&self, node: NodeId) -> CollectionDiffTrace {
+        CollectionDiffTrace {
+            node,
+            kind: CollectionDiffKind::Set,
+            added: self.added.len(),
+            removed: self.removed.len(),
+            updated: 0,
+            unchanged: self.unchanged.len(),
+        }
+    }
+
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -159,6 +170,17 @@ where
 {
     fn clone_box(&self) -> Box<dyn StoredDiff> {
         Box::new(self.clone())
+    }
+
+    fn trace(&self, node: NodeId) -> CollectionDiffTrace {
+        CollectionDiffTrace {
+            node,
+            kind: CollectionDiffKind::Map,
+            added: self.added.len(),
+            removed: self.removed.len(),
+            updated: self.updated.len(),
+            unchanged: self.unchanged.len(),
+        }
     }
 
     fn as_any(&self) -> &dyn Any {

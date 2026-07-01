@@ -244,6 +244,40 @@ Implementations MUST avoid nondeterministic iteration order in public transactio
 
 Time, randomness, I/O, task scheduling, and external resource status MUST enter the graph as canonical inputs supplied by the host.
 
+## Transaction Trace Observability
+
+Every committed transaction exposes a deterministic structural trace. The trace
+is the public contract between core runtime semantics and reusable test support.
+
+Core trace data includes:
+
+- transaction id and committed graph revision;
+- staged input writes and whether each write changed committed state;
+- changed input nodes;
+- initial dirty roots;
+- recomputed and changed derived nodes;
+- recomputed and changed collection nodes;
+- payload-neutral collection diff summaries;
+- resource command identity, operation, scope, and transition policy;
+- output frame identity, scope, revision, and frame kind;
+- scope lifecycle events;
+- audit entries;
+- transaction phase order;
+- optional invariant results added by test support.
+
+Trace order MUST be stable. Node ids, collection diff summaries, resource
+commands, output frames, scope events, audit entries, and phase events MUST NOT
+depend on hash-map iteration order or host callback timing.
+
+Core trace values are structural. Application command payloads, output payloads,
+and collection member payloads are not required to appear in the core trace.
+`trellis-testing` MAY layer typed script data, invariant results, ledgers,
+redaction, and snapshot-friendly dumps on top of the core trace without making
+core depend on a snapshot or serialization framework.
+
+Serialization support for trace/result data is optional and gated by the
+`serde` feature. The default core build does not require `serde`.
+
 ## Equality and propagation
 
 Nodes MAY use equality gating to avoid downstream propagation when the computed value is unchanged.

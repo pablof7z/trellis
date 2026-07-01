@@ -3,6 +3,7 @@ use core::num::NonZeroU64;
 
 /// Stable graph-local identity for a node.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NodeId(NonZeroU64);
 
 impl NodeId {
@@ -25,6 +26,7 @@ impl fmt::Debug for NodeId {
 
 /// Stable graph-local identity for a scope.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ScopeId(NonZeroU64);
 
 impl ScopeId {
@@ -47,6 +49,7 @@ impl fmt::Debug for ScopeId {
 
 /// Stable graph-local identity for a materialized output.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OutputKey(NonZeroU64);
 
 impl OutputKey {
@@ -69,6 +72,7 @@ impl fmt::Debug for OutputKey {
 
 /// Monotonic graph revision marker.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Revision(u64);
 
 impl Revision {
@@ -89,6 +93,7 @@ impl Revision {
 
 /// Monotonic transaction identity marker.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TransactionId(u64);
 
 impl TransactionId {

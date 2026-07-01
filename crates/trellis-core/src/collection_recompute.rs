@@ -6,12 +6,13 @@ impl<C, O> Graph<C, O> {
     pub(crate) fn recompute_dirty_collections(
         &mut self,
         initial_changed: &[NodeId],
-    ) -> GraphResult<Vec<NodeId>> {
+    ) -> GraphResult<CollectionRecomputeTrace> {
         self.collection_diffs.clear();
         self.previous_collection_values = self.collection_values.clone();
         let order = self.collection_topological_order()?;
         let mut changed: BTreeSet<NodeId> = initial_changed.iter().copied().collect();
         let mut changed_collections = Vec::new();
+        let mut recomputed = Vec::new();
 
         for node in order {
             let dependencies = self
@@ -30,6 +31,7 @@ impl<C, O> Graph<C, O> {
                 continue;
             }
 
+            recomputed.push(node);
             let next = self.compute_collection(node, dependencies.as_slice())?;
             let previous = self
                 .previous_collection_values
@@ -48,7 +50,10 @@ impl<C, O> Graph<C, O> {
             }
         }
 
-        Ok(changed_collections)
+        Ok(CollectionRecomputeTrace {
+            recomputed,
+            changed: changed_collections,
+        })
     }
 
     pub(crate) fn compare_full_recomputed_collections(
@@ -153,4 +158,9 @@ impl<C, O> Graph<C, O> {
         order.push(node);
         Ok(())
     }
+}
+
+pub(crate) struct CollectionRecomputeTrace {
+    pub(crate) recomputed: Vec<NodeId>,
+    pub(crate) changed: Vec<NodeId>,
 }

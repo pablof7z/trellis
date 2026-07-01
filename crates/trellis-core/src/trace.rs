@@ -1,30 +1,46 @@
 use crate::{
-    AuditEntry, ClearReason, OutputFrameKind, OutputKey, RebaselineReason, ResourceCommand,
-    ResourceKey, ScopeId, TransactionId, TransactionPhase, TransactionResult,
+    AuditEntry, ClearReason, CollectionDiffTrace, InvariantResultTrace, OutputFrameKind, OutputKey,
+    RebaselineReason, ResourceCommand, ResourceKey, ScopeId, ScopeLifecycleTrace,
+    StagedInputChange, TransactionId, TransactionPhase, TransactionResult,
 };
 use crate::{NodeId, Revision};
 
 /// Deterministic payload-free projection of a committed transaction result.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TransactionTrace {
     /// Committed transaction id.
     pub transaction_id: TransactionId,
     /// Graph revision after commit.
     pub revision: Revision,
+    /// Staged input writes in stable node-id order.
+    pub staged_input_changes: Vec<StagedInputChange>,
     /// Input nodes changed by this transaction.
     pub changed_inputs: Vec<NodeId>,
+    /// Initial dirty roots in stable node-id order.
+    pub dirty_roots: Vec<NodeId>,
+    /// Derived nodes recomputed in deterministic topological order.
+    pub recomputed_derived_nodes: Vec<NodeId>,
     /// Derived nodes changed by this transaction.
     pub changed_derived_nodes: Vec<NodeId>,
+    /// Collection nodes recomputed in deterministic topological order.
+    pub recomputed_collection_nodes: Vec<NodeId>,
     /// Collection nodes changed by this transaction.
     pub changed_collection_nodes: Vec<NodeId>,
+    /// Payload-neutral collection diff summaries.
+    pub collection_diffs: Vec<CollectionDiffTrace>,
     /// Resource command identity and operation trace.
     pub resource_commands: Vec<ResourceCommandTrace>,
     /// Output frame identity and kind trace.
     pub output_frames: Vec<OutputFrameTrace>,
+    /// Scope lifecycle events emitted by the transaction.
+    pub scope_events: Vec<ScopeLifecycleTrace>,
     /// Audit log emitted by the transaction.
     pub audit_log: Vec<AuditEntry>,
     /// Phase trace emitted by the transaction.
     pub phase_trace: Vec<TransactionPhase>,
+    /// Optional invariant results layered by testing support.
+    pub invariant_results: Vec<InvariantResultTrace>,
 }
 
 impl TransactionTrace {
@@ -33,9 +49,14 @@ impl TransactionTrace {
         Self {
             transaction_id: result.transaction_id,
             revision: result.revision,
+            staged_input_changes: result.staged_input_changes.clone(),
             changed_inputs: result.changed_inputs.clone(),
+            dirty_roots: result.dirty_roots.clone(),
+            recomputed_derived_nodes: result.recomputed_derived_nodes.clone(),
             changed_derived_nodes: result.changed_derived_nodes.clone(),
+            recomputed_collection_nodes: result.recomputed_collection_nodes.clone(),
             changed_collection_nodes: result.changed_collection_nodes.clone(),
+            collection_diffs: result.collection_diffs.clone(),
             resource_commands: result
                 .resource_plan
                 .commands()
@@ -53,14 +74,17 @@ impl TransactionTrace {
                     kind: OutputFrameKindTrace::from_kind(&frame.kind),
                 })
                 .collect(),
+            scope_events: result.scope_events.clone(),
             audit_log: result.audit_log.clone(),
             phase_trace: result.phase_trace.clone(),
+            invariant_results: result.invariant_results.clone(),
         }
     }
 }
 
 /// Payload-free resource command trace.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ResourceCommandTrace {
     /// Resource identity.
     pub key: ResourceKey,
@@ -85,6 +109,7 @@ impl ResourceCommandTrace {
 
 /// Resource command operation without application payload.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ResourceCommandKind {
     /// Open a resource.
     Open,
@@ -109,6 +134,7 @@ impl ResourceCommandKind {
 
 /// Structural resource transition policy without application payload.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ResourceTransitionPolicy {
     /// Open a resource that is not currently owned.
     Open,
@@ -135,6 +161,7 @@ impl ResourceTransitionPolicy {
 
 /// Payload-free output frame trace.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OutputFrameTrace {
     /// Output identity.
     pub output_key: OutputKey,
@@ -150,6 +177,7 @@ pub struct OutputFrameTrace {
 
 /// Output frame kind without materialized payload.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum OutputFrameKindTrace {
     /// Baseline frame.
     Baseline,
@@ -181,6 +209,7 @@ impl<C, O> TransactionResult<C, O> {
 
 /// Difference between two replay trace sequences.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TraceMismatch {
     /// Expected transaction traces.
     pub expected: Vec<TransactionTrace>,

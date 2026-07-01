@@ -219,6 +219,7 @@ impl<'graph, C, O> OutputContext<'graph, C, O> {
 
 /// Reason a materialized output was cleared.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ClearReason {
     /// The owning scope was closed.
     ScopeClosed,
@@ -226,6 +227,7 @@ pub enum ClearReason {
 
 /// Reason a materialized output was rebaselined.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum RebaselineReason {
     /// The host explicitly requested a rebaseline.
     Requested,
@@ -233,6 +235,7 @@ pub enum RebaselineReason {
 
 /// Data-only output frame kind.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum OutputFrameKind<O> {
     /// Complete current state for a newly attached output.
     Baseline(O),
@@ -246,6 +249,7 @@ pub enum OutputFrameKind<O> {
 
 /// Data-only materialized output frame returned from a transaction.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OutputFrame<O> {
     /// Output key this frame targets.
     pub output_key: OutputKey,

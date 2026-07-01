@@ -65,10 +65,11 @@ pub enum OutputLedgerError {
 /// Fake output consumer ledger for materialized output frames.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct OutputLedger<O> {
-    outputs: BTreeMap<OutputKey, OutputSnapshot<O>>,
-    closed_scopes: BTreeSet<ScopeId>,
-    frames: Vec<OutputFrameTrace>,
-    errors: Vec<OutputLedgerError>,
+    pub(crate) outputs: BTreeMap<OutputKey, OutputSnapshot<O>>,
+    pub(crate) closed_scopes: BTreeSet<ScopeId>,
+    pub(crate) frames: Vec<OutputFrameTrace>,
+    pub(crate) frame_records: Vec<OutputFrame<O>>,
+    pub(crate) errors: Vec<OutputLedgerError>,
 }
 
 impl<O: Clone + PartialEq> OutputLedger<O> {
@@ -78,6 +79,7 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
             outputs: BTreeMap::new(),
             closed_scopes: BTreeSet::new(),
             frames: Vec::new(),
+            frame_records: Vec::new(),
             errors: Vec::new(),
         }
     }
@@ -98,6 +100,7 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
     pub fn apply_frame(&mut self, frame: &OutputFrame<O>) {
         let trace = output_frame_trace(frame);
         self.frames.push(trace.clone());
+        self.frame_records.push(frame.clone());
         if self.closed_scopes.contains(&frame.scope)
             && !matches!(frame.kind, OutputFrameKind::Clear(_))
         {
@@ -147,6 +150,11 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
     /// Returns frame traces in applied delivery order.
     pub fn frame_trace(&self) -> &[OutputFrameTrace] {
         &self.frames
+    }
+
+    /// Returns applied output frames including typed payloads in delivery order.
+    pub fn frame_records(&self) -> &[OutputFrame<O>] {
+        &self.frame_records
     }
 
     /// Asserts no revision regressions or closed-scope frame errors occurred.

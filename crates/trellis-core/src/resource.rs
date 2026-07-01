@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 /// Stable identity for a desired external resource.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ResourceKey(Box<str>);
 
 impl ResourceKey {
@@ -34,6 +35,7 @@ impl fmt::Debug for ResourceKey {
 
 /// Data-only command describing an external resource lifecycle change.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ResourceCommand<C> {
     /// Open a resource with an application-defined command payload.
     Open {
@@ -95,6 +97,7 @@ impl<C> ResourceCommand<C> {
 
 /// Ordered data-only resource plan returned from graph propagation.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ResourcePlan<C> {
     commands: Vec<ResourceCommand<C>>,
 }

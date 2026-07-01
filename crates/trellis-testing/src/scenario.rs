@@ -1,6 +1,6 @@
 use trellis_core::{
-    OutputFrameTrace, ResourceCommandTrace, ResourceKey, TraceMismatch, TransactionResult,
-    TransactionTrace, assert_transaction_traces_match,
+    GraphError, OutputFrameTrace, ResourceCommandTrace, ResourceKey, Revision, TraceMismatch,
+    TransactionId, TransactionResult, TransactionTrace, assert_transaction_traces_match,
 };
 
 use crate::{FullRecomputeOracle, OracleCheck, OracleMismatch, assert_incremental_equals_full};
@@ -25,18 +25,56 @@ pub struct Scenario {
 pub enum ScenarioError {
     /// The replay trace sequence differed.
     ReplayMismatch(TraceMismatch),
+    /// The final deterministic graph dump differed after replay.
+    ReplayFinalStateMismatch {
+        /// Expected final graph dump.
+        expected: String,
+        /// Actual final graph dump.
+        actual: String,
+    },
+    /// The replayed typed ledger state differed.
+    ReplayLedgerMismatch {
+        /// Ledger field whose value differed.
+        field: &'static str,
+        /// Expected typed ledger state.
+        expected: String,
+        /// Actual typed ledger state.
+        actual: String,
+    },
     /// A named step was not found.
     MissingStep(String),
     /// A named step had different structural data.
     StepMismatch {
         /// Step whose assertion failed.
         step: String,
+        /// Transaction that produced the mismatched structural value.
+        transaction_id: TransactionId,
+        /// Graph revision at the mismatched step.
+        revision: Revision,
         /// Trace field whose value differed.
         field: &'static str,
         /// Expected structural value.
         expected: String,
         /// Actual structural value.
         actual: String,
+    },
+    /// A scenario step failed while staging or committing a transaction.
+    StepCommitFailed {
+        /// Step whose transaction failed.
+        step: String,
+        /// Graph error returned by core.
+        error: GraphError,
+    },
+    /// A step-level invariant hook failed.
+    InvariantFailed {
+        /// Step whose invariant failed.
+        step: String,
+        /// Stable invariant name.
+        invariant: String,
+        /// Transaction that produced the failure.
+        transaction_id: TransactionId,
+        /// Graph revision at the failed invariant.
+        revision: Revision,
     },
 }
 
@@ -50,6 +88,11 @@ pub trait TraceRedactor {
     /// Redacts a resource key.
     fn resource_key(&self, key: &ResourceKey) -> ResourceKey {
         key.clone()
+    }
+
+    /// Redacts an invariant name.
+    fn invariant_name(&self, name: &str) -> String {
+        name.to_owned()
     }
 }
 
@@ -67,9 +110,14 @@ impl Scenario {
 
     /// Records a committed transaction result under a stable step name.
     pub fn record<C, O>(&mut self, name: impl Into<String>, result: &TransactionResult<C, O>) {
+        self.record_trace(name, result.trace());
+    }
+
+    /// Records an already-built structural transaction trace under a step name.
+    pub fn record_trace(&mut self, name: impl Into<String>, trace: TransactionTrace) {
         self.steps.push(ScenarioStep {
             name: name.into(),
-            trace: result.trace(),
+            trace,
         });
     }
 
@@ -88,17 +136,32 @@ impl Scenario {
 
     /// Compares two scenario trace sequences structurally.
     pub fn assert_replay_matches(&self, other: &Scenario) -> Result<(), ScenarioError> {
-        let expected = self
-            .steps
+        assert_transaction_traces_match(&self.traces(), &other.traces())
+            .map_err(ScenarioError::ReplayMismatch)
+    }
+
+    /// Returns all transaction traces in commit order.
+    pub fn traces(&self) -> Vec<TransactionTrace> {
+        self.steps
             .iter()
             .map(|step| step.trace.clone())
-            .collect::<Vec<_>>();
-        let actual = other
-            .steps
+            .collect::<Vec<_>>()
+    }
+
+    /// Returns all resource command traces in commit order.
+    pub fn resource_commands(&self) -> Vec<ResourceCommandTrace> {
+        self.steps
             .iter()
-            .map(|step| step.trace.clone())
-            .collect::<Vec<_>>();
-        assert_transaction_traces_match(&expected, &actual).map_err(ScenarioError::ReplayMismatch)
+            .flat_map(|step| step.trace.resource_commands.iter().cloned())
+            .collect()
+    }
+
+    /// Returns all output frame traces in commit order.
+    pub fn output_frames(&self) -> Vec<OutputFrameTrace> {
+        self.steps
+            .iter()
+            .flat_map(|step| step.trace.output_frames.iter().cloned())
+            .collect()
     }
 
     /// Asserts a named step emitted the expected resource command trace.
@@ -113,6 +176,8 @@ impl Scenario {
         } else {
             Err(ScenarioError::StepMismatch {
                 step: name.to_owned(),
+                transaction_id: step.trace.transaction_id,
+                revision: step.trace.revision,
                 field: "resource_commands",
                 expected: format!("{expected:#?}"),
                 actual: format!("{:#?}", step.trace.resource_commands),
@@ -132,6 +197,8 @@ impl Scenario {
         } else {
             Err(ScenarioError::StepMismatch {
                 step: name.to_owned(),
+                transaction_id: step.trace.transaction_id,
+                revision: step.trace.revision,
                 field: "output_frames",
                 expected: format!("{expected:#?}"),
                 actual: format!("{:#?}", step.trace.output_frames),
@@ -174,6 +241,9 @@ fn redact_trace(trace: &TransactionTrace, redactor: &impl TraceRedactor) -> Tran
     let mut trace = trace.clone();
     for command in &mut trace.resource_commands {
         command.key = redactor.resource_key(&command.key);
+    }
+    for result in &mut trace.invariant_results {
+        result.name = redactor.invariant_name(&result.name);
     }
     trace
 }

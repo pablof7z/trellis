@@ -66,3 +66,8 @@ graph.assert_incremental_equals_full()?;
 ```
 
 When ordering matters, compare transaction traces from independent runs.
+
+For multi-step tests, use `trellis_testing::TransactionScript` and
+`trellis_testing::TrellisHarness` to replay typed canonical input changes
+against a fresh graph builder. Use snapshots only for redacted debug dumps;
+assert resource plans, output frames, replay, and oracle results structurally.
