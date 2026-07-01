@@ -2,7 +2,9 @@
   .hero,
   .content,
   .grid,
-  .grid.two {
+  .grid.two,
+  .lane-grid,
+  .guarantee-strip {
     grid-template-columns: 1fr;
   }
 
@@ -33,6 +35,13 @@
   .hero .phase-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     overflow-x: visible;
+  }
+
+  .trace-head,
+  .trace-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.25rem;
   }
 
   .comparison div {

@@ -16,6 +16,11 @@
   box-shadow: 0 16px 36px var(--shadow);
 }
 
+.card .mono {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
 .card p,
 .card ul {
   margin: 0.6rem 0 0;
@@ -81,6 +86,10 @@
   background: var(--panel);
 }
 
+.muted {
+  color: var(--muted);
+}
+
 .accent-green {
   color: var(--green);
 }
@@ -144,4 +153,115 @@
 
 .comparison div:nth-last-child(-n + 3) {
   border-bottom: 0;
+}
+
+.trace-card,
+.lane {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0a0f15;
+  box-shadow: 0 16px 36px var(--shadow);
+}
+
+.trace-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.hero-trace {
+  align-self: stretch;
+}
+
+.trace-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.trace-block {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.trace-block:last-child {
+  border-bottom: 0;
+}
+
+.trace-block strong {
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.trace-block p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.trace-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--muted);
+  font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+}
+
+.delta {
+  font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 700;
+}
+
+.delta.add {
+  color: var(--green);
+}
+
+.delta.remove {
+  color: var(--red);
+}
+
+.delta.keep {
+  color: var(--muted);
+}
+
+.bug-list {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--border);
+}
+
+.bug-list p {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  background: var(--panel);
+  color: var(--text);
+}
+
+.lane-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.4rem;
+}
+
+.lane {
+  padding: 1rem;
+}
+
+.lane p,
+.lane ul {
+  color: var(--muted);
 }
