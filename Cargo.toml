@@ -1,5 +1,9 @@
 [workspace]
-members = ["crates/trellis-core", "crates/trellis-examples"]
+members = [
+    "crates/trellis-adapter",
+    "crates/trellis-core",
+    "crates/trellis-examples",
+]
 resolver = "3"
 
 [workspace.package]

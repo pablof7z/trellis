@@ -47,7 +47,7 @@ Trellis reconciles resources.
 > more stable than the names. The proof examples are normative design pressure,
 > and the core invariants are non-negotiable.
 
-> Current implementation status: `trellis-core` contains the M13 graph skeleton:
+> Current implementation status: `trellis-core` contains the M14 graph skeleton:
 > typed identities, node handles, scopes, dependency lists, deterministic debug
 > output, atomic canonical input transactions, and pure derived scalar node
 > recomputation, plus typed collection nodes with deterministic structural
@@ -60,7 +60,9 @@ Trellis reconciles resources.
 > test helpers. Audit queries explain node changes, resource commands, output
 > frames, dependency paths, and scope resource inventories. `trellis-examples`
 > contains three proof examples outside core: workspace-driven sync, mini
-> language server, and telemetry dashboard. It does not implement async
+> language server, and telemetry dashboard. `trellis-adapter` defines a
+> runtime-neutral boundary for applying returned resource plans and emitting
+> returned output frames outside graph propagation. It does not implement async
 > behavior, hidden retry logic, or automatic dependency tracking yet.
 
 ---
@@ -2087,9 +2089,13 @@ src/
 ### Optional integration crates
 
 The core crate should stay small. Runtime-specific integrations can live separately.
+The current `trellis-adapter` crate is runtime-neutral: it consumes
+`TransactionResult` data through host-provided sinks, but does not schedule
+work, spawn tasks, or mutate graph state.
 
 ```text
 trellis-core
+trellis-adapter
 trellis-tokio
 trellis-async-std
 trellis-tracing
@@ -2366,7 +2372,8 @@ inspect      enables graph inspection reports
 tokio        optional helpers for Tokio command application
 ```
 
-The core graph should not require a specific async runtime.
+The core graph should not require a specific async runtime. Runtime-specific
+dependencies belong in adapter crates, not `trellis-core`.
 
 ---
 
