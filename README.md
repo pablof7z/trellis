@@ -67,9 +67,10 @@ Trellis reconciles resources.
 > stable benchmark-smoke harness for transaction, diff, scope, output, oracle,
 > and replay paths. `docs/INVARIANTS.md` maps specification invariants to tests,
 > and `docs/ALPHA.md` records the internal alpha product gate backed by
-> example-crate seeded-bug coverage. `trellis-test` contains release-candidate
-> testing helpers for scenarios, resource ledgers, output ledgers, and
-> conformance support reporting. `docs/DESIGN_ESSAY.md` and
+> example-crate seeded-bug coverage. `trellis-testing` contains release-candidate
+> testing helpers for scenarios, oracles, resource ledgers, fake host status
+> events, output ledgers, audit assertions, and conformance support reporting.
+> `docs/DESIGN_ESSAY.md` and
 > `docs/RELEASE_NOTES_0_1.md` position 0.1 as an early design-feedback release.
 > `docs/POST_RELEASE.md` defines the post-release triage policy for keeping
 > core narrow. It does not implement async behavior, hidden retry logic, or
@@ -2109,7 +2110,7 @@ trellis-adapter
 trellis-tokio
 trellis-async-std
 trellis-tracing
-trellis-test
+trellis-testing
 trellis-inspect
 trellis-serde
 ```
@@ -2363,19 +2364,18 @@ graph.assert_incremental_equals_full();
 
 ## Future Feature Direction
 
-The current workspace does not publish a stable feature matrix. Before public
-0.1, feature flags should be documented only after they exist in the crate
-manifests and CI exercises them.
+Core currently has no feature flags. `trellis-testing` keeps optional ecosystem
+tools behind non-default features so production users of `trellis-core` do not
+inherit test-only dependencies.
 
-Candidate boundaries are:
+Current companion-crate feature boundaries are:
 
 ```text
-serde       serialization for graph inspection and trace types
-tracing     transaction and plan spans
-test        oracle and property-test helpers
-inspect     graph inspection reports
-tokio       optional adapter crate helpers
-wasm        optional adapter crate helpers
+proptest   model-script strategy helpers
+insta      snapshot-friendly debug output examples
+trybuild   compile-fail gate documentation and internal dev tests
+fuzz       shared helper boundary for cargo-fuzz targets
+serde      reserved for future serializable trace/debug data
 ```
 
 The core graph should not require a specific async runtime. Runtime-specific

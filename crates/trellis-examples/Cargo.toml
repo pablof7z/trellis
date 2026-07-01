@@ -10,4 +10,4 @@ description = "Proof examples for Trellis graph shapes."
 trellis-core = { version = "0.1.0", path = "../trellis-core" }
 
 [dev-dependencies]
-trellis-test = { path = "../trellis-test" }
+trellis-testing = { path = "../trellis-testing" }

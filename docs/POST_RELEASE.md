@@ -93,9 +93,9 @@ prior-art discussion only.
 | #59 resource transition and ordering policies | Core semantic gap | Defines structural transition intent as data. |
 | #60 resource identity ADR | Core semantic gap | Locks identity separate from command payload. |
 | #61 wrapper-friendly protocol subscription example | Domain concern | Example proves Trellis can hide behind app-owned APIs; no core domain vocabulary. |
-| #33 testing product boundary | Documentation gap | Defines `trellis-test` boundary and non-goals. |
+| #33 testing product boundary | Documentation gap | Defines `trellis-testing` boundary and non-goals. |
 | #34 stable test-observable traces | Core semantic gap | Trace data underpins replay, ledgers, and audit assertions. |
-| #35 scenario runner | Core semantic gap | Testing/oracle primitive for transaction scripts; belongs in `trellis-test`, not core propagation. |
+| #35 scenario runner | Core semantic gap | Testing/oracle primitive for transaction scripts; belongs in `trellis-testing`, not core propagation. |
 | #36 full-recompute harness | Core semantic gap | Testing/oracle primitive that preserves incremental/full-recompute equivalence. |
 | #37 ResourceLedger | Core semantic gap | Testing/oracle primitive for lifecycle checks without executing resources. |
 | #38 fake host executor | Adapter concern | Simulates host boundary without callbacks into graph propagation. |
@@ -106,7 +106,7 @@ prior-art discussion only.
 | #43 audit assertions | Core semantic gap | Testing/oracle primitive for structural assertions over trace/audit facts. |
 | #44 trybuild coverage | Ergonomic sugar | Optional compile-fail coverage for public API misuse. |
 | #45 fuzzing hooks | Core semantic gap | Testing/oracle primitive for graph/lifecycle invariants without changing runtime semantics. |
-| #46 testing docs | Documentation gap | Explains `trellis-test` promise and non-goals. |
+| #46 testing docs | Documentation gap | Explains `trellis-testing` promise and non-goals. |
 
 ## 0.2 Candidate Filter
 

@@ -2,7 +2,7 @@ use super::shape::resource_key;
 use super::types::FeedSnapshot;
 use super::*;
 use trellis_core::{OutputFrameKind, ResourceCommand};
-use trellis_test::{OutputLedger, ResourceLedger, Scenario};
+use trellis_testing::{OutputLedger, ResourceLedger, Scenario};
 
 const ACCOUNT: &str = "acct";
 const ROUTE: &str = "home";

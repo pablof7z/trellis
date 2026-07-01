@@ -1,0 +1,29 @@
+[package]
+name = "trellis-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+
+[dependencies]
+libfuzzer-sys = "0.4"
+trellis-core = { path = "../crates/trellis-core" }
+trellis-testing = { path = "../crates/trellis-testing" }
+
+[[bin]]
+name = "resource_lifecycle"
+path = "fuzz_targets/resource_lifecycle.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "trace_replay"
+path = "fuzz_targets/trace_replay.rs"
+test = false
+doc = false
+bench = false

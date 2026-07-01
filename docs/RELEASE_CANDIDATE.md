@@ -31,23 +31,32 @@ Not claimed:
 - Persistence.
 - Final performance tuning.
 
-## trellis-test Gate
+## trellis-testing Gate
 
-`crates/trellis-test` is the companion testing crate for release-candidate
-readiness. It currently demonstrates:
+`crates/trellis-testing` is the companion testing crate for release-candidate
+readiness. Its Cargo package name is `trellis-testing`; its Rust crate path is
+`trellis_testing`. It remains unpublished until a future release runs
+`cargo publish --dry-run -p trellis-testing`.
 
-- `Scenario` for named transaction trace recording and deterministic replay.
+It currently demonstrates:
+
+- `Scenario` for named transaction trace recording, structural resource/output
+  expectations, deterministic replay, and redacted debug dumps.
+- `FullRecomputeOracle` for application-owned canonical truth comparisons.
 - `ResourceLedger` for scoped resource ownership, duplicate close detection,
-  forbidden broad demand checks, and stale/duplicate/late host status
-  classification.
+  forbidden broad demand checks, history assertions, and stale/duplicate/late
+  host status classification.
+- `FakeHost` for explicit host status events without graph callbacks.
 - `OutputLedger` for output frame application, revision monotonicity, clears,
-  and rebaseline coherence.
-- `ConformanceReport` and `ConformanceLevel` so unsupported conformance levels
-  are explicit rather than silent passes.
+  rebaseline coherence, and closed-scope terminal-frame checks.
+- Audit assertions for explainable resource commands and output frames.
+- `ConformanceSuite`, `ConformanceReport`, and `ConformanceLevel` so
+  unsupported conformance levels are explicit rather than silent passes.
+- Optional `proptest`, `trybuild`, `insta`, and cargo-fuzz guidance without
+  making those tools default dependencies.
 
-The first `trellis-test` surface is intentionally small. It is a release
-candidate proof of the testing product boundary, not a complete replacement for
-the later #32 testing epic.
+The `trellis-testing` surface is intentionally narrow. It proves the testing
+product boundary without making Trellis a general Rust testing framework.
 
 ## CI Gate
 

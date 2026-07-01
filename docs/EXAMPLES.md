@@ -94,7 +94,7 @@ Covered behavior:
 - source shrink withdraws demand and removes admitted rows;
 - an empty source set opens no broad demand;
 - replay requests replace subscription shape and emit coherent rebaselines;
-- `trellis-test` ledgers assert lifecycle and output invariants.
+- `trellis-testing` ledgers assert lifecycle and output invariants.
 
 ## Internal Alpha Prototype
 
