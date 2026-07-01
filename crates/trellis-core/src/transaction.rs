@@ -1,7 +1,9 @@
 use crate::input::{StoredInput, boxed_input};
 use crate::{
     Graph, GraphError, GraphResult, InputNode, NodeId, OutputKey, RebaselineReason, TransactionId,
-    transaction_types::{AuditEntry, AuditEvent, TransactionOptions, TransactionResult},
+    transaction_types::{
+        AuditEntry, AuditEvent, TransactionOptions, TransactionPhase, TransactionResult,
+    },
 };
 use std::collections::BTreeMap;
 
@@ -76,6 +78,8 @@ where
     /// Commits staged input changes atomically.
     pub fn commit(&mut self) -> GraphResult<TransactionResult<C, O>> {
         self.ensure_open()?;
+        let mut phase_trace = vec![TransactionPhase::StageOperations];
+        phase_trace.push(TransactionPhase::ValidateTransaction);
         if let Some(error) = self.failed.clone() {
             self.close();
             return Err(error);
@@ -109,6 +113,7 @@ where
             audit_events.push(event);
         }
 
+        phase_trace.push(TransactionPhase::CommitCanonicalInputs);
         for node in &changed_inputs {
             if let Some(staged) = self.staged_inputs.get(node) {
                 self.working.input_values.insert(*node, staged.clone());
@@ -134,6 +139,8 @@ where
             .collect();
         let mut initial_changed = changed_inputs.clone();
         initial_changed.extend(created_nodes);
+        phase_trace.push(TransactionPhase::MarkDirtyNodes);
+        phase_trace.push(TransactionPhase::RecomputeDerivedNodes);
         let changed_derived_nodes = match self.working.recompute_dirty_derived(&initial_changed) {
             Ok(nodes) => nodes,
             Err(error) => {
@@ -148,6 +155,7 @@ where
             audit_events.push(AuditEvent::DerivedChanged(*node));
         }
         initial_changed.extend(changed_derived_nodes.iter().copied());
+        phase_trace.push(TransactionPhase::RecomputeCollectionNodes);
         let changed_collection_nodes =
             match self.working.recompute_dirty_collections(&initial_changed) {
                 Ok(nodes) => nodes,
@@ -162,8 +170,10 @@ where
             }
             audit_events.push(AuditEvent::CollectionChanged(*node));
         }
+        phase_trace.push(TransactionPhase::ComputeStructuralDiffs);
         self.working
             .baseline_collection_diffs(&self.staged_resource_planner_collections);
+        phase_trace.push(TransactionPhase::ResolveScopeLifecycle);
         let closed_scopes: Vec<_> = self
             .staged_events
             .iter()
@@ -172,6 +182,7 @@ where
                 _ => None,
             })
             .collect();
+        phase_trace.push(TransactionPhase::ProduceResourcePlans);
         let resource_plan = match self.working.produce_resource_plan(&closed_scopes) {
             Ok(plan) => plan,
             Err(error) => {
@@ -181,6 +192,7 @@ where
         };
         let mut output_changed = initial_changed.clone();
         output_changed.extend(changed_collection_nodes.iter().copied());
+        phase_trace.push(TransactionPhase::ProduceOutputFrames);
         let output_frames = match self.working.produce_output_frames(
             &output_changed,
             &closed_scopes,
@@ -202,11 +214,13 @@ where
                 event,
             })
             .collect();
+        phase_trace.push(TransactionPhase::CommitGraphRevision);
         self.working.revision = next_revision;
         self.working.next_node_id = self.graph.next_node_id;
         self.working.next_scope_id = self.graph.next_scope_id;
         self.working.next_output_key = self.graph.next_output_key;
 
+        phase_trace.push(TransactionPhase::ReturnTransactionResult);
         let result = TransactionResult {
             transaction_id: self.id,
             revision: next_revision,
@@ -216,6 +230,7 @@ where
             resource_plan,
             output_frames,
             audit_log,
+            phase_trace,
         };
         *self.graph = self.working.clone();
         self.graph.transaction_open = true;

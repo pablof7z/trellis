@@ -196,21 +196,21 @@ A conforming implementation MUST define a stable transaction phase order.
 The initial phase model is:
 
 ```text
-1. Stage operations
-2. Validate operations
-3. Build candidate graph state
-4. Resolve scope lifecycle changes
-5. Recompute dirty derived scalar nodes
-6. Recompute dirty collection nodes
-7. Compute structural diffs
-8. Compute next desired resource ownership
-9. Diff previous desired resources against next desired resources
-10. Produce ResourcePlan data
-11. Compute next materialized output state
-12. Produce OutputFrame data
-13. Commit graph state and revision
-14. Return TransactionResult
+1. StageOperations
+2. ValidateTransaction
+3. CommitCanonicalInputs
+4. MarkDirtyNodes
+5. RecomputeDerivedNodes
+6. RecomputeCollectionNodes
+7. ComputeStructuralDiffs
+8. ResolveScopeLifecycle
+9. ProduceResourcePlans
+10. ProduceOutputFrames
+11. CommitGraphRevision
+12. ReturnTransactionResult
 ```
+
+Committed transaction results include this phase trace as deterministic data.
 
 The host applies resource plans and output frames only after the transaction result is returned.
 
@@ -428,6 +428,10 @@ If a feature makes full recompute impossible, it MUST be rejected or require a n
 A transaction MUST NOT partially commit if validation or propagation fails.
 
 The initial implementation SHOULD treat user derivation, planning, or materialization failures as transaction failures unless a later ADR defines recoverable error nodes.
+
+For M8, failed transactions return typed errors and MUST NOT emit partial
+resource plans, output frames, or graph revisions. Recoverable status frames are
+part of the M9 error and status model.
 
 The graph SHOULD distinguish:
 

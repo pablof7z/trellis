@@ -4,7 +4,7 @@
 //! metadata, declared dependencies, deterministic inspection, input
 //! transactions, pure derived node recomputation, collection diffs, and
 //! data-only resource plans with recursive scope teardown and materialized
-//! output frames.
+//! output frames. Transaction results include deterministic phase traces.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
@@ -52,4 +52,6 @@ pub use output::{
 pub use resource::{PlanContext, ResourceCommand, ResourceKey, ResourcePlan, ResourcePlanner};
 pub use scope::ScopeMeta;
 pub use transaction::Transaction;
-pub use transaction_types::{AuditEntry, AuditEvent, TransactionOptions, TransactionResult};
+pub use transaction_types::{
+    AuditEntry, AuditEvent, TransactionOptions, TransactionPhase, TransactionResult,
+};

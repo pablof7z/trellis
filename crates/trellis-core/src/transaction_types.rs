@@ -52,6 +52,35 @@ pub enum AuditEvent {
     },
 }
 
+/// Test-observable transaction propagation phase.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum TransactionPhase {
+    /// Staged operations were accepted for commit processing.
+    StageOperations,
+    /// Staged operations and transaction failure state were validated.
+    ValidateTransaction,
+    /// Canonical input values were committed into the candidate graph.
+    CommitCanonicalInputs,
+    /// Dirty roots were identified from changed inputs and newly created nodes.
+    MarkDirtyNodes,
+    /// Dirty scalar derived nodes were recomputed.
+    RecomputeDerivedNodes,
+    /// Dirty collection nodes were recomputed and structural diffs were stored.
+    RecomputeCollectionNodes,
+    /// Late planner registration baselines were materialized as collection diffs.
+    ComputeStructuralDiffs,
+    /// Scope lifecycle changes were resolved for planning.
+    ResolveScopeLifecycle,
+    /// Resource plans were produced from final graph state.
+    ProduceResourcePlans,
+    /// Materialized output frames were produced from final graph state.
+    ProduceOutputFrames,
+    /// Graph revision and candidate state were committed.
+    CommitGraphRevision,
+    /// The transaction result was assembled and returned.
+    ReturnTransactionResult,
+}
+
 /// Result returned by a committed input transaction.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransactionResult<C = (), O = ()> {
@@ -71,4 +100,6 @@ pub struct TransactionResult<C = (), O = ()> {
     pub output_frames: Vec<OutputFrame<O>>,
     /// Deterministic audit entries for staged input writes.
     pub audit_log: Vec<AuditEntry>,
+    /// Deterministic transaction phase trace.
+    pub phase_trace: Vec<TransactionPhase>,
 }
