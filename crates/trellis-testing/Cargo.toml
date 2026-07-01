@@ -1,6 +1,6 @@
 [package]
 name = "trellis-testing"
-version = "0.1.0"
+version = "0.1.1"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -18,7 +18,7 @@ trybuild = []
 [dependencies]
 insta = { version = "1", optional = true }
 proptest = { version = "1", optional = true }
-trellis-core = { version = "0.1.1", path = "../trellis-core" }
+trellis-core = { version = "0.1.2", path = "../trellis-core" }
 
 [dev-dependencies]
 trybuild = "1"
