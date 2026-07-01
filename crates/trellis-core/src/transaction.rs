@@ -232,6 +232,7 @@ where
             audit_log,
             phase_trace,
         };
+        self.working.record_transaction_audit(&result);
         *self.graph = self.working.clone();
         self.graph.transaction_open = true;
         self.close();

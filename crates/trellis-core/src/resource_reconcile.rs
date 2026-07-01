@@ -1,4 +1,7 @@
-use crate::{Graph, GraphError, GraphResult, ResourceCommand, ResourceKey, ResourcePlan, ScopeId};
+use crate::{
+    Graph, GraphError, GraphResult, ResourceCommand, ResourceCommandCause, ResourceKey,
+    ResourcePlan, ScopeId,
+};
 use std::collections::BTreeSet;
 
 impl<C, O> Graph<C, O> {
@@ -6,12 +9,16 @@ impl<C, O> Graph<C, O> {
         &mut self,
         closed_scopes: &[ScopeId],
     ) -> GraphResult<ResourcePlan<C>> {
+        self.audit.pending_resource_causes.clear();
         let planners = self.resource_planners.clone();
         let mut plan = ResourcePlan::new();
         for planner in planners {
             if self.collection_diffs.contains_key(&planner.collection) {
                 let planned = planner.run(self)?;
-                let reconciled = self.reconcile_resource_plan(planner.scope, planned)?;
+                let cause = ResourceCommandCause::Planner {
+                    collection: planner.collection,
+                };
+                let reconciled = self.reconcile_resource_plan(planner.scope, planned, cause)?;
                 plan.append(reconciled);
             }
         }
@@ -28,13 +35,14 @@ impl<C, O> Graph<C, O> {
         &mut self,
         planner_scope: ScopeId,
         plan: ResourcePlan<C>,
+        cause: ResourceCommandCause,
     ) -> GraphResult<ResourcePlan<C>> {
         let mut reconciled = ResourcePlan::new();
         for command in plan.into_commands() {
             if command.scope() != planner_scope {
                 return Err(GraphError::ResourceScopeMismatch(command.scope()));
             }
-            self.reconcile_resource_command(command, &mut reconciled)?;
+            self.reconcile_resource_command(command, &mut reconciled, cause)?;
         }
         Ok(reconciled)
     }
@@ -43,15 +51,16 @@ impl<C, O> Graph<C, O> {
         &mut self,
         command: ResourceCommand<C>,
         plan: &mut ResourcePlan<C>,
+        cause: ResourceCommandCause,
     ) -> GraphResult<()> {
         match command {
             ResourceCommand::Open {
                 key,
                 scope,
                 command,
-            } => self.reconcile_open(key, scope, command, plan),
+            } => self.reconcile_open(key, scope, command, plan, cause),
             ResourceCommand::Close { key, scope } => {
-                self.remove_resource_owner(&key, scope, plan);
+                self.remove_resource_owner(&key, scope, plan, cause);
                 Ok(())
             }
             ResourceCommand::Replace {
@@ -66,6 +75,7 @@ impl<C, O> Graph<C, O> {
                     .or_default()
                     .insert(scope);
                 plan.replace(key, scope, command);
+                self.audit.pending_resource_causes.push(cause);
                 Ok(())
             }
             ResourceCommand::Refresh {
@@ -80,6 +90,7 @@ impl<C, O> Graph<C, O> {
                     .or_default()
                     .insert(scope);
                 plan.refresh(key, scope, command);
+                self.audit.pending_resource_causes.push(cause);
                 Ok(())
             }
         }
@@ -91,6 +102,7 @@ impl<C, O> Graph<C, O> {
         scope: ScopeId,
         command: C,
         plan: &mut ResourcePlan<C>,
+        cause: ResourceCommandCause,
     ) -> GraphResult<()> {
         self.require_scope_open(scope)?;
         let owners = self.resource_owners.entry(key.clone()).or_default();
@@ -98,6 +110,7 @@ impl<C, O> Graph<C, O> {
         owners.insert(scope);
         if was_empty {
             plan.open(key, scope, command);
+            self.audit.pending_resource_causes.push(cause);
         }
         Ok(())
     }
@@ -105,8 +118,9 @@ impl<C, O> Graph<C, O> {
     fn close_scope_resources(&mut self, scope: ScopeId) -> ResourcePlan<C> {
         let keys: Vec<ResourceKey> = self.resource_owners.keys().cloned().collect();
         let mut plan = ResourcePlan::new();
+        let cause = ResourceCommandCause::ScopeClosed { scope };
         for key in keys {
-            self.remove_resource_owner(&key, scope, &mut plan);
+            self.remove_resource_owner(&key, scope, &mut plan, cause);
         }
         plan
     }
@@ -116,6 +130,7 @@ impl<C, O> Graph<C, O> {
         key: &ResourceKey,
         scope: ScopeId,
         plan: &mut ResourcePlan<C>,
+        cause: ResourceCommandCause,
     ) {
         let Some(owners) = self.resource_owners.get_mut(key) else {
             return;
@@ -124,6 +139,7 @@ impl<C, O> Graph<C, O> {
         if owners.is_empty() {
             self.resource_owners.remove(key);
             plan.close(key.clone(), scope);
+            self.audit.pending_resource_causes.push(cause);
         }
     }
 

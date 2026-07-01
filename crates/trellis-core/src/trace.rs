@@ -94,7 +94,7 @@ pub enum ResourceCommandKind {
 }
 
 impl ResourceCommandKind {
-    fn from_command<C>(command: &ResourceCommand<C>) -> Self {
+    pub(crate) fn from_command<C>(command: &ResourceCommand<C>) -> Self {
         match command {
             ResourceCommand::Open { .. } => Self::Open,
             ResourceCommand::Close { .. } => Self::Close,
@@ -133,13 +133,20 @@ pub enum OutputFrameKindTrace {
 }
 
 impl OutputFrameKindTrace {
-    fn from_kind<O>(kind: &OutputFrameKind<O>) -> Self {
+    pub(crate) fn from_kind<O>(kind: &OutputFrameKind<O>) -> Self {
         match kind {
             OutputFrameKind::Baseline(_) => Self::Baseline,
             OutputFrameKind::Delta(_) => Self::Delta,
             OutputFrameKind::Clear(reason) => Self::Clear(*reason),
             OutputFrameKind::Rebaseline(_, reason) => Self::Rebaseline(*reason),
         }
+    }
+}
+
+impl<C, O> TransactionResult<C, O> {
+    /// Returns a deterministic payload-free projection of this result.
+    pub fn trace(&self) -> TransactionTrace {
+        TransactionTrace::from_result(self)
     }
 }
 

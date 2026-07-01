@@ -10,6 +10,8 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+mod audit;
+mod audit_types;
 mod collection;
 mod collection_build;
 mod collection_diff;
@@ -39,6 +41,11 @@ mod transaction;
 mod transaction_build;
 mod transaction_types;
 
+pub(crate) use audit_types::AuditState;
+pub use audit_types::{
+    NodeChangeExplanation, OutputFrameExplanation, ResourceCommandCause,
+    ResourceCommandExplanation, ScopeResourceInventory,
+};
 pub use collection::CollectionContext;
 pub use collection_diff::{Added, MapDiff, Removed, SetDiff, Unchanged, Updated};
 pub use dependency::DependencyList;
