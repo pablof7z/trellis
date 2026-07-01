@@ -1,4 +1,11 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
+
+mod runner;
+
+pub use runner::{
+    ConformanceCheckReport, ConformanceCheckResult, ConformanceFailure, ConformanceRunner,
+    conformance,
+};
 
 /// Opt-in conformance levels for application graph tests.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -17,11 +24,25 @@ pub enum ConformanceLevel {
     PerformanceSmoke = 6,
 }
 
+impl ConformanceLevel {
+    /// All currently defined conformance levels in ascending order.
+    pub const ALL: [Self; 6] = [
+        Self::DeterministicTrace,
+        Self::ScopeResourceLifecycle,
+        Self::MaterializedOutput,
+        Self::FullRecomputeOracle,
+        Self::GeneratedModelSequences,
+        Self::PerformanceSmoke,
+    ];
+}
+
 /// Report of supported and unsupported conformance levels.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ConformanceReport {
     supported: BTreeSet<ConformanceLevel>,
     unsupported: BTreeSet<ConformanceLevel>,
+    unsupported_reasons: BTreeMap<ConformanceLevel, Vec<String>>,
+    checks: Vec<ConformanceCheckReport>,
 }
 
 impl ConformanceReport {
@@ -33,14 +54,40 @@ impl ConformanceReport {
     /// Marks a level as supported by the test target.
     pub fn support(mut self, level: ConformanceLevel) -> Self {
         self.unsupported.remove(&level);
+        self.unsupported_reasons.remove(&level);
         self.supported.insert(level);
         self
     }
 
     /// Marks a level as explicitly unsupported by the test target.
     pub fn unsupported(mut self, level: ConformanceLevel) -> Self {
+        self.unsupported_reasons
+            .entry(level)
+            .or_default()
+            .push("explicitly unsupported".to_owned());
         self.supported.remove(&level);
         self.unsupported.insert(level);
+        self
+    }
+
+    /// Marks a level as explicitly unsupported by the target with a reason.
+    pub fn unsupported_with_reason(
+        mut self,
+        level: ConformanceLevel,
+        reason: impl Into<String>,
+    ) -> Self {
+        self.supported.remove(&level);
+        self.unsupported.insert(level);
+        self.unsupported_reasons
+            .entry(level)
+            .or_default()
+            .push(reason.into());
+        self
+    }
+
+    /// Records an executed check in this report.
+    pub fn record_check(mut self, check: ConformanceCheckReport) -> Self {
+        self.checks.push(check);
         self
     }
 
@@ -52,6 +99,16 @@ impl ConformanceReport {
     /// Returns explicitly unsupported levels.
     pub fn unsupported_levels(&self) -> &BTreeSet<ConformanceLevel> {
         &self.unsupported
+    }
+
+    /// Returns unsupported reasons by conformance level.
+    pub fn unsupported_reasons(&self) -> &BTreeMap<ConformanceLevel, Vec<String>> {
+        &self.unsupported_reasons
+    }
+
+    /// Returns executed check summaries.
+    pub fn check_results(&self) -> &[ConformanceCheckReport] {
+        &self.checks
     }
 
     /// Returns true if a level is supported.
@@ -77,14 +134,7 @@ impl ConformanceSuite {
     /// Creates a suite requiring all currently defined levels.
     pub fn all() -> Self {
         let mut suite = Self::new();
-        for level in [
-            ConformanceLevel::DeterministicTrace,
-            ConformanceLevel::ScopeResourceLifecycle,
-            ConformanceLevel::MaterializedOutput,
-            ConformanceLevel::FullRecomputeOracle,
-            ConformanceLevel::GeneratedModelSequences,
-            ConformanceLevel::PerformanceSmoke,
-        ] {
+        for level in ConformanceLevel::ALL {
             suite = suite.require(level);
         }
         suite
@@ -113,6 +163,11 @@ impl ConformanceSuite {
             }
         }
         report
+    }
+
+    /// Creates an executable runner for this conformance suite.
+    pub fn runner(self) -> ConformanceRunner {
+        ConformanceRunner::new(self)
     }
 }
 
