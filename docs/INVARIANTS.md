@@ -145,6 +145,18 @@ Evidence:
 - `crates/trellis-core/tests/resource_plan_boundaries.rs::late_planner_registration_opens_existing_collection_members`
 - `crates/trellis-adapter/tests/boundary.rs::adapter_does_not_change_full_transaction_results`
 
+## Resource Identity Is Structural
+
+Resource identity must be graph-visible as `ResourceKey`, separate from
+application command payload. Transition policy must be structural transaction
+trace data.
+
+Evidence:
+
+- `crates/trellis-core/tests/resource_plans.rs::updated_map_members_produce_replace_commands`
+- `crates/trellis-test/tests/release_gate.rs::resource_ledger_detects_lifecycle_and_status_classes`
+- `docs/ADRS/0002-resource-identity-separate-from-payload.md`
+
 ## Scope Owns Lifecycle
 
 Every live resource and materialized output must be associated with a scope.
@@ -230,5 +242,8 @@ graph failure or retry policy.
 Evidence:
 
 - `crates/trellis-core/tests/error_status.rs::host_resource_failure_is_modeled_as_canonical_input`
+- `crates/trellis-core/tests/error_status.rs::duplicate_host_status_is_an_unchanged_canonical_input`
+- `crates/trellis-core/tests/error_status.rs::unsupported_resource_transition_is_host_status_not_graph_failure`
+- `crates/trellis-test/tests/release_gate.rs::resource_ledger_detects_lifecycle_and_status_classes`
 - `crates/trellis-core/tests/error_status.rs::error_categories_and_audit_events_are_deterministic`
 - `crates/trellis-core/tests/derived_failures.rs::full_recompute_check_detects_mismatch`

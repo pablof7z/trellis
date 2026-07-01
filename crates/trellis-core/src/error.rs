@@ -79,26 +79,6 @@ impl From<DeriveError> for OutputError {
     }
 }
 
-/// Host-observed resource status that can be written as canonical input.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum HostResourceStatus {
-    /// The host has not reported a resource outcome.
-    Unknown,
-    /// The resource is live according to the host.
-    Open,
-    /// The resource failed outside graph propagation.
-    Failed(String),
-    /// The resource is closed according to the host.
-    Closed,
-}
-
-impl HostResourceStatus {
-    /// Returns the model category for host-reported resource status.
-    pub const fn category(&self) -> ErrorCategory {
-        ErrorCategory::HostResourceStatus
-    }
-}
-
 /// Errors for graph metadata and input transaction operations.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum GraphError {

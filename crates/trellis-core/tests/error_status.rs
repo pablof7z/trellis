@@ -1,8 +1,9 @@
 use std::collections::BTreeSet;
 
 use trellis_core::{
-    DependencyList, DeriveError, ErrorCategory, ErrorTarget, Graph, GraphError, HostResourceStatus,
-    OutputError, PlanError, ResourceKey, ResourcePlan,
+    AuditEvent, DependencyList, DeriveError, ErrorCategory, ErrorTarget, Graph, GraphError,
+    HostResourceOutcome, HostResourceStatus, OutputError, PlanError, ResourceKey, ResourcePlan,
+    Revision,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -90,24 +91,77 @@ fn output_error_does_not_corrupt_graph_state() {
 fn host_resource_failure_is_modeled_as_canonical_input() {
     let mut graph = Graph::new();
     let mut tx = graph.begin_transaction().unwrap();
+    let scope = tx.create_scope("scope").unwrap();
     let status = tx.input::<HostResourceStatus>("resource-status").unwrap();
-    tx.set_input(
-        status,
-        HostResourceStatus::Failed("connection refused".to_owned()),
-    )
-    .unwrap();
+    let failed = HostResourceStatus::new(
+        key("a"),
+        scope,
+        Revision::new(1),
+        Revision::new(2),
+        HostResourceOutcome::Failed("connection refused".to_owned()),
+    );
+    tx.set_input(status, failed.clone()).unwrap();
     let result = tx.commit().unwrap();
     drop(tx);
 
     assert_eq!(result.changed_inputs, vec![status.id()]);
+    assert_eq!(graph.input_value(status).unwrap(), Some(&failed));
+    assert_eq!(failed.category(), ErrorCategory::HostResourceStatus);
     assert_eq!(
-        graph.input_value(status).unwrap(),
-        Some(&HostResourceStatus::Failed("connection refused".to_owned()))
-    );
-    assert_eq!(
-        HostResourceStatus::Failed("connection refused".to_owned()).category(),
+        HostResourceOutcome::Failed("connection refused".to_owned()).category(),
         ErrorCategory::HostResourceStatus
     );
+}
+
+#[test]
+fn duplicate_host_status_is_an_unchanged_canonical_input() {
+    let mut graph = Graph::new();
+    let mut tx = graph.begin_transaction().unwrap();
+    let scope = tx.create_scope("scope").unwrap();
+    let status = tx.input::<HostResourceStatus>("resource-status").unwrap();
+    let current = HostResourceStatus::new(
+        key("a"),
+        scope,
+        Revision::new(1),
+        Revision::new(2),
+        HostResourceOutcome::Open,
+    );
+    tx.set_input(status, current.clone()).unwrap();
+    tx.commit().unwrap();
+    drop(tx);
+
+    let mut tx = graph.begin_transaction().unwrap();
+    tx.set_input(status, current).unwrap();
+    let result = tx.commit().unwrap();
+    drop(tx);
+
+    assert!(result.changed_inputs.is_empty());
+    assert_eq!(
+        result.audit_log[0].event,
+        AuditEvent::InputUnchanged(status.id())
+    );
+}
+
+#[test]
+fn unsupported_resource_transition_is_host_status_not_graph_failure() {
+    let mut graph = Graph::new();
+    let mut tx = graph.begin_transaction().unwrap();
+    let scope = tx.create_scope("scope").unwrap();
+    let status = tx.input::<HostResourceStatus>("resource-status").unwrap();
+    let unsupported = HostResourceStatus::new(
+        key("a"),
+        scope,
+        Revision::new(1),
+        Revision::new(2),
+        HostResourceOutcome::Unsupported("replace unsupported".to_owned()),
+    );
+    tx.set_input(status, unsupported.clone()).unwrap();
+    let result = tx.commit().unwrap();
+    drop(tx);
+
+    assert_eq!(result.changed_inputs, vec![status.id()]);
+    assert_eq!(graph.revision(), result.revision);
+    assert_eq!(graph.input_value(status).unwrap(), Some(&unsupported));
 }
 
 #[test]

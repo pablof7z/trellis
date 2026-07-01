@@ -268,6 +268,11 @@ A resource command SHOULD include:
 - graph revision;
 - cause or audit pointer.
 
+Resource identity MUST be represented by graph-visible `ResourceKey` data. It
+MUST NOT be hidden inside application command payloads. Payloads remain
+application-defined, but identity, owning scope, operation, transition policy,
+and cause metadata are Trellis-visible structural data.
+
 Allowed operation vocabulary SHOULD begin small:
 
 ```text
@@ -277,6 +282,31 @@ Replace
 Refresh
 Noop
 ```
+
+Allowed transition policy vocabulary SHOULD begin small:
+
+```text
+Open
+Close
+ReplaceAtomically
+Refresh
+Noop
+```
+
+`ReplaceAtomically` means the host must use a domain-native replacement
+operation or report that the transition is unsupported as later host resource
+status. Trellis does not pretend to guarantee external atomicity.
+
+Replace is distinct from close plus open. A collection member update MAY emit a
+replace transition, and a source shrink MUST emit deterministic close
+transitions for removed resource keys.
+
+Transition policy MUST appear in structural transaction trace data, not only in
+debug prose.
+
+Resource plan order MUST be deterministic. Collection-driven plans SHOULD use
+deterministic collection diff order. Scope teardown close commands MUST be
+ordered by deterministic scope teardown and resource-key order.
 
 The core MUST understand resource identity and ownership well enough to produce teardown commands. The core MUST NOT understand domain-specific command payload semantics.
 
@@ -296,6 +326,49 @@ host writes ResourceStatus(A, Failed) as input in a later transaction
 ```
 
 The graph MUST NOT hide retry or backoff behavior inside propagation.
+
+### Host resource status
+
+Host resource status is canonical input to a later transaction.
+
+The host applies a `ResourcePlan`, observes success, failure, unsupported
+transition, closed, or stale outcomes, then writes that observation as input.
+
+The canonical loop is:
+
+```text
+graph emits ResourcePlan
+host applies ResourcePlan
+host observes success/failure/closed/stale/unsupported
+host reports HostResourceStatus as later canonical input
+graph derives status, output, or retry demand from that input
+```
+
+A host status input SHOULD expose:
+
+```text
+resource_key
+scope
+command_revision
+status_revision
+status payload
+```
+
+Status for the current command revision MAY affect derived status or output by
+normal input propagation.
+
+Status for an old command revision is stale. Stale status MAY produce audit
+facts but MUST NOT create resource ownership.
+
+Status for a closed scope or removed owner is late. Late status MUST NOT reopen
+a scope, reattach resource ownership, or resurrect resource demand.
+
+Duplicate status delivery MUST be deterministic and idempotent or explicitly
+rejected. A duplicate MUST NOT corrupt ownership or output revisioning.
+
+Host status MUST NOT mutate graph state outside a transaction, run callbacks
+into graph propagation, or trigger graph-internal retry/backoff. Retry and
+backoff remain application policy.
 
 ## Scopes and teardown
 

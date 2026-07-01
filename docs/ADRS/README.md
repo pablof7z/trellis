@@ -78,3 +78,4 @@ What must be added so the decision is enforceable?
 ## Current ADRs
 
 - [ADR 0001: Effects are data, not closures](0001-effects-are-data-not-closures.md)
+- [ADR 0002: Resource identity is separate from command payload](0002-resource-identity-separate-from-payload.md)

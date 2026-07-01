@@ -154,6 +154,9 @@ resource plan.
 Host resource status is canonical input. It is not graph failure, and it does
 not cause hidden retry or backoff inside the core.
 
+A status identifies the resource key, scope, command revision, status revision,
+and application-defined outcome.
+
 ## Input node
 
 A node whose value is supplied by the host as canonical input.
@@ -241,6 +244,8 @@ Examples:
 
 The graph computes resource commands. The host executes them.
 
+Every command exposes resource identity separately from any command payload.
+
 ## Resource key
 
 A stable identity for a desired resource.
@@ -248,6 +253,13 @@ A stable identity for a desired resource.
 The graph uses resource keys to compute ownership, diff desired resource state, avoid duplicate opens, and produce correct close commands.
 
 The core may understand resource identity without understanding domain-specific payloads.
+
+## Resource payload
+
+Application-defined data carried by a resource command.
+
+Payloads may tell the host how to open, replace, or refresh a resource, but
+payloads do not define graph-visible resource identity.
 
 ## Resource plan
 
@@ -257,6 +269,15 @@ A resource plan represents changes from previous desired resource state to next 
 
 It is data, not execution.
 
+## Resource transition policy
+
+Structural lifecycle intent attached to a resource command.
+
+Examples include open, close, replace atomically, refresh, and no-op.
+
+Transition policy is trace data. It is not debug prose and it does not execute
+the resource.
+
 ## Revision
 
 A monotonically increasing version marker.
@@ -264,6 +285,11 @@ A monotonically increasing version marker.
 Graph revisions identify committed transaction results.
 
 Output revisions identify materialized output state for an output key.
+
+Command revisions identify the transaction revision that produced a resource
+command.
+
+Status revisions identify host observations of command application.
 
 Revisions are used for ordering, replay, audit, and consumer recovery.
 

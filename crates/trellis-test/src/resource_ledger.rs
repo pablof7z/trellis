@@ -1,6 +1,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use trellis_core::{ResourceCommand, ResourceKey, Revision, ScopeId, TransactionResult};
+use trellis_core::{
+    ResourceCommand, ResourceCommandTrace, ResourceKey, Revision, ScopeId, TransactionResult,
+};
+
+use crate::host_status::{HostStatusClass, HostStatusEvent, HostStatusIdentity, HostStatusRecord};
 
 /// Current ledger view for one resource key.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -17,34 +21,6 @@ pub struct ResourceSnapshot {
     pub command_revision: Revision,
     /// Monotonic command generation assigned by the ledger.
     pub generation: u64,
-}
-
-/// Explicit host status event fed to tests after plan application.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct HostStatusEvent {
-    /// Resource key targeted by the status.
-    pub key: ResourceKey,
-    /// Scope targeted by the status.
-    pub scope: ScopeId,
-    /// Command revision the host believes it is reporting for.
-    pub command_revision: Revision,
-    /// Revision of the status observation.
-    pub status_revision: Revision,
-}
-
-/// Classification for host status delivery.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum HostStatusClass {
-    /// Status matches the current resource/scope/revision.
-    Current,
-    /// Status duplicates the last accepted status revision.
-    Duplicate,
-    /// Status targets an old command revision.
-    Stale,
-    /// Status targets a command revision newer than the ledger has observed.
-    Future,
-    /// Status targets a scope that no longer owns the resource.
-    Late,
 }
 
 /// Resource ledger assertion failure.
@@ -67,6 +43,13 @@ pub enum ResourceLedgerError {
         /// Actual owner set.
         actual: BTreeSet<ScopeId>,
     },
+    /// Resource command order did not match the expected structural trace.
+    CommandOrderMismatch {
+        /// Expected command trace.
+        expected: Vec<ResourceCommandTrace>,
+        /// Actual command trace.
+        actual: Vec<ResourceCommandTrace>,
+    },
 }
 
 /// Fake resource lifecycle ledger for applying Trellis resource plans.
@@ -76,7 +59,9 @@ pub struct ResourceLedger {
     duplicate_closes: BTreeSet<ResourceKey>,
     forbidden: BTreeSet<ResourceKey>,
     forbidden_opened: BTreeSet<ResourceKey>,
-    accepted_status: BTreeMap<ResourceKey, Revision>,
+    accepted_status: BTreeSet<HostStatusIdentity>,
+    status_records: Vec<HostStatusRecord>,
+    command_trace: Vec<ResourceCommandTrace>,
 }
 
 impl ResourceLedger {
@@ -92,6 +77,7 @@ impl ResourceLedger {
 
     /// Applies all resource commands from a transaction result.
     pub fn apply_result<C, O>(&mut self, result: &TransactionResult<C, O>) {
+        self.command_trace.extend(result.trace().resource_commands);
         for command in result.resource_plan.commands() {
             self.apply_command(command, result.revision);
         }
@@ -104,24 +90,38 @@ impl ResourceLedger {
 
     /// Classifies a host status event without mutating graph state.
     pub fn classify_status(&mut self, status: HostStatusEvent) -> HostStatusClass {
-        let Some(snapshot) = self.resources.get(&status.key) else {
-            return HostStatusClass::Late;
-        };
-        if !snapshot.owners.contains(&status.scope) {
-            return HostStatusClass::Late;
+        let class = self.classify_status_ref(&status);
+        if class == HostStatusClass::Current {
+            self.accepted_status
+                .insert(HostStatusIdentity::from(&status));
         }
-        if status.command_revision < snapshot.command_revision {
-            return HostStatusClass::Stale;
+        self.status_records.push(HostStatusRecord { status, class });
+        class
+    }
+
+    /// Returns status classifications in delivery order.
+    pub fn status_records(&self) -> &[HostStatusRecord] {
+        &self.status_records
+    }
+
+    /// Returns applied resource command traces in delivery order.
+    pub fn command_trace(&self) -> &[ResourceCommandTrace] {
+        &self.command_trace
+    }
+
+    /// Asserts the full applied resource command order.
+    pub fn assert_command_order(
+        &self,
+        expected: &[ResourceCommandTrace],
+    ) -> Result<(), ResourceLedgerError> {
+        if self.command_trace == expected {
+            Ok(())
+        } else {
+            Err(ResourceLedgerError::CommandOrderMismatch {
+                expected: expected.to_vec(),
+                actual: self.command_trace.clone(),
+            })
         }
-        if status.command_revision > snapshot.command_revision {
-            return HostStatusClass::Future;
-        }
-        if self.accepted_status.get(&status.key) == Some(&status.status_revision) {
-            return HostStatusClass::Duplicate;
-        }
-        self.accepted_status
-            .insert(status.key, status.status_revision);
-        HostStatusClass::Current
     }
 
     /// Asserts every tracked resource still has at least one owner.
@@ -244,5 +244,27 @@ impl ResourceLedger {
                 }
             }
         }
+    }
+
+    fn classify_status_ref(&self, status: &HostStatusEvent) -> HostStatusClass {
+        let Some(snapshot) = self.resources.get(&status.resource_key) else {
+            return HostStatusClass::Late;
+        };
+        if !snapshot.owners.contains(&status.scope) {
+            return HostStatusClass::Late;
+        }
+        if status.command_revision < snapshot.command_revision {
+            return HostStatusClass::Stale;
+        }
+        if status.command_revision > snapshot.command_revision {
+            return HostStatusClass::Future;
+        }
+        if self
+            .accepted_status
+            .contains(&HostStatusIdentity::from(status))
+        {
+            return HostStatusClass::Duplicate;
+        }
+        HostStatusClass::Current
     }
 }

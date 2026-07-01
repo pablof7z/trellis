@@ -1,6 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use trellis_core::{DependencyList, Graph, ResourceCommand, ResourceKey, ResourcePlan};
+use trellis_core::{
+    DependencyList, Graph, ResourceCommand, ResourceCommandKind, ResourceKey, ResourcePlan,
+    ResourceTransitionPolicy,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Command {
@@ -193,6 +196,14 @@ fn updated_map_members_produce_replace_commands() {
             scope,
             command: Command::Replace("a".to_owned(), 2),
         }]
+    );
+    assert_eq!(
+        result.trace().resource_commands[0].kind,
+        ResourceCommandKind::Replace
+    );
+    assert_eq!(
+        result.trace().resource_commands[0].transition,
+        ResourceTransitionPolicy::ReplaceAtomically
     );
 }
 
