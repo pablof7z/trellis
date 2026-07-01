@@ -1,0 +1,13 @@
+/target/
+/.worktrees/
+/.git/
+/.vercel/
+
+Cargo.toml
+Cargo.lock
+README.md
+
+/crates/
+/scripts/
+/docs/**/*.md
+/docs/ADRS/
