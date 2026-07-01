@@ -44,15 +44,18 @@ Trellis reconciles resources.
 
 > Project status: early design / 0.1 preview. The examples in this README show the intended shape of the API. Names and exact signatures may change before stabilization.
 
-> Current implementation status: `trellis-core` contains the M9 graph skeleton:
+> Current implementation status: `trellis-core` contains the M10 graph skeleton:
 > typed identities, node handles, scopes, dependency lists, deterministic debug
 > output, atomic canonical input transactions, and pure derived scalar node
 > recomputation, plus typed collection nodes with deterministic structural
 > diffs, data-only resource plans, and deterministic recursive scope teardown.
 > It also emits typed materialized output frames and exposes deterministic
 > transaction phase traces, typed failure categories, and host resource status
-> as canonical input data. It does not implement async behavior, hidden retry
-> logic, or automatic dependency tracking yet.
+> as canonical input data. Full-recompute assertions cover derived values,
+> collections, desired resource ownership, and materialized output state for
+> supported graph shapes, with deterministic replay trace and generated model
+> test helpers. It does not implement async behavior, hidden retry logic, or
+> automatic dependency tracking yet.
 
 ---
 
@@ -1604,6 +1607,15 @@ all dynamic dependencies are inspectable.
 ### Full recompute
 
 Full recompute is the oracle.
+
+For supported graph shapes, `trellis-core` exposes
+`assert_incremental_equals_full()` to compare incremental state against a
+rebuild from canonical inputs and live graph structure. The M10 oracle checks
+derived scalar values, materialized collections, desired resource ownership,
+and materialized output state. It also exposes payload-free transaction traces
+and deterministic model scripts so tests can replay the same input sequence
+into a fresh graph and compare phase, audit, resource-command, and output-frame
+ordering.
 
 For any sequence of input changes, the graph should end in the same state as rebuilding from canonical inputs.
 
