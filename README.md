@@ -44,11 +44,11 @@ Trellis reconciles resources.
 
 > Project status: early design / 0.1 preview. The examples in this README show the intended shape of the API. Names and exact signatures may change before stabilization.
 
-> Current implementation status: `trellis-core` contains the M1 metadata-only
-> graph skeleton: typed identities, node handles, scopes, dependency lists, and
-> deterministic debug output. It does not implement propagation, transactions,
-> resource plans, materialized outputs, async behavior, or automatic dependency
-> tracking yet.
+> Current implementation status: `trellis-core` contains the M2 graph skeleton:
+> typed identities, node handles, scopes, dependency lists, deterministic debug
+> output, and atomic canonical input transactions. It does not implement
+> derived recomputation, collection diffs, resource plans, materialized outputs,
+> async behavior, or automatic dependency tracking yet.
 
 ---
 

@@ -1,17 +1,22 @@
 use crate::{
     CollectionNode, DependencyList, DerivedNode, GraphError, GraphResult, InputNode, NodeHandle,
-    NodeId, NodeKind, NodeMeta, Revision, ScopeId, ScopeMeta,
+    NodeId, NodeKind, NodeMeta, Revision, ScopeId, ScopeMeta, Transaction, TransactionId,
+    TransactionOptions,
+    input::{StoredInput, downcast_input, value_type},
 };
 use std::collections::BTreeMap;
 
-/// Metadata-only Trellis graph skeleton.
-#[derive(Clone, Debug)]
+/// Trellis graph skeleton with transactional input mutation.
+#[derive(Clone)]
 pub struct Graph {
-    next_node_id: u64,
-    next_scope_id: u64,
-    revision: Revision,
-    nodes: BTreeMap<NodeId, NodeMeta>,
+    pub(crate) next_node_id: u64,
+    pub(crate) next_scope_id: u64,
+    next_transaction_id: TransactionId,
+    pub(crate) revision: Revision,
+    pub(crate) nodes: BTreeMap<NodeId, NodeMeta>,
     scopes: BTreeMap<ScopeId, ScopeMeta>,
+    pub(crate) input_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
+    pub(crate) transaction_open: bool,
 }
 
 impl Graph {
@@ -20,9 +25,12 @@ impl Graph {
         Self {
             next_node_id: 1,
             next_scope_id: 1,
+            next_transaction_id: TransactionId::default(),
             revision: Revision::default(),
             nodes: BTreeMap::new(),
             scopes: BTreeMap::new(),
+            input_values: BTreeMap::new(),
+            transaction_open: false,
         }
     }
 
@@ -31,15 +39,28 @@ impl Graph {
         self.revision
     }
 
-    /// Creates a root scope with no parent.
-    pub fn create_scope(&mut self, debug_name: impl Into<String>) -> ScopeId {
-        self.create_scope_with_parent(debug_name, None)
-            .expect("None parent is always valid")
+    /// Begins an input transaction with default options.
+    pub fn begin_transaction(&mut self) -> GraphResult<Transaction<'_>> {
+        self.begin_transaction_with_options(TransactionOptions::default())
     }
 
-    /// Creates a scope with an optional parent scope.
-    pub fn create_scope_with_parent(
+    /// Begins an input transaction with explicit options.
+    pub fn begin_transaction_with_options(
         &mut self,
+        options: TransactionOptions,
+    ) -> GraphResult<Transaction<'_>> {
+        if self.transaction_open {
+            return Err(GraphError::NestedTransaction);
+        }
+
+        self.transaction_open = true;
+        let id = self.allocate_transaction_id();
+        Ok(Transaction::new(self, id, options))
+    }
+
+    pub(crate) fn create_scope_with_parent_direct(
+        &mut self,
+        id: ScopeId,
         debug_name: impl Into<String>,
         parent: Option<ScopeId>,
     ) -> GraphResult<ScopeId> {
@@ -47,70 +68,72 @@ impl Graph {
             self.require_scope(parent)?;
         }
 
-        let id = self.allocate_scope_id();
         self.scopes
             .insert(id, ScopeMeta::new(id, debug_name, parent));
         Ok(id)
     }
 
-    /// Creates an input node.
-    pub fn input<T>(&mut self, debug_name: impl Into<String>) -> InputNode<T> {
-        let id = self.allocate_node_id();
+    pub(crate) fn input_direct<T>(
+        &mut self,
+        id: NodeId,
+        debug_name: impl Into<String>,
+    ) -> GraphResult<InputNode<T>>
+    where
+        T: Clone + PartialEq + 'static,
+    {
         let meta = NodeMeta::new(
             id,
             NodeKind::Input,
             debug_name,
             DependencyList::empty(),
             self.revision,
+            Some(value_type::<T>()),
         );
         self.nodes.insert(id, meta);
-        InputNode::new(id)
+        Ok(InputNode::new(id))
     }
 
-    /// Creates a derived node with explicit dependencies.
-    pub fn derived<T>(
+    pub(crate) fn derived_direct<T>(
         &mut self,
+        id: NodeId,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
     ) -> GraphResult<DerivedNode<T>> {
-        let id = self.next_node_id();
         self.validate_dependencies(id, &dependencies)?;
-        let id = self.allocate_node_id();
         let meta = NodeMeta::new(
             id,
             NodeKind::Derived,
             debug_name,
             dependencies,
             self.revision,
+            None,
         );
         self.nodes.insert(id, meta);
         Ok(DerivedNode::new(id))
     }
 
-    /// Creates a collection node with explicit dependencies.
-    pub fn collection<K, V>(
+    pub(crate) fn collection_direct<K, V>(
         &mut self,
+        id: NodeId,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
     ) -> GraphResult<CollectionNode<K, V>> {
-        let id = self.next_node_id();
         self.validate_dependencies(id, &dependencies)?;
-        let id = self.allocate_node_id();
         let meta = NodeMeta::new(
             id,
             NodeKind::Collection,
             debug_name,
             dependencies,
             self.revision,
+            None,
         );
         self.nodes.insert(id, meta);
         Ok(CollectionNode::new(id))
     }
 
-    /// Attaches a node to an owning scope.
-    pub fn attach_node_to_scope<H: NodeHandle>(
+    pub(crate) fn attach_node_to_scope_direct(
         &mut self,
-        node: H,
+        node_id: NodeId,
         scope: ScopeId,
     ) -> GraphResult<()> {
         let scope_meta = self.require_scope(scope)?;
@@ -118,7 +141,6 @@ impl Graph {
             return Err(GraphError::ScopeAlreadyClosed(scope));
         }
 
-        let node_id = node.id();
         let node_meta = self
             .nodes
             .get_mut(&node_id)
@@ -152,6 +174,26 @@ impl Graph {
         self.node_meta(node).map(NodeMeta::dependencies)
     }
 
+    /// Returns the committed value for a typed input node.
+    pub fn input_value<T>(&self, input: InputNode<T>) -> GraphResult<Option<&T>>
+    where
+        T: Clone + PartialEq + 'static,
+    {
+        self.input_value_by_id(input.id())
+    }
+
+    /// Returns the committed value for an input node id.
+    pub fn input_value_by_id<T>(&self, node: NodeId) -> GraphResult<Option<&T>>
+    where
+        T: Clone + PartialEq + 'static,
+    {
+        self.validate_input_write::<T>(node)?;
+        Ok(self
+            .input_values
+            .get(&node)
+            .and_then(|value| downcast_input::<T>(value.as_ref())))
+    }
+
     /// Returns all node metadata in stable id order.
     pub fn nodes(&self) -> impl Iterator<Item = &NodeMeta> {
         self.nodes.values()
@@ -162,20 +204,21 @@ impl Graph {
         self.scopes.values()
     }
 
-    fn allocate_node_id(&mut self) -> NodeId {
+    pub(crate) fn allocate_node_id(&mut self) -> NodeId {
         let id = NodeId::from_index(self.next_node_id);
         self.next_node_id += 1;
         id
     }
 
-    fn next_node_id(&self) -> NodeId {
-        NodeId::from_index(self.next_node_id)
-    }
-
-    fn allocate_scope_id(&mut self) -> ScopeId {
+    pub(crate) fn allocate_scope_id(&mut self) -> ScopeId {
         let id = ScopeId::from_index(self.next_scope_id);
         self.next_scope_id += 1;
         id
+    }
+
+    fn allocate_transaction_id(&mut self) -> TransactionId {
+        self.next_transaction_id = self.next_transaction_id.next();
+        self.next_transaction_id
     }
 
     fn require_scope(&self, id: ScopeId) -> GraphResult<&ScopeMeta> {
@@ -194,6 +237,20 @@ impl Graph {
             if !self.nodes.contains_key(dependency) {
                 return Err(GraphError::UnknownNode(*dependency));
             }
+        }
+        Ok(())
+    }
+
+    pub(crate) fn validate_input_write<T>(&self, node: NodeId) -> GraphResult<()>
+    where
+        T: 'static,
+    {
+        let meta = self.nodes.get(&node).ok_or(GraphError::UnknownNode(node))?;
+        if meta.kind() != NodeKind::Input {
+            return Err(GraphError::NotInputNode(node));
+        }
+        if meta.value_type() != Some(value_type::<T>()) {
+            return Err(GraphError::WrongInputType(node));
         }
         Ok(())
     }

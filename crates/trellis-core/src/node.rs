@@ -1,4 +1,5 @@
 use crate::{DependencyList, NodeId, Revision, ScopeId};
+use core::any::TypeId;
 use core::marker::PhantomData;
 
 /// The metadata kind of a graph node.
@@ -132,6 +133,8 @@ pub struct NodeMeta {
     dependencies: DependencyList,
     owning_scope: Option<ScopeId>,
     created_revision: Revision,
+    last_changed_revision: Revision,
+    value_type: Option<TypeId>,
 }
 
 impl NodeMeta {
@@ -141,6 +144,7 @@ impl NodeMeta {
         debug_name: impl Into<String>,
         dependencies: DependencyList,
         created_revision: Revision,
+        value_type: Option<TypeId>,
     ) -> Self {
         Self {
             id,
@@ -149,6 +153,8 @@ impl NodeMeta {
             dependencies,
             owning_scope: None,
             created_revision,
+            last_changed_revision: created_revision,
+            value_type,
         }
     }
 
@@ -182,7 +188,25 @@ impl NodeMeta {
         self.created_revision
     }
 
+    /// Returns the graph revision at which this node last changed.
+    pub fn last_changed_revision(&self) -> Revision {
+        self.last_changed_revision
+    }
+
     pub(crate) fn attach_scope(&mut self, scope: ScopeId) {
         self.owning_scope = Some(scope);
+    }
+
+    pub(crate) fn value_type(&self) -> Option<TypeId> {
+        self.value_type
+    }
+
+    pub(crate) fn mark_changed(&mut self, revision: Revision) {
+        self.last_changed_revision = revision;
+    }
+
+    pub(crate) fn mark_created(&mut self, revision: Revision) {
+        self.created_revision = revision;
+        self.last_changed_revision = revision;
     }
 }
