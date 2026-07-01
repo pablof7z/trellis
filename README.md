@@ -65,16 +65,12 @@ Use Trellis when you need to answer questions like:
 
 ## Install
 
-The core crate is prepared as `trellis-core` v0.1.0.
-
-After the first crates.io publish:
-
 ```toml
 [dependencies]
 trellis-core = "0.1"
 ```
 
-Before that publish is available, use the repository directly:
+To use unreleased repository changes:
 
 ```toml
 [dependencies]
