@@ -45,10 +45,9 @@ Preferred locations:
 ## trellis-testing
 
 The Cargo package for the companion crate is `trellis-testing`; the Rust crate
-path is `trellis_testing`. The package remains `publish = false` until the
-release checklist runs a crates.io dry run for the chosen public name. The old
-`trellis-test` package name is not usable because crates.io already has the
-normalized `trellis_test` name.
+path is `trellis_testing`. The old `trellis-test` package name is not usable
+because crates.io already has the normalized `trellis_test` name, so the public
+companion package uses `trellis-testing`.
 
 - `Scenario` for named transaction trace recording and deterministic replay;
 - `TransactionScript` and `TrellisHarness` for deterministic typed transaction

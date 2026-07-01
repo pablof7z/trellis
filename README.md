@@ -150,9 +150,9 @@ against a full recompute from canonical inputs.
 ## Crates
 
 - `trellis-core`: deterministic graph runtime and public core API.
-- `trellis-testing`: scenario scripts, replay checks, resource/output ledgers,
-  fake host status helpers, audit assertions, and conformance support. This is
-  currently kept in-repo while the public testing crate name is settled.
+- `trellis-testing`: companion testing crate with scenario scripts, replay
+  checks, resource/output ledgers, fake host status helpers, audit assertions,
+  and conformance support.
 - `trellis-adapter`: runtime-neutral adapter boundary for applying returned
   plans and emitting returned frames outside graph propagation.
 - `trellis-examples`: proof examples for workspace sync, a mini language

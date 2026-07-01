@@ -35,8 +35,9 @@ Not claimed:
 
 `crates/trellis-testing` is the companion testing crate for release-candidate
 readiness. Its Cargo package name is `trellis-testing`; its Rust crate path is
-`trellis_testing`. It remains unpublished until a future release runs
-`cargo publish --dry-run -p trellis-testing`.
+`trellis_testing`. It is intended to publish as the public companion package for
+Trellis-specific scenario, oracle, resource-ledger, output-ledger, audit, and
+conformance tests.
 
 It currently demonstrates:
 
