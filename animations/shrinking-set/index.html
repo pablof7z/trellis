@@ -139,17 +139,20 @@
     @keyframes staleFade { 0%, 40% { opacity: 1; transform: translateX(0); } 58%, 88% { opacity: 0.28; transform: translateX(10px); } 96%, 100% { opacity: 1; transform: translateX(0); } }
     @keyframes newRow { 0%, 45% { opacity: 0; transform: translateY(8px); } 58%, 88% { opacity: 1; transform: translateY(0); } 96%, 100% { opacity: 0; transform: translateY(8px); } }
     @media (max-width: 720px) {
+      body.animation-page { height: auto; min-height: 100vh; overflow: auto; }
       .shrinking-stage { padding: 0.55rem; }
-      .loop { gap: 0.45rem; }
+      .shrinking-stage { height: auto; min-height: 100vh; align-items: start; padding-top: 1.1rem; }
+      .loop { gap: 0.45rem; height: auto; }
       .topline { font-size: 0.68rem; }
       .title { font-size: 0.86rem; }
-      .grid-stage { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1.3fr) minmax(0, 0.8fr); gap: 0.5rem; }
+      .grid-stage { grid-template-columns: 1fr; grid-template-rows: auto auto; gap: 0.5rem; }
+      .workbench { grid-template-rows: auto auto auto; }
       .sets { padding: 0.45rem; gap: 0.4rem; }
       .lanes { padding: 0 0.45rem 0.45rem; gap: 0.35rem; }
       .lane { min-height: 54px; padding: 0.4rem; }
       .chip { min-height: 21px; padding: 0.1rem 0.34rem; font-size: 0.66rem; }
       .graph-wrap { padding: 0.15rem 0.45rem 0.4rem; }
-      svg { min-height: 132px; }
+      svg { height: auto; min-height: 150px; }
       .trace-body { gap: 0.3rem; padding: 0.45rem; }
       .row { min-height: 25px; grid-template-columns: 4.2rem minmax(0, 1fr) auto; font-size: 0.66rem; }
       .caption { font-size: 0.76rem; }
