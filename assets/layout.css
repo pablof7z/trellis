@@ -49,6 +49,14 @@ h3 {
   font-size: clamp(1.05rem, 1.6vw, 1.32rem);
 }
 
+.hero-claim {
+  margin: 1rem 0 0;
+  max-width: 680px;
+  font-size: clamp(1.45rem, 3vw, 2.4rem);
+  line-height: 1.15;
+  font-weight: 760;
+}
+
 .thesis {
   display: grid;
   gap: 0.2rem;
@@ -124,4 +132,22 @@ h3 {
   border-top: 1px solid var(--border);
   padding: 2.5rem 0;
   color: var(--muted);
+}
+
+.guarantee-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--border);
+}
+
+.guarantee-strip span {
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  background: var(--panel);
+  color: var(--text);
+  font-weight: 650;
 }

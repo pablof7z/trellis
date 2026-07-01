@@ -3,179 +3,210 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Trellis is a Rust library for deterministic reactive resource graphs where derived state changes produce scoped resource plans and revisioned materialized outputs.">
-  <title>Trellis - Deterministic Reactive Resource Graphs</title>
+  <meta name="description" content="Trellis is an early Rust runtime design for deterministic resource graph reconciliation in application kernels.">
+  <title>Trellis - Resource Graph Reconciliation</title>
   <link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
   <header class="site-header">
     <div class="nav-wrap">
       <a class="brand" href="/" aria-current="page"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a>
-      <nav class="nav-links" aria-label="Primary">
-        <a href="/" aria-current="page">Home</a>
-        <a href="/guide">Guide</a>
-        <a href="/examples">Examples</a>
-        <a href="/concepts">Concepts</a>
-        <a href="/comparisons">Comparisons</a>
-        <a href="/docs">Docs</a>
-        <a href="/roadmap">Roadmap</a>
-        <a href="https://github.com/pablof7z/trellis">GitHub</a>
-      </nav>
+      <nav class="nav-links" aria-label="Primary"><a href="/guide">Guide</a><a href="/examples">Examples</a><a href="/docs">Docs</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav>
     </div>
   </header>
 
   <main>
     <section class="container hero">
       <div>
-        <span class="eyebrow">Deterministic reactive resource graphs</span>
+        <span class="eyebrow">0.1 design preview. API unstable. Built for feedback.</span>
         <h1>Trellis</h1>
+        <p class="hero-claim">Your app already has a hidden resource graph.</p>
         <div class="thesis">
           <span>Signals recompute values.</span>
           <span>Trellis reconciles resources.</span>
         </div>
-        <p class="lead">A Rust library for application kernels where derived state changes produce scoped resource plans and revisioned materialized outputs.</p>
-        <p class="lead">For kernels that own subscriptions, sync windows, file watchers, live queries, background jobs, hydration tasks, and output surfaces.</p>
+        <p class="lead">An early Rust runtime for application kernels where changing state must safely open, close, cancel, clear, replay, and rebaseline live resources.</p>
         <div class="button-row">
           <a class="button primary" href="/guide">Read the guide</a>
-          <a class="button" href="/examples">View examples</a>
+          <a class="button" href="#traces">See the traces</a>
           <a class="button" href="https://github.com/pablof7z/trellis">GitHub</a>
         </div>
       </div>
-      <aside class="diagram" aria-label="Trellis propagation diagram">
-        <div class="phase-row">
-          <div class="phase"><b>Input</b><small>workspace</small></div>
-          <div class="phase"><b>Derive</b><small>projects</small></div>
-          <div class="phase"><b>Diff</b><small>+/- set</small></div>
-          <div class="phase"><b>Plan</b><small>open/close</small></div>
-          <div class="phase"><b>Apply</b><small>host actor</small></div>
-          <div class="phase"><b>Output</b><small>#42</small></div>
+      <aside class="trace-card hero-trace" aria-label="Transaction trace">
+        <div class="trace-head">
+          <span>Transaction #88</span>
+          <span>dashboard_cards.delta</span>
         </div>
-        <pre><code>[dependencies]
-# package name pending:
-# "trellis" is already taken on crates.io</code></pre>
-        <p class="badge">0.1 is early. API unstable. Designed for feedback.</p>
+        <div class="trace-block">
+          <strong>input</strong>
+          <p class="mono">selected_site = plant-12</p>
+        </div>
+        <div class="trace-block">
+          <strong>diff: visible_devices</strong>
+          <div class="trace-row"><span class="delta remove">- pump-1</span><span>closed</span></div>
+          <div class="trace-row"><span class="delta keep">= pump-2</span><span>kept</span></div>
+          <div class="trace-row"><span class="delta add">+ pump-3</span><span>opened</span></div>
+        </div>
+        <div class="trace-block">
+          <strong>plan</strong>
+          <div class="trace-row"><span>close topic:pump-1</span><span class="accent-red">remove</span></div>
+          <div class="trace-row"><span>open topic:pump-3</span><span class="accent-green">add</span></div>
+        </div>
+        <div class="trace-block">
+          <strong>output</strong>
+          <p class="mono">dashboard_cards.delta rev=88 stale=false</p>
+        </div>
       </aside>
     </section>
 
+    <section class="container guarantee-strip" aria-label="Trellis guarantees">
+      <span>No hidden I/O in graph propagation.</span>
+      <span>No orphan resources after scope close.</span>
+      <span>No wildcard demand from empty sets.</span>
+    </section>
+
     <section class="section">
       <div class="container">
-        <h2>The missing middle</h2>
-        <p class="section-intro">Most reactive systems stop at value invalidation. A changed. B depends on A. Recompute B. Real application kernels often need more.</p>
-        <div class="grid two">
-          <div class="card">
-            <h3>Value invalidation</h3>
-            <p>A changed. B depends on A. Recompute B.</p>
-          </div>
-          <div class="card">
-            <h3>Resource reconciliation</h3>
-            <p>A changed. B derived a new set. That set shrank. Old resources must close, new resources must open, stale output must clear, and the next visible state must be coherent.</p>
-          </div>
+        <h2>The bug class</h2>
+        <p class="section-intro">The bug is not that a value failed to recompute. The bug is that the old value still owns something.</p>
+        <div class="bug-list">
+          <p>A workspace changes, but old sync windows remain open.</p>
+          <p>A file is deleted, but diagnostics remain visible.</p>
+          <p>A plugin is disabled, but its worker keeps running.</p>
+          <p>A filter becomes empty, but a wildcard subscription opens.</p>
+          <p>A panel closes, but its live query stays alive.</p>
         </div>
+        <p class="section-intro">These are resource graph bugs. Trellis turns them into explicit diffs, plans, scopes, and output revisions.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>The model</h2>
+        <p class="section-intro">Canonical input derives collections. Collection changes produce structural diffs. Diffs produce resource plans. Plans update materialized output revisions.</p>
         <div class="path-line mono" aria-label="Resource graph path">
-          <span>Input</span><span>-&gt;</span><span>Derived Value</span><span>-&gt;</span><span>Collection Diff</span><span>-&gt;</span><span>Resource Plan</span><span>-&gt;</span><span>Materialized Output</span><span>-&gt;</span><span>Revision</span>
+          <span>input</span><span>-&gt;</span><span>derived collection</span><span>-&gt;</span><span>structural diff</span><span>-&gt;</span><span>resource plan</span><span>-&gt;</span><span>output revision</span>
         </div>
-        <p class="section-intro">Trellis turns dependency changes into inspectable resource plans, not hidden side effects.</p>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <h2>A realistic example</h2>
-        <p class="section-intro">Start with local-first sync, not Nostr. The reusable pattern is broader than any one protocol.</p>
-        <div class="grid">
-          <article class="card">
-            <h3>Local-first sync</h3>
-            <p class="mono">active workspace -&gt; visible projects -&gt; sync windows -&gt; replica demand -&gt; issue board</p>
-            <p>When the user switches workspaces, Trellis can derive the new project set, close obsolete sync windows, open new ones, replay cached rows, clear stale board rows, and emit a new output revision.</p>
-          </article>
-          <article class="card">
-            <h3>Language servers</h3>
-            <p class="mono">file changes -&gt; module graph -&gt; diagnostics -&gt; semantic tokens -&gt; editor output</p>
-            <p>When a file is deleted, stale diagnostics clear. When imports change, dependents invalidate. When a workspace closes, watchers and analysis tasks stop.</p>
-          </article>
-          <article class="card">
-            <h3>IoT dashboards</h3>
-            <p class="mono">selected site -&gt; visible devices -&gt; topic subscriptions -&gt; telemetry cards</p>
-            <p>When a filter shrinks, topic subscriptions shrink. Empty device sets subscribe to nothing, not accidentally broader demand.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <h2>Core model</h2>
-        <p class="section-intro">Trellis gives names to the pieces most systems already hand-roll.</p>
-        <div class="grid">
-          <div class="card"><h3>InputNode&lt;T&gt;</h3><p>Canonical state changed by one owner.</p></div>
-          <div class="card"><h3>DerivedNode&lt;T&gt;</h3><p>Deterministic value derived from explicit dependencies.</p></div>
-          <div class="card"><h3>CollectionNode&lt;K, V&gt;</h3><p>A derived set or map with structural diffs.</p></div>
-          <div class="card"><h3>ResourcePlan&lt;C&gt;</h3><p>Commands produced from changes. The graph does not run arbitrary I/O.</p></div>
-          <div class="card"><h3>Scope</h3><p>A lifetime owner for resources, outputs, and dependencies.</p></div>
-          <div class="card"><h3>MaterializedOutput&lt;O&gt;</h3><p>A revisioned output surface with baseline, delta, clear, and rebaseline semantics.</p></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <h2>Why plans, not effects?</h2>
-        <p class="section-intro">Trellis does not encourage arbitrary effect closures that run because they happened to read a value. Propagation produces data: close this, open that, clear this output, emit this revision.</p>
-        <pre><code>let demand = graph.resource_plan(
-    "visible_device_topics",
-    visible_devices.diff(),
-    |diff| {
-        Plan::new()
-            .close_topics(diff.removed())
-            .open_topics(diff.added())
-            .clear_rows(diff.removed())
-    },
-);</code></pre>
-        <p class="section-intro">The result is inspectable, testable, replayable, and easier to audit.</p>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <h2>Built-in invariants</h2>
-        <div class="grid">
-          <div class="card"><h3>Source shrink withdraws resources</h3><p>Removed collection members produce close commands.</p></div>
-          <div class="card"><h3>Empty sources fail closed</h3><p>Empty demand stays empty unless a fallback is explicit.</p></div>
-          <div class="card"><h3>Scope close releases ownership</h3><p>Closing a scope removes its resources and clears or rebaselines outputs.</p></div>
-          <div class="card"><h3>Output is revisioned</h3><p>Consumers receive coherent baseline, delta, clear, and rebaseline frames.</p></div>
-          <div class="card"><h3>Incremental equals truth</h3><p>Full recompute oracles can check incremental graph state.</p></div>
-          <div class="card"><h3>Effects are planned first</h3><p>The host actor applies commands after deterministic propagation.</p></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <h2>Not another signal library</h2>
-        <p class="section-intro">Use UI signals for UI state. Use Trellis when a derived value owns external resources.</p>
-        <div class="grid">
-          <div class="card"><h3>Signals</h3><p>Great for values and views. Not enough for resource lifecycle.</p></div>
-          <div class="card"><h3>Rx</h3><p>Great for stream composition. Not enough for scoped resource reconciliation.</p></div>
-          <div class="card"><h3>Salsa</h3><p>Great for pure incremental queries. Not enough for live resource plans and materialized output.</p></div>
-          <div class="card"><h3>Trellis</h3><p>Built for deterministic state-derived resource lifecycle.</p></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <h2>0.1 status</h2>
-        <p class="section-intro">Trellis 0.1 is intentionally narrow. The goal is not to solve all reactivity. The goal is to prove one reusable kernel.</p>
-        <div class="grid two">
-          <div class="card">
-            <h3>Included</h3>
-            <ul><li>explicit nodes</li><li>collection diffs</li><li>resource plans</li><li>scopes</li><li>transactions</li><li>revisioned outputs</li><li>testing hooks</li></ul>
+        <div class="lane-grid">
+          <div class="lane">
+            <h3>Graph phase</h3>
+            <p>Stage inputs, validate dependencies, derive dirty nodes, diff collections, plan commands, and commit revisions.</p>
+            <ul class="plain-list"><li>no external I/O</li><li>no task spawning</li><li>no host callbacks</li><li>no hidden handle mutation</li></ul>
           </div>
-          <div class="card">
-            <h3>Not included</h3>
-            <ul><li>UI bindings</li><li>automatic dependency discovery</li><li>distributed execution</li><li>database persistence</li><li>domain-specific adapters</li><li>production stability guarantees</li></ul>
+          <div class="lane">
+            <h3>Host phase</h3>
+            <p>Apply returned commands, emit returned frames, observe resource results, and feed those results back as inputs.</p>
+            <ul class="plain-list"><li>commands are data</li><li>frames are inspectable</li><li>runtime results are explicit</li><li>logs explain each revision</li></ul>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="section" id="traces">
+      <div class="container">
+        <h2>Trace UI is the product surface</h2>
+        <p class="section-intro">Trellis should feel like a dependency graph debugger, a transaction inspector, and a resource ownership ledger.</p>
+        <div class="grid">
+          <article class="trace-card">
+            <div class="trace-head"><span>Collection</span><span>visible_devices</span></div>
+            <div class="trace-block">
+              <strong>before</strong>
+              <p class="mono">pump-1<br>pump-2</p>
+            </div>
+            <div class="trace-block">
+              <strong>after</strong>
+              <p class="mono"><span class="delta keep">pump-2</span><br><span class="delta add">pump-3</span></p>
+            </div>
+          </article>
+          <article class="trace-card">
+            <div class="trace-head"><span>ResourcePlan</span><span>mqtt_topics</span></div>
+            <div class="trace-block">
+              <div class="trace-row"><span>close topic:pump-1</span><span class="accent-red">close</span></div>
+              <div class="trace-row"><span>open topic:pump-3</span><span class="accent-green">open</span></div>
+              <div class="trace-row"><span>keep topic:pump-2</span><span class="muted">keep</span></div>
+            </div>
+          </article>
+          <article class="trace-card">
+            <div class="trace-head"><span>Scope</span><span>dashboard-panel-17</span></div>
+            <div class="trace-block">
+              <strong>owns</strong>
+              <p class="mono">topic:pump-2<br>topic:pump-3<br>output:dashboard-cards</p>
+            </div>
+            <div class="trace-block">
+              <strong>on close</strong>
+              <p class="mono">close topics<br>clear output</p>
+            </div>
+          </article>
+          <article class="trace-card">
+            <div class="trace-head"><span>Output</span><span>dashboard_cards</span></div>
+            <div class="trace-block">
+              <div class="trace-row"><span>revision</span><span class="accent-violet">#88</span></div>
+              <div class="trace-row"><span>type</span><span>delta</span></div>
+              <div class="trace-row"><span>stale</span><span>false</span></div>
+            </div>
+          </article>
+          <article class="trace-card">
+            <div class="trace-head"><span>Oracle</span><span>full recompute</span></div>
+            <div class="trace-block">
+              <div class="trace-row"><span>incremental rows</span><span>42</span></div>
+              <div class="trace-row"><span>full recompute rows</span><span>42</span></div>
+              <div class="trace-row"><span>status</span><span class="accent-green">pass</span></div>
+            </div>
+          </article>
+          <article class="trace-card">
+            <div class="trace-head"><span>Inspector</span><span>last transaction</span></div>
+            <div class="trace-block">
+              <p class="mono">removed=1 added=1 kept=1<br>commands=2 frames=1<br>scope=dashboard-panel-17</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Concrete use cases</h2>
+        <p class="section-intro">The same primitive set handles network subscriptions, file watchers, plugin resources, and output surfaces.</p>
+        <div class="grid">
+          <article class="card"><h3>Local-first sync</h3><p class="mono">workspace -&gt; projects -&gt; sync windows -&gt; issue board</p><p>Switching workspaces closes A, keeps B, opens C, replays cached rows, and emits a coherent board revision.</p></article>
+          <article class="card"><h3>MQTT dashboard</h3><p class="mono">site filter -&gt; devices -&gt; topics -&gt; dashboard cards</p><p>Filter shrink unsubscribes removed devices. Empty sets subscribe to nothing.</p></article>
+          <article class="card"><h3>Plugin runtime</h3><p class="mono">enabled plugins -&gt; commands/watchers/workers -&gt; shell output</p><p>Disable means teardown: no stale commands, no orphan workers, no forgotten file watchers.</p></article>
+          <article class="card"><h3>Language server</h3><p class="mono">files -&gt; module graph -&gt; watchers -&gt; diagnostics</p><p>Salsa can recompute pure diagnostics. Trellis models clear diagnostics, update watcher sets, and cancel analysis jobs.</p></article>
+          <article class="card"><h3>Nostr/NMP feed</h3><p class="mono">account -&gt; contacts -&gt; relay filters -&gt; feed projection</p><p>Contact-list replacement withdraws old demand and rebaselines visible output.</p></article>
+          <article class="card"><h3>Market data</h3><p class="mono">watchlist -&gt; quote streams -&gt; alert jobs -&gt; terminal output</p><p>A later pressure test for performance, entitlement, and backpressure boundaries.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Correctness is the product.</h2>
+        <div class="grid">
+          <div class="card"><h3>Source shrink withdraws</h3><p>Removed collection members produce close commands.</p></div>
+          <div class="card"><h3>Empty fails closed</h3><p>Empty demand stays empty unless a fallback is explicit.</p></div>
+          <div class="card"><h3>Scope close releases</h3><p>A resource with no owning scope is a bug.</p></div>
+          <div class="card"><h3>Revision is coherent</h3><p>Consumers receive baseline, delta, clear, or rebaseline frames.</p></div>
+          <div class="card"><h3>Plan is inspectable</h3><p>Your tests and logs can read the same command data the host applies.</p></div>
+          <div class="card"><h3>Incremental equals truth</h3><p>Full-recompute oracles check incremental graph state.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>When not to use Trellis</h2>
+        <p class="section-intro">Do not use Trellis for ordinary UI state, pure memoization, or stream transformations that do not own external resources. Use it when a derived value opens something, closes something, or exposes revisioned output that must stay coherent.</p>
+        <pre><code>let tx = graph.transaction(|tx| {
+    tx.set(selected_site, SiteId("plant-12"));
+});
+
+for command in tx.commands() {
+    runtime.apply(command);
+}
+
+for frame in tx.frames() {
+    output.send(frame);
+}</code></pre>
       </div>
     </section>
   </main>
@@ -183,6 +214,7 @@
   <footer class="footer">
     <div class="container">
       <p>Trellis is for Rust developers who have hand-rolled callback glue to keep derived state, subscriptions, jobs, caches, and output surfaces in sync.</p>
+      <p><a href="/roadmap">Roadmap</a> <span class="muted">/</span> <a href="/comparisons">Comparisons</a> <span class="muted">/</span> <a href="/concepts">Concepts</a></p>
       <p class="mono">Make the graph explicit.</p>
     </div>
   </footer>
