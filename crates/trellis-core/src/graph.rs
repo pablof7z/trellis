@@ -1,39 +1,46 @@
 use crate::{
     DependencyList, DerivedNode, GraphError, GraphResult, InputNode, NodeHandle, NodeId, NodeKind,
-    NodeMeta, Revision, ScopeId, ScopeMeta, Transaction, TransactionId, TransactionOptions,
+    NodeMeta, OutputKey, OutputMeta, Revision, ScopeId, ScopeMeta, Transaction, TransactionId,
+    TransactionOptions,
     collection::{CollectionSpec, StoredCollection, StoredDiff},
     derive::DerivedSpec,
     input::{StoredInput, value_type},
+    output::OutputSpec,
     resource::{ResourceKey, ResourcePlanner},
 };
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Trellis graph skeleton with transactional input mutation.
-pub struct Graph<C = ()> {
+pub struct Graph<C = (), O = ()> {
     pub(crate) next_node_id: u64,
     pub(crate) next_scope_id: u64,
+    pub(crate) next_output_key: u64,
     pub(crate) next_transaction_id: TransactionId,
     pub(crate) revision: Revision,
     pub(crate) nodes: BTreeMap<NodeId, NodeMeta>,
     pub(crate) scopes: BTreeMap<ScopeId, ScopeMeta>,
     pub(crate) input_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
-    pub(crate) derived_specs: BTreeMap<NodeId, DerivedSpec<C>>,
+    pub(crate) derived_specs: BTreeMap<NodeId, DerivedSpec<C, O>>,
     pub(crate) derived_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
-    pub(crate) collection_specs: BTreeMap<NodeId, CollectionSpec<C>>,
+    pub(crate) collection_specs: BTreeMap<NodeId, CollectionSpec<C, O>>,
     pub(crate) collection_values: BTreeMap<NodeId, Box<dyn StoredCollection>>,
     pub(crate) previous_collection_values: BTreeMap<NodeId, Box<dyn StoredCollection>>,
     pub(crate) collection_diffs: BTreeMap<NodeId, Box<dyn StoredDiff>>,
-    pub(crate) resource_planners: Vec<ResourcePlanner<C>>,
+    pub(crate) resource_planners: Vec<ResourcePlanner<C, O>>,
     pub(crate) resource_owners: BTreeMap<ResourceKey, BTreeSet<ScopeId>>,
+    pub(crate) output_specs: BTreeMap<OutputKey, OutputSpec<C, O>>,
+    pub(crate) output_values: BTreeMap<OutputKey, O>,
+    pub(crate) outputs: BTreeMap<OutputKey, OutputMeta>,
     pub(crate) transaction_open: bool,
 }
 
-impl<C> Graph<C> {
+impl<C, O> Graph<C, O> {
     /// Creates an empty graph.
     pub fn new_with_command_type() -> Self {
         Self {
             next_node_id: 1,
             next_scope_id: 1,
+            next_output_key: 1,
             next_transaction_id: TransactionId::default(),
             revision: Revision::default(),
             nodes: BTreeMap::new(),
@@ -47,6 +54,9 @@ impl<C> Graph<C> {
             collection_diffs: BTreeMap::new(),
             resource_planners: Vec::new(),
             resource_owners: BTreeMap::new(),
+            output_specs: BTreeMap::new(),
+            output_values: BTreeMap::new(),
+            outputs: BTreeMap::new(),
             transaction_open: false,
         }
     }
@@ -57,7 +67,10 @@ impl<C> Graph<C> {
     }
 
     /// Begins an input transaction with default options.
-    pub fn begin_transaction(&mut self) -> GraphResult<Transaction<'_, C>> {
+    pub fn begin_transaction(&mut self) -> GraphResult<Transaction<'_, C, O>>
+    where
+        O: Clone + PartialEq,
+    {
         self.begin_transaction_with_options(TransactionOptions::default())
     }
 
@@ -65,7 +78,10 @@ impl<C> Graph<C> {
     pub fn begin_transaction_with_options(
         &mut self,
         options: TransactionOptions,
-    ) -> GraphResult<Transaction<'_, C>> {
+    ) -> GraphResult<Transaction<'_, C, O>>
+    where
+        O: Clone + PartialEq,
+    {
         if self.transaction_open {
             return Err(GraphError::NestedTransaction);
         }
@@ -118,7 +134,7 @@ impl<C> Graph<C> {
         id: NodeId,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&crate::DeriveContext<'ctx, C>) -> Result<T, crate::DeriveError>
+        derive: impl for<'ctx> Fn(&crate::DeriveContext<'ctx, C, O>) -> Result<T, crate::DeriveError>
         + 'static,
     ) -> GraphResult<DerivedNode<T>>
     where
@@ -135,7 +151,8 @@ impl<C> Graph<C> {
             Some(value_type::<T>()),
         );
         self.nodes.insert(id, meta);
-        self.derived_specs.insert(id, DerivedSpec::new(derive));
+        self.derived_specs
+            .insert(id, DerivedSpec::<C, O>::new(derive));
         Ok(DerivedNode::new(id))
     }
 
@@ -177,6 +194,11 @@ impl<C> Graph<C> {
         self.scopes.get(&id)
     }
 
+    /// Returns metadata for a materialized output.
+    pub fn output_meta(&self, key: OutputKey) -> Option<&OutputMeta> {
+        self.outputs.get(&key)
+    }
+
     /// Returns declared dependencies for a node.
     pub fn dependencies<H: NodeHandle>(&self, node: H) -> Option<&DependencyList> {
         self.node_meta(node).map(NodeMeta::dependencies)
@@ -204,6 +226,12 @@ impl<C> Graph<C> {
         id
     }
 
+    pub(crate) fn allocate_output_key(&mut self) -> OutputKey {
+        let key = OutputKey::from_index(self.next_output_key);
+        self.next_output_key += 1;
+        key
+    }
+
     fn allocate_transaction_id(&mut self) -> TransactionId {
         self.next_transaction_id = self.next_transaction_id.next();
         self.next_transaction_id
@@ -227,6 +255,18 @@ impl<C> Graph<C> {
             }
             if self.depends_on(*dependency, node_id) {
                 return Err(GraphError::CycleDetected(node_id));
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) fn validate_output_dependencies(
+        &self,
+        dependencies: &DependencyList,
+    ) -> GraphResult<()> {
+        for dependency in dependencies.as_slice() {
+            if !self.nodes.contains_key(dependency) {
+                return Err(GraphError::UnknownNode(*dependency));
             }
         }
         Ok(())

@@ -1,6 +1,6 @@
 use crate::{Graph, GraphResult, ResourceKey, ScopeId};
 
-impl<C> Graph<C> {
+impl<C, O> Graph<C, O> {
     pub(crate) fn close_scope_direct(&mut self, scope: ScopeId) -> GraphResult<Vec<ScopeId>> {
         self.require_scope(scope)?;
         let scopes = self.scope_close_order(scope);

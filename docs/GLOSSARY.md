@@ -70,6 +70,10 @@ An output frame that describes a change from a previous materialized output revi
 
 A sequence of deltas applied to a baseline should reconstruct the same output state as a later baseline for the same output key.
 
+In the initial implementation, deltas are state-replacement deltas: applying a
+delta replaces the consumer's current state for that output key with the delta
+payload.
+
 ## Dependency
 
 An explicit edge from one node, planner, or output to another node or diff.

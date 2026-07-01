@@ -1,4 +1,4 @@
-use crate::{DeriveError, NodeId, ScopeId, TransactionId};
+use crate::{DeriveError, NodeId, OutputKey, ScopeId, TransactionId};
 use core::fmt;
 
 /// Result type used by graph metadata operations.
@@ -37,6 +37,10 @@ pub enum GraphError {
     WrongDerivedType(NodeId),
     /// A collection read used the wrong key or value type for the node.
     WrongCollectionType(NodeId),
+    /// An output key is not present in the graph.
+    UnknownOutput(OutputKey),
+    /// A materialized output computation failed.
+    OutputFailed(OutputKey, DeriveError),
     /// A resource command used a scope outside its registered planner scope.
     ResourceScopeMismatch(ScopeId),
     /// A resource command required an existing owned resource.
@@ -73,6 +77,8 @@ impl fmt::Display for GraphError {
             Self::WrongCollectionType(id) => {
                 write!(f, "wrong collection value type for node: {id:?}")
             }
+            Self::UnknownOutput(key) => write!(f, "unknown output: {key:?}"),
+            Self::OutputFailed(key, error) => write!(f, "output failed for {key:?}: {error:?}"),
             Self::ResourceScopeMismatch(id) => write!(f, "resource scope mismatch: {id:?}"),
             Self::ResourceNotOwned => write!(f, "resource is not owned"),
             Self::CycleDetected(id) => write!(f, "dependency cycle detected at node: {id:?}"),

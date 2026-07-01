@@ -334,9 +334,8 @@ The initial scope teardown order is:
 6. Produce output clear/rebaseline frames for closed-scope outputs once outputs exist.
 ```
 
-M6 implements this order for scopes, nodes, and resources. Materialized outputs
-are not implemented until M7, so output clear/rebaseline frames are a reserved
-teardown phase rather than a current transaction result field.
+M7 implements this order for scopes, nodes, resources, and materialized output
+clear frames.
 
 ## Shared resources
 
@@ -395,6 +394,11 @@ Clear
 Rebaseline
 Status
 ```
+
+The M7 implementation uses state-replacement deltas: a `Delta` payload is a
+coherent replacement for the output's consumer state. This keeps the first
+output API typed and deterministic while leaving structural output deltas for a
+later design if the examples prove they are needed.
 
 Output revisions MUST be monotonic per output key.
 

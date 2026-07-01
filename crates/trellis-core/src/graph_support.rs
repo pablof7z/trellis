@@ -1,9 +1,10 @@
 use crate::Graph;
-impl<C> Clone for Graph<C> {
+impl<C, O: Clone> Clone for Graph<C, O> {
     fn clone(&self) -> Self {
         Self {
             next_node_id: self.next_node_id,
             next_scope_id: self.next_scope_id,
+            next_output_key: self.next_output_key,
             next_transaction_id: self.next_transaction_id,
             revision: self.revision,
             nodes: self.nodes.clone(),
@@ -17,19 +18,29 @@ impl<C> Clone for Graph<C> {
             collection_diffs: self.collection_diffs.clone(),
             resource_planners: self.resource_planners.clone(),
             resource_owners: self.resource_owners.clone(),
+            output_specs: self.output_specs.clone(),
+            output_values: self.output_values.clone(),
+            outputs: self.outputs.clone(),
             transaction_open: self.transaction_open,
         }
     }
 }
 
-impl Graph<()> {
+impl Graph<(), ()> {
     /// Creates an empty graph with no resource command payload type.
     pub fn new() -> Self {
         Self::new_with_command_type()
     }
 }
 
-impl<C> Default for Graph<C> {
+impl<O> Graph<(), O> {
+    /// Creates an empty graph with a materialized output payload type.
+    pub fn new_with_output_type() -> Self {
+        Self::new_with_command_type()
+    }
+}
+
+impl<C, O> Default for Graph<C, O> {
     fn default() -> Self {
         Self::new_with_command_type()
     }
