@@ -44,7 +44,7 @@ Trellis reconciles resources.
 
 > Project status: early design / 0.1 preview. The examples in this README show the intended shape of the API. Names and exact signatures may change before stabilization.
 
-> Current implementation status: `trellis-core` contains the M11 graph skeleton:
+> Current implementation status: `trellis-core` contains the M12 graph skeleton:
 > typed identities, node handles, scopes, dependency lists, deterministic debug
 > output, atomic canonical input transactions, and pure derived scalar node
 > recomputation, plus typed collection nodes with deterministic structural
@@ -55,9 +55,10 @@ Trellis reconciles resources.
 > collections, desired resource ownership, and materialized output state for
 > supported graph shapes, with deterministic replay trace and generated model
 > test helpers. Audit queries explain node changes, resource commands, output
-> frames, dependency paths, and scope resource inventories. It does not
-> implement async behavior, hidden retry logic, or automatic dependency
-> tracking yet.
+> frames, dependency paths, and scope resource inventories. `trellis-examples`
+> contains three proof examples outside core: workspace-driven sync, mini
+> language server, and telemetry dashboard. It does not implement async
+> behavior, hidden retry logic, or automatic dependency tracking yet.
 
 ---
 
