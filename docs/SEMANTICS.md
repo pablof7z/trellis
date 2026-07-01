@@ -1,0 +1,466 @@
+# Trellis Semantics
+
+Status: normative draft.
+
+This document defines the intended runtime semantics for Trellis. It is written before implementation so code can be reviewed against a stable contract.
+
+## Normative language
+
+The words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY are used deliberately.
+
+- MUST means required for a conforming implementation.
+- MUST NOT means forbidden for a conforming implementation.
+- SHOULD means expected unless a documented reason exists.
+- MAY means permitted but not required.
+
+## Core execution model
+
+Trellis is an actor-owned, deterministic graph propagation core.
+
+The host application owns the event loop and all I/O. Trellis owns graph state and deterministic propagation inside explicit transaction boundaries.
+
+The intended control flow is:
+
+```text
+external event arrives at host
+host begins transaction
+host stages canonical input/scope changes
+host commits transaction
+graph validates staged changes
+graph computes derived state
+graph computes diffs
+graph computes resource plans
+graph computes output frames
+graph commits revision
+host receives TransactionResult
+host applies resource plans
+host emits output frames
+host reports external resource status as later inputs
+```
+
+The graph MUST NOT run indefinitely. It computes one transaction result at a time.
+
+## Graph ownership
+
+A `Graph` owns:
+
+- node registry;
+- dependency edges;
+- current node values;
+- current materialized collection state;
+- current desired resource ownership state;
+- current materialized output state;
+- scope registry;
+- revision counters;
+- deterministic audit state needed for debugging and testing.
+
+The host owns:
+
+- threads and tasks;
+- async runtimes;
+- timers;
+- network connections;
+- files;
+- databases;
+- UI callbacks;
+- retry and backoff policy;
+- actual application resource handles.
+
+The graph MAY know that a resource with key `K` is desired by scope `S`. The graph MUST NOT know how to open a socket, read a file, execute a query, render UI, or perform any domain-specific side effect.
+
+## Single-writer mutation
+
+Version 0.1 assumes single-writer graph mutation.
+
+All graph mutations MUST occur through a transaction API. The graph MUST NOT expose mutation APIs that bypass transaction boundaries.
+
+The graph MUST reject:
+
+- nested mutable transactions;
+- mutation during propagation;
+- mutation of closed scopes;
+- resource attachment without an owning scope;
+- output attachment without an owning scope;
+- invalid node references;
+- dependency cycles.
+
+Concurrent hosts MAY send events to the actor that owns the graph, but they MUST NOT mutate the graph directly.
+
+## Nodes
+
+A node is an identified value or collection in the graph.
+
+Every node MUST have:
+
+- stable graph-local identity;
+- kind;
+- debug name;
+- declared dependencies;
+- last-changed revision;
+- scope ownership, unless it is explicitly global.
+
+Node identity MUST NOT be derived from debug name. Debug names are for diagnostics only.
+
+### Input nodes
+
+An `InputNode<T>` represents canonical state supplied by the host.
+
+Input nodes are changed only by transactions.
+
+Input nodes SHOULD represent facts, not side effects. For example, an external resource failure should be written back as a resource-status input rather than handled by hidden graph retry logic.
+
+### Derived nodes
+
+A `DerivedNode<T>` represents a deterministic value computed from declared dependencies.
+
+A derived node computation MUST:
+
+- read only declared dependencies;
+- be deterministic for the same dependency values;
+- avoid external I/O;
+- avoid task spawning;
+- avoid graph mutation;
+- avoid calling host callbacks.
+
+A derived node computation SHOULD be pure. If it uses internal caches, those caches MUST NOT become a second source of truth and MUST NOT affect deterministic output.
+
+### Collection nodes
+
+A `CollectionNode<K, V>` represents a derived set or map with structural diff semantics.
+
+A collection node MUST maintain enough committed state to compute deterministic diffs between the previous committed collection and the next committed collection.
+
+Set diffs MUST distinguish:
+
+- added members;
+- removed members;
+- unchanged members when needed for audit or materialization.
+
+Map diffs MUST distinguish:
+
+- added keys;
+- removed keys;
+- updated keys;
+- unchanged keys when needed for audit or materialization.
+
+Diff ordering MUST be deterministic.
+
+## Dependencies
+
+Version 0.1 is explicit-dependency-first.
+
+Every derived node, collection node, resource planner, and materialized output MUST declare the nodes or diffs it depends on.
+
+The initial implementation MUST NOT rely on automatic dependency discovery by recording reads inside closures.
+
+Dynamic dependencies MAY be introduced in a future ADR only if:
+
+- the resulting dependency set is inspectable;
+- the dependency set is deterministic;
+- full recompute remains possible;
+- audit output can explain why the dependency exists;
+- resource teardown remains scoped and deterministic.
+
+## Transactions
+
+A transaction is the only unit of committed graph change.
+
+A transaction may stage:
+
+- input changes;
+- scope creation;
+- scope closure;
+- node creation, if graph construction is dynamic;
+- output attachment or detachment;
+- resource-owner attachment or detachment;
+- host-reported resource status changes.
+
+A transaction MUST be atomic. If validation or propagation fails, the graph MUST NOT partially commit staged changes, resource desired state, output state, or revision counters.
+
+A transaction result MUST include enough information for the host and tests to observe what happened:
+
+- transaction id;
+- resulting graph revision;
+- changed inputs;
+- changed derived nodes;
+- collection diffs;
+- resource plans;
+- output frames;
+- audit entries;
+- errors, if any.
+
+## Transaction phase order
+
+A conforming implementation MUST define a stable transaction phase order.
+
+The initial phase model is:
+
+```text
+1. Stage operations
+2. Validate operations
+3. Build candidate graph state
+4. Resolve scope lifecycle changes
+5. Recompute dirty derived scalar nodes
+6. Recompute dirty collection nodes
+7. Compute structural diffs
+8. Compute next desired resource ownership
+9. Diff previous desired resources against next desired resources
+10. Produce ResourcePlan data
+11. Compute next materialized output state
+12. Produce OutputFrame data
+13. Commit graph state and revision
+14. Return TransactionResult
+```
+
+The host applies resource plans and output frames only after the transaction result is returned.
+
+No phase MAY perform external I/O.
+
+No phase MAY call host callbacks.
+
+If a future implementation changes phase order, it MUST update this document and add or update an ADR.
+
+## Determinism
+
+For the same:
+
+- initial graph definition;
+- initial graph state;
+- transaction sequence;
+- host-reported resource statuses;
+- configured equality rules;
+
+Trellis MUST produce the same:
+
+- derived values;
+- collection diffs;
+- desired resource ownership;
+- resource plans;
+- output frames;
+- revisions;
+- audit trace.
+
+Implementations MUST avoid nondeterministic iteration order in public transaction results. Hash-map iteration order MUST NOT leak into diffs, plans, frames, or audit output.
+
+Time, randomness, I/O, task scheduling, and external resource status MUST enter the graph as canonical inputs supplied by the host.
+
+## Equality and propagation
+
+Nodes MAY use equality gating to avoid downstream propagation when the computed value is unchanged.
+
+Equality rules MUST be explicit and deterministic.
+
+A no-op input change SHOULD NOT advance node revisions or produce downstream diffs unless the node is configured to treat identical writes as significant.
+
+## Resource plans
+
+A resource plan is plain data describing desired lifecycle changes for external resources.
+
+A resource plan MUST NOT execute resources.
+
+A resource command SHOULD include:
+
+- resource key;
+- operation;
+- owning scope or ownership delta;
+- command payload supplied by the application;
+- transaction id;
+- graph revision;
+- cause or audit pointer.
+
+Allowed operation vocabulary SHOULD begin small:
+
+```text
+Open
+Close
+Replace
+Refresh
+Noop
+```
+
+The core MUST understand resource identity and ownership well enough to produce teardown commands. The core MUST NOT understand domain-specific command payload semantics.
+
+### Desired resource state
+
+The graph maintains desired resource ownership, not actual resource success.
+
+Actual resource success or failure is reported by the host as later canonical input.
+
+Example:
+
+```text
+graph emits Open(Resource A)
+host attempts to open Resource A
+host observes failure
+host writes ResourceStatus(A, Failed) as input in a later transaction
+```
+
+The graph MUST NOT hide retry or backoff behavior inside propagation.
+
+## Scopes and teardown
+
+A scope is a lifetime owner.
+
+A scope may own:
+
+- nodes;
+- desired resources;
+- materialized outputs;
+- child scopes.
+
+Every live desired resource MUST have at least one owning scope.
+
+Every materialized output surface MUST have an owning scope.
+
+Closing a scope MUST deterministically remove that scope's ownership from all resources and outputs it owns. If a resource has no remaining owners after scope closure, the transaction MUST produce a close command for that resource. If an output is owned by the closed scope, the transaction MUST produce a clear or finalization frame for that output.
+
+Closing a scope MUST be idempotent.
+
+Closing a parent scope MUST close child scopes or otherwise remove their ownership according to a documented deterministic order.
+
+The graph MUST provide a way to detect orphaned resources and outputs in tests.
+
+## Shared resources
+
+A resource MAY be desired by multiple scopes.
+
+Shared ownership MUST be explicit.
+
+If one scope closes but another live scope still owns the same resource key, the graph MUST NOT emit a final close command for that resource. It MAY emit an ownership-change audit entry.
+
+A final close command MUST be emitted only when the resource key is no longer desired by any live scope.
+
+## Empty-source semantics
+
+An empty collection means an empty collection.
+
+An empty source MUST NOT imply wildcard demand, all resources, default resources, or fallback resources.
+
+If an application wants fallback behavior, it MUST model that fallback as an explicit derived node or explicit canonical input.
+
+Examples:
+
+```text
+visible_device_set = {}
+ -> desired_topic_set = {}
+ -> no topic subscriptions
+```
+
+```text
+accessible_project_set = {}
+ -> desired_sync_windows = {}
+ -> no sync windows
+```
+
+## Materialized outputs
+
+A materialized output is a revisioned surface emitted by the graph as data.
+
+The host may send output frames to a UI, bridge, log, network, test harness, or any other consumer. The graph does not call those consumers directly.
+
+An output frame SHOULD include:
+
+- output key;
+- owning scope;
+- transaction id;
+- output revision;
+- frame kind;
+- payload;
+- cause or audit pointer.
+
+Initial frame kinds SHOULD include:
+
+```text
+Baseline
+Delta
+Clear
+Rebaseline
+Status
+```
+
+Output revisions MUST be monotonic per output key.
+
+A consumer SHOULD be able to reconstruct the latest output state by starting from a baseline and applying subsequent deltas, or by accepting a later rebaseline.
+
+A scope close MUST produce clear or finalization frames for outputs owned only by that scope.
+
+## Full recompute
+
+Full recompute is the process of deriving current graph state from canonical committed inputs and live scope state without using incremental dirty propagation history.
+
+For supported graph shapes, Trellis MUST provide testing hooks to compare incremental state against full recompute.
+
+Full recompute comparison SHOULD include:
+
+- derived scalar values;
+- materialized collections;
+- desired resource ownership;
+- materialized output state;
+- output baseline equivalence;
+- relevant audit or cause information where practical.
+
+If a feature makes full recompute impossible, it MUST be rejected or require a new ADR explaining why the feature belongs in the core despite that cost.
+
+## Error semantics
+
+A transaction MUST NOT partially commit if validation or propagation fails.
+
+The initial implementation SHOULD treat user derivation, planning, or materialization failures as transaction failures unless a later ADR defines recoverable error nodes.
+
+The graph SHOULD distinguish:
+
+- programmer errors;
+- invalid graph references;
+- cycle errors;
+- derive errors;
+- planning errors;
+- materialization errors;
+- host-reported resource status.
+
+Host-reported resource failure is not graph failure. It is canonical input.
+
+## Audit semantics
+
+The graph SHOULD produce deterministic audit information sufficient to answer:
+
+- which transaction changed this node;
+- which dependency caused this node to change;
+- which collection diff produced this resource command;
+- which scope owns this resource;
+- why this output frame was emitted;
+- whether a resource was closed due to source shrink or scope closure;
+- whether an output was cleared due to empty source, rebaseline, or teardown.
+
+If a resource command cannot be explained by graph state, it should not exist.
+
+## Prohibited behavior
+
+A conforming core implementation MUST NOT:
+
+- open sockets;
+- perform file I/O;
+- execute database queries;
+- spawn async tasks;
+- sleep;
+- schedule timers;
+- call UI callbacks;
+- call user closures for side effects during propagation;
+- use hidden global state;
+- use hidden dependency discovery in v0.1;
+- allow resources without scopes;
+- allow output frames without revisions;
+- allow transaction partial commits.
+
+## Required test invariants
+
+Implementation MUST eventually provide tests for:
+
+- source shrink closes removed resources;
+- empty source opens no resources;
+- scope close closes resources and clears outputs;
+- shared resource closes only after last owner closes;
+- no-op equality does not propagate unexpectedly;
+- output deltas reconstruct the same state as a later baseline;
+- transaction failure is atomic;
+- transaction replay is deterministic;
+- incremental state equals full recompute for supported graph shapes.
