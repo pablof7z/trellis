@@ -3,7 +3,10 @@ use crate::{
     Transaction,
 };
 
-impl<C: 'static> Transaction<'_, C> {
+impl<C: 'static, O> Transaction<'_, C, O>
+where
+    O: Clone + PartialEq + 'static,
+{
     /// Stages a map-diff resource planner.
     pub fn map_resource_planner<K, V>(
         &mut self,

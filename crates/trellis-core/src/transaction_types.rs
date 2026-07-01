@@ -1,4 +1,4 @@
-use crate::{NodeId, ResourcePlan, Revision, ScopeId, TransactionId};
+use crate::{NodeId, OutputFrame, ResourcePlan, Revision, ScopeId, TransactionId};
 
 /// Configuration for committing input changes.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -54,7 +54,7 @@ pub enum AuditEvent {
 
 /// Result returned by a committed input transaction.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct TransactionResult<C = ()> {
+pub struct TransactionResult<C = (), O = ()> {
     /// Committed transaction id.
     pub transaction_id: TransactionId,
     /// Graph revision after commit.
@@ -67,6 +67,8 @@ pub struct TransactionResult<C = ()> {
     pub changed_collection_nodes: Vec<NodeId>,
     /// Data-only resource commands produced by graph propagation.
     pub resource_plan: ResourcePlan<C>,
+    /// Data-only materialized output frames produced by graph propagation.
+    pub output_frames: Vec<OutputFrame<O>>,
     /// Deterministic audit entries for staged input writes.
     pub audit_log: Vec<AuditEntry>,
 }

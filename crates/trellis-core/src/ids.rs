@@ -45,6 +45,28 @@ impl fmt::Debug for ScopeId {
     }
 }
 
+/// Stable graph-local identity for a materialized output.
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct OutputKey(NonZeroU64);
+
+impl OutputKey {
+    pub(crate) fn from_index(index: u64) -> Self {
+        let value = NonZeroU64::new(index).expect("output keys start at 1");
+        Self(value)
+    }
+
+    /// Returns the opaque numeric value for deterministic inspection.
+    pub fn get(self) -> u64 {
+        self.0.get()
+    }
+}
+
+impl fmt::Debug for OutputKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OutputKey({})", self.get())
+    }
+}
+
 /// Monotonic graph revision marker.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Revision(u64);

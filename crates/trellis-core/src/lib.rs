@@ -3,8 +3,8 @@
 //! This crate currently defines typed identities, graph metadata, scope
 //! metadata, declared dependencies, deterministic inspection, input
 //! transactions, pure derived node recomputation, collection diffs, and
-//! data-only resource plans with recursive scope teardown. It does not
-//! implement materialized outputs.
+//! data-only resource plans with recursive scope teardown and materialized
+//! output frames.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
@@ -23,6 +23,9 @@ mod ids;
 mod input;
 mod node;
 mod oracle;
+mod output;
+mod output_build;
+mod output_reconcile;
 mod read;
 mod resource;
 mod resource_build;
@@ -39,9 +42,13 @@ pub use dependency::DependencyList;
 pub use derive::{DeriveContext, DeriveError};
 pub use error::{GraphError, GraphResult};
 pub use graph::Graph;
-pub use ids::{NodeId, Revision, ScopeId, TransactionId};
+pub use ids::{NodeId, OutputKey, Revision, ScopeId, TransactionId};
 pub use node::{CollectionNode, DerivedNode, InputNode, NodeHandle, NodeKind, NodeMeta};
 pub use oracle::FullRecomputeCheck;
+pub use output::{
+    ClearReason, MaterializedOutput, OutputContext, OutputFrame, OutputFrameKind, OutputMeta,
+    OutputOptions, RebaselineReason,
+};
 pub use resource::{PlanContext, ResourceCommand, ResourceKey, ResourcePlan, ResourcePlanner};
 pub use scope::ScopeMeta;
 pub use transaction::Transaction;

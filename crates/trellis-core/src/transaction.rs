@@ -1,27 +1,31 @@
 use crate::input::{StoredInput, boxed_input};
 use crate::{
-    Graph, GraphError, GraphResult, InputNode, NodeId, TransactionId,
+    Graph, GraphError, GraphResult, InputNode, NodeId, OutputKey, RebaselineReason, TransactionId,
     transaction_types::{AuditEntry, AuditEvent, TransactionOptions, TransactionResult},
 };
 use std::collections::BTreeMap;
 
 /// Staged canonical input transaction.
-pub struct Transaction<'graph, C = ()> {
-    pub(crate) graph: &'graph mut Graph<C>,
-    pub(crate) working: Graph<C>,
+pub struct Transaction<'graph, C = (), O = ()> {
+    pub(crate) graph: &'graph mut Graph<C, O>,
+    pub(crate) working: Graph<C, O>,
     id: TransactionId,
     options: TransactionOptions,
     staged_inputs: BTreeMap<NodeId, Box<dyn StoredInput>>,
     pub(crate) staged_events: Vec<AuditEvent>,
     pub(crate) staged_resource_planner_collections: Vec<NodeId>,
+    pub(crate) staged_output_rebaselines: BTreeMap<OutputKey, RebaselineReason>,
     pub(crate) graph_mutated: bool,
     pub(crate) failed: Option<GraphError>,
     closed: bool,
 }
 
-impl<'graph, C> Transaction<'graph, C> {
+impl<'graph, C, O> Transaction<'graph, C, O>
+where
+    O: Clone + PartialEq,
+{
     pub(crate) fn new(
-        graph: &'graph mut Graph<C>,
+        graph: &'graph mut Graph<C, O>,
         id: TransactionId,
         options: TransactionOptions,
     ) -> Self {
@@ -35,6 +39,7 @@ impl<'graph, C> Transaction<'graph, C> {
             staged_inputs: BTreeMap::new(),
             staged_events: Vec::new(),
             staged_resource_planner_collections: Vec::new(),
+            staged_output_rebaselines: BTreeMap::new(),
             graph_mutated: false,
             failed: None,
             closed: false,
@@ -69,7 +74,7 @@ impl<'graph, C> Transaction<'graph, C> {
     }
 
     /// Commits staged input changes atomically.
-    pub fn commit(&mut self) -> GraphResult<TransactionResult<C>> {
+    pub fn commit(&mut self) -> GraphResult<TransactionResult<C, O>> {
         self.ensure_open()?;
         if let Some(error) = self.failed.clone() {
             self.close();
@@ -174,6 +179,21 @@ impl<'graph, C> Transaction<'graph, C> {
                 return Err(error);
             }
         };
+        let mut output_changed = initial_changed.clone();
+        output_changed.extend(changed_collection_nodes.iter().copied());
+        let output_frames = match self.working.produce_output_frames(
+            &output_changed,
+            &closed_scopes,
+            &self.staged_output_rebaselines,
+            self.id,
+            next_revision,
+        ) {
+            Ok(frames) => frames,
+            Err(error) => {
+                self.close();
+                return Err(error);
+            }
+        };
         let audit_log = audit_events
             .into_iter()
             .map(|event| AuditEntry {
@@ -185,6 +205,7 @@ impl<'graph, C> Transaction<'graph, C> {
         self.working.revision = next_revision;
         self.working.next_node_id = self.graph.next_node_id;
         self.working.next_scope_id = self.graph.next_scope_id;
+        self.working.next_output_key = self.graph.next_output_key;
 
         let result = TransactionResult {
             transaction_id: self.id,
@@ -193,6 +214,7 @@ impl<'graph, C> Transaction<'graph, C> {
             changed_derived_nodes,
             changed_collection_nodes,
             resource_plan,
+            output_frames,
             audit_log,
         };
         *self.graph = self.working.clone();
@@ -215,7 +237,7 @@ impl<'graph, C> Transaction<'graph, C> {
     }
 }
 
-impl<C> Drop for Transaction<'_, C> {
+impl<C, O> Drop for Transaction<'_, C, O> {
     fn drop(&mut self) {
         if !self.closed {
             self.graph.transaction_open = false;

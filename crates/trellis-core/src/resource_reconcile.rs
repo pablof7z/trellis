@@ -1,7 +1,7 @@
 use crate::{Graph, GraphError, GraphResult, ResourceCommand, ResourceKey, ResourcePlan, ScopeId};
 use std::collections::BTreeSet;
 
-impl<C> Graph<C> {
+impl<C, O> Graph<C, O> {
     pub(crate) fn produce_resource_plan(
         &mut self,
         closed_scopes: &[ScopeId],

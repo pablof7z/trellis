@@ -1,7 +1,7 @@
 use crate::Graph;
 use core::fmt::Write;
 
-impl<C> Graph<C> {
+impl<C, O> Graph<C, O> {
     /// Returns a deterministic text dump of graph metadata.
     pub fn debug_dump(&self) -> String {
         let mut out = String::new();

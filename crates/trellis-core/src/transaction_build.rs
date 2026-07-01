@@ -4,7 +4,10 @@ use crate::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 
-impl<C: 'static> Transaction<'_, C> {
+impl<C: 'static, O> Transaction<'_, C, O>
+where
+    O: Clone + PartialEq + 'static,
+{
     /// Stages creation of a root scope with no parent.
     pub fn create_scope(&mut self, debug_name: impl Into<String>) -> GraphResult<ScopeId> {
         self.ensure_open()?;
@@ -78,7 +81,7 @@ impl<C: 'static> Transaction<'_, C> {
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&DeriveContext<'ctx, C>) -> Result<T, DeriveError> + 'static,
+        derive: impl for<'ctx> Fn(&DeriveContext<'ctx, C, O>) -> Result<T, DeriveError> + 'static,
     ) -> GraphResult<DerivedNode<T>>
     where
         T: Clone + PartialEq + 'static,
@@ -107,7 +110,7 @@ impl<C: 'static> Transaction<'_, C> {
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeMap<K, V>, DeriveError>
+        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeMap<K, V>, DeriveError>
         + 'static,
     ) -> GraphResult<CollectionNode<K, V>>
     where
@@ -122,7 +125,7 @@ impl<C: 'static> Transaction<'_, C> {
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeMap<K, V>, DeriveError>
+        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeMap<K, V>, DeriveError>
         + 'static,
     ) -> GraphResult<CollectionNode<K, V>>
     where
@@ -153,7 +156,7 @@ impl<C: 'static> Transaction<'_, C> {
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeSet<K>, DeriveError>
+        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeSet<K>, DeriveError>
         + 'static,
     ) -> GraphResult<CollectionNode<K, ()>>
     where

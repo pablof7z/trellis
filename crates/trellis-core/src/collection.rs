@@ -6,31 +6,29 @@ use core::marker::PhantomData;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-type ComputeFn<C> =
-    dyn for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<Box<dyn StoredCollection>, DeriveError>;
+type ComputeFn<C, O> = dyn for<'ctx> Fn(
+    &CollectionContext<'ctx, C, O>,
+) -> Result<Box<dyn StoredCollection>, DeriveError>;
 
 pub(crate) struct MapCollectionShape<K, V>(PhantomData<fn() -> (K, V)>);
-
 pub(crate) struct SetCollectionShape<K>(PhantomData<fn() -> K>);
-
-pub(crate) struct CollectionSpec<C> {
-    compute: Arc<ComputeFn<C>>,
+pub(crate) struct CollectionSpec<C, O> {
+    compute: Arc<ComputeFn<C, O>>,
 }
 
-impl<C> Clone for CollectionSpec<C> {
+impl<C, O> Clone for CollectionSpec<C, O> {
     fn clone(&self) -> Self {
         Self {
             compute: Arc::clone(&self.compute),
         }
     }
 }
-
-impl<C> CollectionSpec<C> {
+impl<C, O> CollectionSpec<C, O> {
     pub(crate) fn map<K, V, F>(derive: F) -> Self
     where
         K: Clone + Ord + 'static,
         V: Clone + PartialEq + 'static,
-        F: for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeMap<K, V>, DeriveError>
+        F: for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeMap<K, V>, DeriveError>
             + 'static,
     {
         Self {
@@ -41,7 +39,8 @@ impl<C> CollectionSpec<C> {
     pub(crate) fn set<K, F>(derive: F) -> Self
     where
         K: Clone + Ord + 'static,
-        F: for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeSet<K>, DeriveError> + 'static,
+        F: for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeSet<K>, DeriveError>
+            + 'static,
     {
         Self {
             compute: Arc::new(move |ctx| derive(ctx).map(boxed_set)),
@@ -50,20 +49,19 @@ impl<C> CollectionSpec<C> {
 
     pub(crate) fn compute(
         &self,
-        ctx: &CollectionContext<'_, C>,
+        ctx: &CollectionContext<'_, C, O>,
     ) -> Result<Box<dyn StoredCollection>, DeriveError> {
         (self.compute)(ctx)
     }
 }
-
 /// Read-only context passed to pure collection node computations.
-pub struct CollectionContext<'graph, C = ()> {
-    graph: &'graph Graph<C>,
+pub struct CollectionContext<'graph, C = (), O = ()> {
+    graph: &'graph Graph<C, O>,
     declared_dependencies: &'graph [NodeId],
 }
 
-impl<'graph, C> CollectionContext<'graph, C> {
-    pub(crate) fn new(graph: &'graph Graph<C>, declared_dependencies: &'graph [NodeId]) -> Self {
+impl<'graph, C, O> CollectionContext<'graph, C, O> {
+    pub(crate) fn new(graph: &'graph Graph<C, O>, declared_dependencies: &'graph [NodeId]) -> Self {
         Self {
             graph,
             declared_dependencies,

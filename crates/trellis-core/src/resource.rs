@@ -174,16 +174,16 @@ impl<'graph, D> PlanContext<'graph, D> {
     }
 }
 
-type PlannerFn<C> = dyn Fn(&Graph<C>) -> GraphResult<ResourcePlan<C>>;
+type PlannerFn<C, O> = dyn Fn(&Graph<C, O>) -> GraphResult<ResourcePlan<C>>;
 
 /// Registered pure resource planner.
-pub struct ResourcePlanner<C> {
+pub struct ResourcePlanner<C, O> {
     pub(crate) collection: NodeId,
     pub(crate) scope: ScopeId,
-    run: Arc<PlannerFn<C>>,
+    run: Arc<PlannerFn<C, O>>,
 }
 
-impl<C> Clone for ResourcePlanner<C> {
+impl<C, O> Clone for ResourcePlanner<C, O> {
     fn clone(&self) -> Self {
         Self {
             collection: self.collection,
@@ -193,11 +193,11 @@ impl<C> Clone for ResourcePlanner<C> {
     }
 }
 
-impl<C> ResourcePlanner<C> {
+impl<C, O> ResourcePlanner<C, O> {
     pub(crate) fn new(
         collection: NodeId,
         scope: ScopeId,
-        run: impl Fn(&Graph<C>) -> GraphResult<ResourcePlan<C>> + 'static,
+        run: impl Fn(&Graph<C, O>) -> GraphResult<ResourcePlan<C>> + 'static,
     ) -> Self {
         Self {
             collection,
@@ -206,7 +206,7 @@ impl<C> ResourcePlanner<C> {
         }
     }
 
-    pub(crate) fn run(&self, graph: &Graph<C>) -> GraphResult<ResourcePlan<C>> {
+    pub(crate) fn run(&self, graph: &Graph<C, O>) -> GraphResult<ResourcePlan<C>> {
         (self.run)(graph)
     }
 }
