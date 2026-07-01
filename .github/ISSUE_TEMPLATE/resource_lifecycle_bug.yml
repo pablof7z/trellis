@@ -1,0 +1,31 @@
+name: "Bug: resource lifecycle / teardown"
+description: Report resource ownership, plan, scope, or teardown problems.
+title: "Bug: "
+labels: ["bug", "core", "quality-gate"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What resource lifecycle invariant failed?
+    validations:
+      required: true
+  - type: textarea
+    id: ownership
+    attributes:
+      label: Ownership and scope
+      description: Which scope owns the resource, and what close/open sequence occurred?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected plan
+      description: What ResourcePlan should have been returned?
+    validations:
+      required: true
+  - type: textarea
+    id: test
+    attributes:
+      label: Missing or failing test
+      description: Which scope/resource invariant test should cover this?

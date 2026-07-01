@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Roadmap epic
+    url: https://github.com/pablof7z/trellis/issues/1
+    about: Use the roadmap epic to find existing milestone work before opening a new issue.

@@ -2,6 +2,26 @@
 
 **Deterministic reactive resource graphs for Rust application kernels.**
 
+## North-star contract
+
+Trellis is a deterministic reactive resource-graph runtime.
+
+It accepts canonical input changes.
+It recomputes explicit derived nodes.
+It produces structural diffs.
+It turns diffs into resource plans.
+It emits revisioned materialized output frames.
+It scopes teardown.
+It never performs external side effects during graph propagation.
+It makes incremental behavior checkable against full recompute.
+
+The first version optimizes for correctness, determinism, auditability, small
+API surface, testability, boring internals, and clear failure modes.
+
+It does not optimize for ergonomics magic, macro-heavy APIs, automatic
+dependency discovery, async runtime ownership, distributed execution, maximum
+generality, or UI framework integration.
+
 Trellis is a small Rust runtime for systems where changing state does more than recompute values.
 
 It is for application kernels where derived state owns live resources, produces scoped command plans, and emits revisioned materialized output.

@@ -1,0 +1,24 @@
+name: "Example request"
+description: Request or refine an example outside the core crate.
+title: "Example: "
+labels: ["examples"]
+body:
+  - type: textarea
+    id: shape
+    attributes:
+      label: Graph shape
+      description: Describe the canonical inputs, derived nodes, collection diffs, resource plans, and materialized outputs.
+    validations:
+      required: true
+  - type: textarea
+    id: proof
+    attributes:
+      label: What this proves
+      description: Which generic Trellis primitive does this example exercise?
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Core leakage risks
+      description: What domain concepts must stay outside core?
