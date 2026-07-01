@@ -3,7 +3,8 @@
 //! This crate currently defines typed identities, graph metadata, scope
 //! metadata, declared dependencies, deterministic inspection, input
 //! transactions, pure derived node recomputation, collection diffs, and
-//! data-only resource plans. It does not implement materialized outputs.
+//! data-only resource plans with recursive scope teardown. It does not
+//! implement materialized outputs.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
@@ -27,6 +28,7 @@ mod resource;
 mod resource_build;
 mod resource_reconcile;
 mod scope;
+mod scope_lifecycle;
 mod transaction;
 mod transaction_build;
 mod transaction_types;

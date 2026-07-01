@@ -82,7 +82,10 @@ impl<C> Graph<C> {
         parent: Option<ScopeId>,
     ) -> GraphResult<ScopeId> {
         if let Some(parent) = parent {
-            self.require_scope(parent)?;
+            let parent_meta = self.require_scope(parent)?;
+            if parent_meta.is_closed() {
+                return Err(GraphError::ScopeAlreadyClosed(parent));
+            }
         }
 
         self.scopes
@@ -159,22 +162,6 @@ impl<C> Graph<C> {
         Ok(())
     }
 
-    pub(crate) fn close_scope_direct(&mut self, scope: ScopeId) -> GraphResult<()> {
-        let scope_meta = self
-            .scopes
-            .get_mut(&scope)
-            .ok_or(GraphError::UnknownScope(scope))?;
-        if scope_meta.is_closed() {
-            self.resource_planners
-                .retain(|planner| planner.scope != scope);
-            return Ok(());
-        }
-        scope_meta.close();
-        self.resource_planners
-            .retain(|planner| planner.scope != scope);
-        Ok(())
-    }
-
     /// Returns metadata for a node.
     pub fn node_meta<H: NodeHandle>(&self, node: H) -> Option<&NodeMeta> {
         self.nodes.get(&node.id())
@@ -222,7 +209,7 @@ impl<C> Graph<C> {
         self.next_transaction_id
     }
 
-    fn require_scope(&self, id: ScopeId) -> GraphResult<&ScopeMeta> {
+    pub(crate) fn require_scope(&self, id: ScopeId) -> GraphResult<&ScopeMeta> {
         self.scopes.get(&id).ok_or(GraphError::UnknownScope(id))
     }
 
