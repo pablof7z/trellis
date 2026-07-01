@@ -11,7 +11,7 @@ Run these before opening or merging a non-trivial PR:
 cargo fmt --all --check
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
-cargo doc --workspace --no-deps
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
 git diff --check
 ```
 
@@ -39,7 +39,22 @@ Preferred locations:
 - oracle and replay: `oracle_model.rs`;
 - auditability: `audit_observability.rs`, `audit_causes.rs`;
 - proof examples: `crates/trellis-examples/src/*.rs`;
-- adapter boundary: `crates/trellis-adapter/tests/*.rs`.
+- adapter boundary: `crates/trellis-adapter/tests/*.rs`;
+- reusable testing helpers: `crates/trellis-test/tests/*.rs`.
+
+## trellis-test
+
+`trellis-test` is the companion testing surface for downstream-style graph
+checks. It currently provides:
+
+- `Scenario` for named transaction trace recording and deterministic replay;
+- `ResourceLedger` for scoped lifecycle assertions, forbidden broad demand, and
+  host-status classification;
+- `OutputLedger` for output revision and clear/rebaseline coherence;
+- `ConformanceReport` for explicit supported/unsupported conformance levels.
+
+The crate does not execute resources, hide canonical inputs, or provide an
+async runtime.
 
 ## Oracle Tests
 

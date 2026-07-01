@@ -26,3 +26,10 @@ version = "0.1.0"
 dependencies = [
  "trellis-core",
 ]
+
+[[package]]
+name = "trellis-test"
+version = "0.1.0"
+dependencies = [
+ "trellis-core",
+]
