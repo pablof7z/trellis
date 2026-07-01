@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use trellis_core::{
-    DependencyList, DeriveError, Graph, OutputFrameKind, ResourceCommand, ResourceKey,
+    DependencyList, Graph, OutputError, OutputFrameKind, ResourceCommand, ResourceKey,
     ResourcePlan, TransactionPhase,
 };
 
@@ -118,7 +118,7 @@ fn failed_transaction_emits_no_partial_plans_or_frames() {
             "output",
             scope,
             DependencyList::new([source.id()]).unwrap(),
-            move |_| Err(DeriveError::message("output failed")),
+            move |_| Err(OutputError::message("output failed")),
         )
         .unwrap();
     let error = tx.commit().unwrap_err();
@@ -126,7 +126,7 @@ fn failed_transaction_emits_no_partial_plans_or_frames() {
 
     assert_eq!(
         error,
-        trellis_core::GraphError::OutputFailed(output.key(), DeriveError::message("output failed"),)
+        trellis_core::GraphError::OutputFailed(output.key(), OutputError::message("output failed"),)
     );
     assert_eq!(graph.revision().get(), 0);
     assert!(graph.output_meta(output.key()).is_none());

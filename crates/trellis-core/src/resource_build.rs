@@ -1,6 +1,6 @@
 use crate::{
-    CollectionNode, GraphResult, MapDiff, PlanContext, ResourcePlan, ResourcePlanner, SetDiff,
-    Transaction,
+    CollectionNode, GraphError, GraphResult, MapDiff, PlanContext, PlanError, ResourcePlan,
+    ResourcePlanner, SetDiff, Transaction,
 };
 
 impl<C: 'static, O> Transaction<'_, C, O>
@@ -12,7 +12,9 @@ where
         &mut self,
         collection: CollectionNode<K, V>,
         scope: crate::ScopeId,
-        planner: impl for<'ctx> Fn(&PlanContext<'ctx, MapDiff<K, V>>) -> GraphResult<ResourcePlan<C>>
+        planner: impl for<'ctx> Fn(
+            &PlanContext<'ctx, MapDiff<K, V>>,
+        ) -> Result<ResourcePlan<C>, PlanError>
         + 'static,
     ) -> GraphResult<()>
     where
@@ -28,7 +30,7 @@ where
                 return Ok(ResourcePlan::new());
             };
             let ctx = PlanContext::new(scope, diff);
-            planner(&ctx)
+            planner(&ctx).map_err(|error| GraphError::PlanFailed(scope, error))
         });
         self.staged_resource_planner_collections
             .push(collection.id());
@@ -42,7 +44,7 @@ where
         &mut self,
         collection: CollectionNode<K, ()>,
         scope: crate::ScopeId,
-        planner: impl for<'ctx> Fn(&PlanContext<'ctx, SetDiff<K>>) -> GraphResult<ResourcePlan<C>>
+        planner: impl for<'ctx> Fn(&PlanContext<'ctx, SetDiff<K>>) -> Result<ResourcePlan<C>, PlanError>
         + 'static,
     ) -> GraphResult<()>
     where
@@ -57,7 +59,7 @@ where
                 return Ok(ResourcePlan::new());
             };
             let ctx = PlanContext::new(scope, diff);
-            planner(&ctx)
+            planner(&ctx).map_err(|error| GraphError::PlanFailed(scope, error))
         });
         self.staged_resource_planner_collections
             .push(collection.id());

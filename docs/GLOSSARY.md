@@ -146,6 +146,14 @@ The application using Trellis.
 
 The host owns external events, I/O, resource command execution, runtime integration, UI bridges, and feedback of external observations into the graph as canonical inputs.
 
+## Host resource status
+
+Plain data supplied by the host to report what happened while applying a
+resource plan.
+
+Host resource status is canonical input. It is not graph failure, and it does
+not cause hidden retry or backoff inside the core.
+
 ## Input node
 
 A node whose value is supplied by the host as canonical input.
