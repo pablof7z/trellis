@@ -10,6 +10,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "trellis-bench"
+version = "0.1.0"
+dependencies = [
+ "trellis-core",
+]
+
+[[package]]
 name = "trellis-core"
 version = "0.1.0"
 
