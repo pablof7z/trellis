@@ -50,16 +50,19 @@ Core deterministic graph runtime:
 - audit explanations;
 - full-recompute checks.
 
-### `trellis-test`
+### `trellis-testing`
 
 Companion testing helpers:
 
-- named scenario trace recording;
-- deterministic replay comparison;
-- resource lifecycle ledger;
-- host-status classification;
+- named scenario trace recording and structural step expectations;
+- deterministic replay comparison and redacted debug dumps;
+- application-owned full-recompute oracle harness;
+- resource lifecycle ledger with command history assertions;
+- fake host status event generation and classification;
 - output frame ledger;
-- conformance-level reporting.
+- audit assertions for explainable plans and frames;
+- conformance suite and conformance-level reporting;
+- optional `proptest`, `trybuild`, `insta`, and cargo-fuzz guidance.
 
 ### `trellis-adapter`
 
@@ -85,7 +88,7 @@ diffs, scope close, output emission, full recompute, and trace replay.
 The testing story is part of the product. 0.1 demonstrates:
 
 - `cargo test --workspace`;
-- `trellis-test` scenario replay;
+- `trellis-testing` scenario replay and structural trace expectations;
 - resource ledger checks for ownership, duplicate closes, forbidden broad
   demand, and host-status classes;
 - output ledger checks for revision order, clear frames, and rebaseline
@@ -117,7 +120,7 @@ The most useful feedback is about:
 - whether scope ownership catches real lifecycle bugs;
 - whether output frames are sufficient for external consumers;
 - whether full-recompute checks are practical;
-- whether `trellis-test` provides the right testing boundary;
+- whether `trellis-testing` provides the right testing boundary;
 - whether examples feel like the same abstraction or separate special cases;
 - what can be removed before the API grows.
 

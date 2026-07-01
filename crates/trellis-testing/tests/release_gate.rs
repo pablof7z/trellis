@@ -2,12 +2,13 @@ use std::collections::BTreeSet;
 
 use trellis_core::{
     DependencyList, Graph, HostResourceOutcome, InputNode, MaterializedOutput, OutputFrameKind,
-    ResourceCommandKind, ResourceCommandTrace, ResourceKey, ResourcePlan, ResourceTransitionPolicy,
-    Revision, ScopeId,
+    OutputKey, ResourceCommandKind, ResourceCommandTrace, ResourceKey, ResourcePlan,
+    ResourceTransitionPolicy, Revision, ScopeId,
 };
-use trellis_test::{
-    ConformanceLevel, ConformanceReport, HostStatusClass, HostStatusEvent, OutputLedger,
-    ResourceLedger, Scenario,
+use trellis_testing::{
+    ConformanceLevel, ConformanceReport, ConformanceSuite, FakeHost, FullRecomputeOracle,
+    HostStatusClass, HostStatusEvent, NoRedaction, OutputLedger, ResourceLedger, Scenario,
+    assert_incremental_equals_full, assert_no_unexplained_output_frame, assert_no_unexplained_plan,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -104,6 +105,27 @@ fn run_scenario() -> Scenario {
     scenario
 }
 
+struct LedgerOracle;
+
+impl FullRecomputeOracle<OutputLedger<BTreeSet<u8>>> for LedgerOracle {
+    type CanonicalInputs = (OutputKey, BTreeSet<u8>);
+    type ExpectedState = BTreeSet<u8>;
+
+    fn recompute(inputs: &Self::CanonicalInputs) -> Self::ExpectedState {
+        inputs.1.clone()
+    }
+
+    fn observe_incremental(
+        ledger: &OutputLedger<BTreeSet<u8>>,
+        inputs: &Self::CanonicalInputs,
+    ) -> Self::ExpectedState {
+        ledger
+            .snapshot(inputs.0)
+            .and_then(|snapshot| snapshot.state.clone())
+            .unwrap_or_default()
+    }
+}
+
 #[test]
 fn scenario_replay_is_structural_and_deterministic() {
     let first = run_scenario();
@@ -113,6 +135,16 @@ fn scenario_replay_is_structural_and_deterministic() {
     assert_eq!(
         first.step("shrink").unwrap().trace.resource_commands.len(),
         1
+    );
+    first
+        .assert_step_resource_commands(
+            "shrink",
+            &first.step("shrink").unwrap().trace.resource_commands,
+        )
+        .unwrap();
+    assert_eq!(
+        first.to_redacted_debug_string(&NoRedaction),
+        second.to_redacted_debug_string(&NoRedaction)
     );
 }
 
@@ -124,10 +156,12 @@ fn resource_ledger_detects_lifecycle_and_status_classes() {
     ledger.apply_result(&initial);
     ledger.assert_all_resources_have_owner().unwrap();
     ledger.assert_no_forbidden_opened().unwrap();
+    ledger.assert_resource_opened_once(&key(1)).unwrap();
 
     let shrink = set_source(&mut target, members(&[1]));
     ledger.apply_result(&shrink);
     ledger.assert_resource_not_open(&key(2)).unwrap();
+    ledger.assert_resource_closed_once(&key(2)).unwrap();
     ledger.assert_no_duplicate_close().unwrap();
     ledger
         .assert_command_order(&[
@@ -215,6 +249,12 @@ fn resource_ledger_detects_lifecycle_and_status_classes() {
             HostStatusClass::Late,
         ]
     );
+
+    let mut host = FakeHost::new();
+    let host_result = set_source(&mut target, members(&[1, 3]));
+    let events = host.apply_result(&mut ledger, &host_result);
+    assert_eq!(events.len(), 1);
+    assert_eq!(events[0].class, HostStatusClass::Current);
 }
 
 #[test]
@@ -242,6 +282,13 @@ fn output_ledger_checks_revision_and_rebaseline_coherence() {
     ledger
         .assert_current_equals(output_key, &members(&[1, 2]))
         .unwrap();
+    assert_incremental_equals_full::<_, LedgerOracle>(&ledger, &(output_key, members(&[1, 2])))
+        .unwrap();
+    let mismatch =
+        assert_incremental_equals_full::<_, LedgerOracle>(&ledger, &(output_key, members(&[9])))
+            .unwrap_err();
+    assert_eq!(mismatch.expected, members(&[9]));
+    assert_eq!(mismatch.actual, members(&[1, 2]));
 
     assert!(matches!(
         &rebaseline.output_frames[0].kind,
@@ -255,6 +302,10 @@ fn output_ledger_checks_revision_and_rebaseline_coherence() {
     ledger.close_scope(target.scope);
     ledger.apply_result(&closed);
     ledger.assert_cleared(output_key).unwrap();
+    ledger
+        .assert_no_frame_for_closed_scope_except_terminal()
+        .unwrap();
+    assert!(ledger.errors().is_empty());
 }
 
 #[test]
@@ -272,4 +323,24 @@ fn conformance_levels_report_unsupported_explicitly() {
             .unsupported_levels()
             .contains(&ConformanceLevel::GeneratedModelSequences)
     );
+
+    let suite = ConformanceSuite::all();
+    let report = suite.report(&[
+        ConformanceLevel::DeterministicTrace,
+        ConformanceLevel::ScopeResourceLifecycle,
+    ]);
+    assert!(report.supports(ConformanceLevel::DeterministicTrace));
+    assert!(
+        report
+            .unsupported_levels()
+            .contains(&ConformanceLevel::MaterializedOutput)
+    );
+}
+
+#[test]
+fn audit_assertions_explain_plans_and_frames() {
+    let (target, initial) = build_graph(members(&[1]));
+
+    assert_no_unexplained_plan(&target.graph, &initial).unwrap();
+    assert_no_unexplained_output_frame(&target.graph, &initial).unwrap();
 }

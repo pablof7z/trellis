@@ -118,6 +118,11 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
         self.outputs.get(&key)
     }
 
+    /// Returns structural ledger errors observed while applying frames.
+    pub fn errors(&self) -> &[OutputLedgerError] {
+        &self.errors
+    }
+
     /// Asserts no revision regressions or closed-scope frame errors occurred.
     pub fn assert_revision_monotonic(&self) -> Result<(), OutputLedgerError> {
         if let Some(error) = self.errors.first() {
@@ -125,6 +130,17 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
         } else {
             Ok(())
         }
+    }
+
+    /// Asserts closed scopes emitted no non-terminal output frames.
+    pub fn assert_no_frame_for_closed_scope_except_terminal(
+        &self,
+    ) -> Result<(), OutputLedgerError> {
+        self.errors
+            .iter()
+            .find(|error| matches!(error, OutputLedgerError::FrameAfterClosedScope { .. }))
+            .cloned()
+            .map_or(Ok(()), Err)
     }
 
     /// Asserts an output key is currently cleared.

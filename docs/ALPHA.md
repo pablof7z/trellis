@@ -91,7 +91,7 @@ scope inventories, and no orphan resources.
 
 The alpha path verifies coherent delta application followed by rebaseline. That
 is enough for internal confidence; later conformance work should generalize this
-into reusable `trellis-test` ledgers.
+into reusable `trellis-testing` ledgers.
 
 ### Could a different domain use the same core?
 
@@ -103,5 +103,5 @@ without core-domain leakage.
 
 Keep Trellis internal and continue. The abstraction is promising enough to move
 to release-candidate hardening, but public release still depends on the
-`trellis-test` story, conformance levels, host-status semantics, resource
+`trellis-testing` story, conformance levels, host-status semantics, resource
 transition policy, and release gates tracked in GitHub.

@@ -1,0 +1,15 @@
+error[E0308]: mismatched types
+  --> tests/ui/input_type_mismatch.rs:16:16
+   |
+16 |     needs_user(project);
+   |     ---------- ^^^^^^^ expected `InputNode<UserId>`, found `InputNode<ProjectId>`
+   |     |
+   |     arguments to this function are incorrect
+   |
+   = note: expected struct `InputNode<UserId>`
+              found struct `InputNode<ProjectId>`
+note: function defined here
+  --> tests/ui/input_type_mismatch.rs:9:4
+   |
+ 9 | fn needs_user(_: InputNode<UserId>) {}
+   |    ^^^^^^^^^^ --------------------

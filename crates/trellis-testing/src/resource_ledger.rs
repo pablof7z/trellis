@@ -4,9 +4,10 @@ use trellis_core::{
     ResourceCommand, ResourceCommandTrace, ResourceKey, Revision, ScopeId, TransactionResult,
 };
 
+use crate::ResourceLedgerError;
 use crate::host_status::{HostStatusClass, HostStatusEvent, HostStatusIdentity, HostStatusRecord};
 
-/// Current ledger view for one resource key.
+/// Current or historical ledger view for one resource key.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ResourceSnapshot {
     /// Scopes that currently own the resource.
@@ -23,39 +24,11 @@ pub struct ResourceSnapshot {
     pub generation: u64,
 }
 
-/// Resource ledger assertion failure.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ResourceLedgerError {
-    /// Resource has no owner.
-    Orphan(ResourceKey),
-    /// Resource was closed without a matching owner.
-    DuplicateClose(ResourceKey),
-    /// Forbidden resource demand was opened.
-    ForbiddenOpen(ResourceKey),
-    /// Resource is still open.
-    StillOpen(ResourceKey),
-    /// Resource does not have the expected owners.
-    OwnerMismatch {
-        /// Resource key.
-        key: ResourceKey,
-        /// Expected owner set.
-        expected: BTreeSet<ScopeId>,
-        /// Actual owner set.
-        actual: BTreeSet<ScopeId>,
-    },
-    /// Resource command order did not match the expected structural trace.
-    CommandOrderMismatch {
-        /// Expected command trace.
-        expected: Vec<ResourceCommandTrace>,
-        /// Actual command trace.
-        actual: Vec<ResourceCommandTrace>,
-    },
-}
-
 /// Fake resource lifecycle ledger for applying Trellis resource plans.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ResourceLedger {
     resources: BTreeMap<ResourceKey, ResourceSnapshot>,
+    history: BTreeMap<ResourceKey, ResourceSnapshot>,
     duplicate_closes: BTreeSet<ResourceKey>,
     forbidden: BTreeSet<ResourceKey>,
     forbidden_opened: BTreeSet<ResourceKey>,
@@ -86,6 +59,11 @@ impl ResourceLedger {
     /// Returns the current snapshot for a resource.
     pub fn snapshot(&self, key: &ResourceKey) -> Option<&ResourceSnapshot> {
         self.resources.get(key)
+    }
+
+    /// Returns the latest live or closed snapshot for a resource.
+    pub fn history(&self, key: &ResourceKey) -> Option<&ResourceSnapshot> {
+        self.history.get(key)
     }
 
     /// Classifies a host status event without mutating graph state.
@@ -134,6 +112,11 @@ impl ResourceLedger {
         Ok(())
     }
 
+    /// Asserts every tracked live resource has at least one owner.
+    pub fn assert_no_orphan_resources(&self) -> Result<(), ResourceLedgerError> {
+        self.assert_all_resources_have_owner()
+    }
+
     /// Asserts no duplicate close was observed.
     pub fn assert_no_duplicate_close(&self) -> Result<(), ResourceLedgerError> {
         if let Some(key) = self.duplicate_closes.iter().next() {
@@ -158,6 +141,61 @@ impl ResourceLedger {
             Err(ResourceLedgerError::StillOpen(key.clone()))
         } else {
             Ok(())
+        }
+    }
+
+    /// Asserts a closed scope owns no live resources.
+    pub fn assert_closed_scope_owns_no_resources(
+        &self,
+        scope: ScopeId,
+    ) -> Result<(), ResourceLedgerError> {
+        let resources = self
+            .resources
+            .iter()
+            .filter(|(_, snapshot)| snapshot.owners.contains(&scope))
+            .map(|(key, _)| key.clone())
+            .collect::<Vec<_>>();
+        if resources.is_empty() {
+            Ok(())
+        } else {
+            Err(ResourceLedgerError::ClosedScopeOwnsResources { scope, resources })
+        }
+    }
+
+    /// Asserts a resource was opened exactly once.
+    pub fn assert_resource_opened_once(
+        &self,
+        key: &ResourceKey,
+    ) -> Result<(), ResourceLedgerError> {
+        self.assert_count(key, "open_count", 1, |snapshot| snapshot.open_count)
+    }
+
+    /// Asserts a resource was closed exactly once.
+    pub fn assert_resource_closed_once(
+        &self,
+        key: &ResourceKey,
+    ) -> Result<(), ResourceLedgerError> {
+        self.assert_count(key, "close_count", 1, |snapshot| snapshot.close_count)
+    }
+
+    /// Asserts a resource has the expected command generation.
+    pub fn assert_resource_generation(
+        &self,
+        key: &ResourceKey,
+        expected: u64,
+    ) -> Result<(), ResourceLedgerError> {
+        let actual = self
+            .history
+            .get(key)
+            .map_or(0, |snapshot| snapshot.generation);
+        if actual == expected {
+            Ok(())
+        } else {
+            Err(ResourceLedgerError::GenerationMismatch {
+                key: key.clone(),
+                expected,
+                actual,
+            })
         }
     }
 
@@ -204,6 +242,7 @@ impl ResourceLedger {
                 snapshot.open_count += 1;
                 snapshot.command_revision = revision;
                 snapshot.generation += 1;
+                self.record_history(key);
             }
             ResourceCommand::Close { key, scope } => {
                 let Some(snapshot) = self.resources.get_mut(key) else {
@@ -217,7 +256,10 @@ impl ResourceLedger {
                 snapshot.command_revision = revision;
                 snapshot.generation += 1;
                 if snapshot.owners.is_empty() {
+                    self.record_history(key);
                     self.resources.remove(key);
+                } else {
+                    self.record_history(key);
                 }
             }
             ResourceCommand::Replace { key, scope, .. } => {
@@ -236,11 +278,13 @@ impl ResourceLedger {
                 snapshot.replace_count += 1;
                 snapshot.command_revision = revision;
                 snapshot.generation += 1;
+                self.record_history(key);
             }
             ResourceCommand::Refresh { key, .. } => {
                 if let Some(snapshot) = self.resources.get_mut(key) {
                     snapshot.command_revision = revision;
                     snapshot.generation += 1;
+                    self.record_history(key);
                 }
             }
         }
@@ -266,5 +310,31 @@ impl ResourceLedger {
             return HostStatusClass::Duplicate;
         }
         HostStatusClass::Current
+    }
+
+    fn assert_count(
+        &self,
+        key: &ResourceKey,
+        field: &'static str,
+        expected: usize,
+        count: impl FnOnce(&ResourceSnapshot) -> usize,
+    ) -> Result<(), ResourceLedgerError> {
+        let actual = self.history.get(key).map_or(0, count);
+        if actual == expected {
+            Ok(())
+        } else {
+            Err(ResourceLedgerError::CountMismatch {
+                key: key.clone(),
+                field,
+                expected,
+                actual,
+            })
+        }
+    }
+
+    fn record_history(&mut self, key: &ResourceKey) {
+        if let Some(snapshot) = self.resources.get(key) {
+            self.history.insert(key.clone(), snapshot.clone());
+        }
     }
 }

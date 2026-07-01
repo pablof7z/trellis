@@ -59,3 +59,65 @@ impl ConformanceReport {
         self.supported.contains(&level)
     }
 }
+
+/// Opt-in set of conformance levels an application wants to exercise.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ConformanceSuite {
+    required: BTreeSet<ConformanceLevel>,
+}
+
+impl ConformanceSuite {
+    /// Creates an empty conformance suite.
+    pub fn new() -> Self {
+        Self {
+            required: BTreeSet::new(),
+        }
+    }
+
+    /// Creates a suite requiring all currently defined levels.
+    pub fn all() -> Self {
+        let mut suite = Self::new();
+        for level in [
+            ConformanceLevel::DeterministicTrace,
+            ConformanceLevel::ScopeResourceLifecycle,
+            ConformanceLevel::MaterializedOutput,
+            ConformanceLevel::FullRecomputeOracle,
+            ConformanceLevel::GeneratedModelSequences,
+            ConformanceLevel::PerformanceSmoke,
+        ] {
+            suite = suite.require(level);
+        }
+        suite
+    }
+
+    /// Adds a required level to this suite.
+    pub fn require(mut self, level: ConformanceLevel) -> Self {
+        self.required.insert(level);
+        self
+    }
+
+    /// Returns required levels.
+    pub fn required_levels(&self) -> &BTreeSet<ConformanceLevel> {
+        &self.required
+    }
+
+    /// Builds a report, marking required but unsupported levels explicitly.
+    pub fn report(&self, supported: &[ConformanceLevel]) -> ConformanceReport {
+        let mut report = ConformanceReport::new();
+        let supported = supported.iter().copied().collect::<BTreeSet<_>>();
+        for level in &self.required {
+            if supported.contains(level) {
+                report = report.support(*level);
+            } else {
+                report = report.unsupported(*level);
+            }
+        }
+        report
+    }
+}
+
+impl Default for ConformanceSuite {
+    fn default() -> Self {
+        Self::new()
+    }
+}
