@@ -8,7 +8,8 @@ use core::marker::PhantomData;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-type OutputFn<C, O> = dyn for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, OutputError>;
+type OutputFn<C, O> =
+    dyn for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, OutputError> + Send + Sync;
 
 /// Typed handle for a materialized output surface.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -113,7 +114,10 @@ impl<C, O> Clone for OutputSpec<C, O> {
 
 impl<C, O> OutputSpec<C, O> {
     pub(crate) fn new(
-        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, OutputError> + 'static,
+        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, OutputError>
+        + Send
+        + Sync
+        + 'static,
     ) -> Self {
         Self {
             materialize: Arc::new(materialize),
@@ -142,7 +146,7 @@ impl<'graph, C, O> OutputContext<'graph, C, O> {
     /// Reads a declared input dependency.
     pub fn input<T>(&self, input: InputNode<T>) -> Result<&'graph T, DeriveError>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         let node = input.id();
         self.require_declared(node)?;
@@ -156,7 +160,7 @@ impl<'graph, C, O> OutputContext<'graph, C, O> {
     /// Reads a declared scalar derived dependency.
     pub fn derived<T>(&self, derived: DerivedNode<T>) -> Result<&'graph T, DeriveError>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         let node = derived.id();
         self.require_declared(node)?;
@@ -173,8 +177,8 @@ impl<'graph, C, O> OutputContext<'graph, C, O> {
         collection: CollectionNode<K, V>,
     ) -> Result<&'graph BTreeMap<K, V>, DeriveError>
     where
-        K: Clone + Ord + 'static,
-        V: Clone + PartialEq + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
+        V: Clone + PartialEq + Send + Sync + 'static,
     {
         let node = collection.id();
         self.require_declared(node)?;
@@ -194,7 +198,7 @@ impl<'graph, C, O> OutputContext<'graph, C, O> {
         collection: CollectionNode<K, ()>,
     ) -> Result<&'graph BTreeSet<K>, DeriveError>
     where
-        K: Clone + Ord + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
     {
         let node = collection.id();
         self.require_declared(node)?;

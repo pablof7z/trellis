@@ -15,11 +15,13 @@ where
         planner: impl for<'ctx> Fn(
             &PlanContext<'ctx, MapDiff<K, V>>,
         ) -> Result<ResourcePlan<C>, PlanError>
+        + Send
+        + Sync
         + 'static,
     ) -> GraphResult<()>
     where
-        K: Clone + Ord + 'static,
-        V: Clone + PartialEq + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
+        V: Clone + PartialEq + Send + Sync + 'static,
     {
         self.ensure_open()?;
         self.working.require_scope_open(scope)?;
@@ -45,10 +47,12 @@ where
         collection: CollectionNode<K, ()>,
         scope: crate::ScopeId,
         planner: impl for<'ctx> Fn(&PlanContext<'ctx, SetDiff<K>>) -> Result<ResourcePlan<C>, PlanError>
+        + Send
+        + Sync
         + 'static,
     ) -> GraphResult<()>
     where
-        K: Clone + Ord + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
     {
         self.ensure_open()?;
         self.working.require_scope_open(scope)?;

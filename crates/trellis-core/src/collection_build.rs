@@ -14,11 +14,13 @@ impl<C: 'static, O> Graph<C, O> {
         derive: impl for<'ctx> Fn(
             &CollectionContext<'ctx, C, O>,
         ) -> Result<BTreeMap<K, V>, crate::DeriveError>
+        + Send
+        + Sync
         + 'static,
     ) -> GraphResult<CollectionNode<K, V>>
     where
-        K: Clone + Ord + 'static,
-        V: Clone + PartialEq + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
+        V: Clone + PartialEq + Send + Sync + 'static,
     {
         self.validate_dependencies(id, &dependencies)?;
         let meta = NodeMeta::new(
@@ -43,10 +45,12 @@ impl<C: 'static, O> Graph<C, O> {
         derive: impl for<'ctx> Fn(
             &CollectionContext<'ctx, C, O>,
         ) -> Result<BTreeSet<K>, crate::DeriveError>
+        + Send
+        + Sync
         + 'static,
     ) -> GraphResult<CollectionNode<K, ()>>
     where
-        K: Clone + Ord + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
     {
         self.validate_dependencies(id, &dependencies)?;
         let meta = NodeMeta::new(

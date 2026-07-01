@@ -58,7 +58,7 @@ where
     /// Stages a typed canonical input change.
     pub fn set_input<T>(&mut self, input: InputNode<T>, value: T) -> GraphResult<()>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         self.set_input_by_id(input.id(), value)
     }
@@ -66,7 +66,7 @@ where
     /// Stages a canonical input change by node id.
     pub fn set_input_by_id<T>(&mut self, node: NodeId, value: T) -> GraphResult<()>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         self.ensure_open()?;
         if let Err(error) = self.working.validate_input_write::<T>(node) {

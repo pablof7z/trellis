@@ -3,8 +3,9 @@ use crate::{DerivedNode, Graph, GraphError, GraphResult, InputNode, NodeId, Node
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-type ComputeFn<C, O> =
-    dyn for<'ctx> Fn(&DeriveContext<'ctx, C, O>) -> Result<Box<dyn StoredInput>, DeriveError>;
+type ComputeFn<C, O> = dyn for<'ctx> Fn(&DeriveContext<'ctx, C, O>) -> Result<Box<dyn StoredInput>, DeriveError>
+    + Send
+    + Sync;
 
 pub(crate) struct DerivedSpec<C, O> {
     compute: Arc<ComputeFn<C, O>>,
@@ -21,8 +22,11 @@ impl<C, O> Clone for DerivedSpec<C, O> {
 impl<C, O> DerivedSpec<C, O> {
     pub(crate) fn new<T, F>(derive: F) -> Self
     where
-        T: Clone + PartialEq + 'static,
-        F: for<'ctx> Fn(&DeriveContext<'ctx, C, O>) -> Result<T, DeriveError> + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
+        F: for<'ctx> Fn(&DeriveContext<'ctx, C, O>) -> Result<T, DeriveError>
+            + Send
+            + Sync
+            + 'static,
     {
         Self {
             compute: Arc::new(move |ctx| derive(ctx).map(boxed_input)),
@@ -54,7 +58,7 @@ impl<'graph, C, O> DeriveContext<'graph, C, O> {
     /// Reads a declared input dependency.
     pub fn input<T>(&self, input: InputNode<T>) -> Result<&'graph T, DeriveError>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         let node = input.id();
         self.require_declared(node)?;
@@ -68,7 +72,7 @@ impl<'graph, C, O> DeriveContext<'graph, C, O> {
     /// Reads a declared derived dependency.
     pub fn derived<T>(&self, derived: DerivedNode<T>) -> Result<&'graph T, DeriveError>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         let node = derived.id();
         self.require_declared(node)?;

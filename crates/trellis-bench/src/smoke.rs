@@ -1,5 +1,7 @@
-use std::cell::Cell;
-use std::rc::Rc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicUsize, Ordering},
+};
 
 use crate::smoke_collections;
 use trellis_core::{DependencyList, Graph};
@@ -147,13 +149,13 @@ fn no_downstream_change() -> usize {
             move |ctx| Ok(ctx.input(input)? % 2),
         )
         .unwrap();
-    let runs = Rc::new(Cell::new(0));
-    let counter = Rc::clone(&runs);
+    let runs = Arc::new(AtomicUsize::new(0));
+    let counter = Arc::clone(&runs);
     tx.derived(
         "downstream",
         DependencyList::new([parity.id()]).unwrap(),
         move |ctx| {
-            counter.set(counter.get() + 1);
+            counter.fetch_add(1, Ordering::Relaxed);
             Ok(*ctx.derived(parity)?)
         },
     )
@@ -161,11 +163,11 @@ fn no_downstream_change() -> usize {
     tx.commit().unwrap();
     drop(tx);
 
-    let previous_runs = runs.get();
+    let previous_runs = runs.load(Ordering::Relaxed);
     let mut tx = graph.begin_transaction().unwrap();
     tx.set_input(input, 3).unwrap();
     let result = tx.commit().unwrap();
-    assert_eq!(runs.get(), previous_runs);
+    assert_eq!(runs.load(Ordering::Relaxed), previous_runs);
     result.changed_derived_nodes.len()
 }
 

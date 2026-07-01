@@ -231,7 +231,7 @@ where
     /// Stages a typed canonical input write for this step.
     pub fn input<T>(mut self, input: InputNode<T>, value: T) -> Self
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         self.operations
             .push(Box::new(move |tx| tx.set_input(input, value.clone())));

@@ -185,7 +185,7 @@ impl<'graph, D> PlanContext<'graph, D> {
     }
 }
 
-type PlannerFn<C, O> = dyn Fn(&Graph<C, O>) -> GraphResult<ResourcePlan<C>>;
+type PlannerFn<C, O> = dyn Fn(&Graph<C, O>) -> GraphResult<ResourcePlan<C>> + Send + Sync;
 
 pub(crate) struct ResourcePlanner<C, O> {
     pub(crate) collection: NodeId,
@@ -207,7 +207,7 @@ impl<C, O> ResourcePlanner<C, O> {
     pub(crate) fn new(
         collection: NodeId,
         scope: ScopeId,
-        run: impl Fn(&Graph<C, O>) -> GraphResult<ResourcePlan<C>> + 'static,
+        run: impl Fn(&Graph<C, O>) -> GraphResult<ResourcePlan<C>> + Send + Sync + 'static,
     ) -> Self {
         Self {
             collection,

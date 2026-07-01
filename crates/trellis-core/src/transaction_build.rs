@@ -66,7 +66,7 @@ where
     /// Stages creation of an input node.
     pub fn input<T>(&mut self, debug_name: impl Into<String>) -> GraphResult<InputNode<T>>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         self.ensure_open()?;
         let id = self.graph.allocate_node_id();
@@ -81,10 +81,13 @@ where
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&DeriveContext<'ctx, C, O>) -> Result<T, DeriveError> + 'static,
+        derive: impl for<'ctx> Fn(&DeriveContext<'ctx, C, O>) -> Result<T, DeriveError>
+        + Send
+        + Sync
+        + 'static,
     ) -> GraphResult<DerivedNode<T>>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         self.ensure_open()?;
         let id = self.graph.allocate_node_id();
@@ -111,11 +114,13 @@ where
         debug_name: impl Into<String>,
         dependencies: DependencyList,
         derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeMap<K, V>, DeriveError>
+        + Send
+        + Sync
         + 'static,
     ) -> GraphResult<CollectionNode<K, V>>
     where
-        K: Clone + Ord + 'static,
-        V: Clone + PartialEq + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
+        V: Clone + PartialEq + Send + Sync + 'static,
     {
         self.map_collection(debug_name, dependencies, derive)
     }
@@ -126,11 +131,13 @@ where
         debug_name: impl Into<String>,
         dependencies: DependencyList,
         derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeMap<K, V>, DeriveError>
+        + Send
+        + Sync
         + 'static,
     ) -> GraphResult<CollectionNode<K, V>>
     where
-        K: Clone + Ord + 'static,
-        V: Clone + PartialEq + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
+        V: Clone + PartialEq + Send + Sync + 'static,
     {
         self.ensure_open()?;
         let id = self.graph.allocate_node_id();
@@ -157,10 +164,12 @@ where
         debug_name: impl Into<String>,
         dependencies: DependencyList,
         derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeSet<K>, DeriveError>
+        + Send
+        + Sync
         + 'static,
     ) -> GraphResult<CollectionNode<K, ()>>
     where
-        K: Clone + Ord + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
     {
         self.ensure_open()?;
         let id = self.graph.allocate_node_id();

@@ -1,5 +1,7 @@
-use std::cell::Cell;
-use std::rc::Rc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicUsize, Ordering},
+};
 
 use trellis_core::{DependencyList, DeriveError, Graph, GraphError};
 
@@ -43,16 +45,15 @@ fn undeclared_dependency_read_fails_transaction() {
 
 #[test]
 fn full_recompute_check_detects_mismatch() {
-    let runs = Rc::new(Cell::new(0));
-    let runs_for_derive = Rc::clone(&runs);
+    let runs = Arc::new(AtomicUsize::new(0));
+    let runs_for_derive = Arc::clone(&runs);
 
     let mut graph = Graph::new();
     let mut tx = graph.begin_transaction().unwrap();
     let derived = tx
         .derived::<u64>("nondeterministic", DependencyList::empty(), move |_| {
-            let next = runs_for_derive.get() + 1;
-            runs_for_derive.set(next);
-            Ok(next)
+            let next = runs_for_derive.fetch_add(1, Ordering::Relaxed) + 1;
+            Ok(next as u64)
         })
         .unwrap();
     tx.commit().unwrap();

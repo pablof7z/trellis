@@ -13,7 +13,7 @@ impl<C, O> Graph<C, O> {
     /// Returns the committed value for a typed input node.
     pub fn input_value<T>(&self, input: InputNode<T>) -> GraphResult<Option<&T>>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         self.input_value_by_id(input.id())
     }
@@ -21,7 +21,7 @@ impl<C, O> Graph<C, O> {
     /// Returns the committed value for an input node id.
     pub fn input_value_by_id<T>(&self, node: NodeId) -> GraphResult<Option<&T>>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         self.validate_input_write::<T>(node)?;
         Ok(self
@@ -33,7 +33,7 @@ impl<C, O> Graph<C, O> {
     /// Returns the committed value for a typed derived node.
     pub fn derived_value<T>(&self, derived: DerivedNode<T>) -> GraphResult<Option<&T>>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         self.derived_value_by_id(derived.id())
     }
@@ -41,7 +41,7 @@ impl<C, O> Graph<C, O> {
     /// Returns the committed value for a derived node id.
     pub fn derived_value_by_id<T>(&self, node: NodeId) -> GraphResult<Option<&T>>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         self.validate_derived_write::<T>(node)?;
         Ok(self
@@ -56,8 +56,8 @@ impl<C, O> Graph<C, O> {
         collection: CollectionNode<K, V>,
     ) -> GraphResult<Option<&BTreeMap<K, V>>>
     where
-        K: Clone + Ord + 'static,
-        V: Clone + PartialEq + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
+        V: Clone + PartialEq + Send + Sync + 'static,
     {
         self.map_collection_by_id(collection.id())
     }
@@ -68,7 +68,7 @@ impl<C, O> Graph<C, O> {
         collection: CollectionNode<K, ()>,
     ) -> GraphResult<Option<&BTreeSet<K>>>
     where
-        K: Clone + Ord + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
     {
         self.set_collection_by_id(collection.id())
     }
@@ -79,8 +79,8 @@ impl<C, O> Graph<C, O> {
         collection: CollectionNode<K, V>,
     ) -> GraphResult<Option<&MapDiff<K, V>>>
     where
-        K: Clone + Ord + 'static,
-        V: Clone + PartialEq + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
+        V: Clone + PartialEq + Send + Sync + 'static,
     {
         self.map_diff_by_id(collection.id())
     }
@@ -88,7 +88,7 @@ impl<C, O> Graph<C, O> {
     /// Returns the last committed set diff for the current transaction.
     pub fn set_diff<K>(&self, collection: CollectionNode<K, ()>) -> GraphResult<Option<&SetDiff<K>>>
     where
-        K: Clone + Ord + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
     {
         self.set_diff_by_id(collection.id())
     }
@@ -124,8 +124,8 @@ impl<C, O> Graph<C, O> {
     /// Returns the committed map for a collection node id.
     pub fn map_collection_by_id<K, V>(&self, node: NodeId) -> GraphResult<Option<&BTreeMap<K, V>>>
     where
-        K: Clone + Ord + 'static,
-        V: Clone + PartialEq + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
+        V: Clone + PartialEq + Send + Sync + 'static,
     {
         self.validate_map_collection_read::<K, V>(node)?;
         Ok(self
@@ -137,7 +137,7 @@ impl<C, O> Graph<C, O> {
     /// Returns the committed set for a collection node id.
     pub fn set_collection_by_id<K>(&self, node: NodeId) -> GraphResult<Option<&BTreeSet<K>>>
     where
-        K: Clone + Ord + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
     {
         self.validate_set_collection_read::<K>(node)?;
         Ok(self
@@ -149,8 +149,8 @@ impl<C, O> Graph<C, O> {
     /// Returns the current transaction's map diff for a collection node id.
     pub fn map_diff_by_id<K, V>(&self, node: NodeId) -> GraphResult<Option<&MapDiff<K, V>>>
     where
-        K: Clone + Ord + 'static,
-        V: Clone + PartialEq + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
+        V: Clone + PartialEq + Send + Sync + 'static,
     {
         self.validate_map_collection_read::<K, V>(node)?;
         Ok(self
@@ -162,7 +162,7 @@ impl<C, O> Graph<C, O> {
     /// Returns the current transaction's set diff for a collection node id.
     pub fn set_diff_by_id<K>(&self, node: NodeId) -> GraphResult<Option<&SetDiff<K>>>
     where
-        K: Clone + Ord + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
     {
         self.validate_set_collection_read::<K>(node)?;
         Ok(self
