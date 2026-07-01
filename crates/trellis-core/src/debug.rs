@@ -35,6 +35,14 @@ impl Graph {
             .expect("writing to String cannot fail");
         }
 
+        writeln!(&mut out, "Dependency paths:").expect("writing to String cannot fail");
+        for node in self.nodes() {
+            for dependency in node.dependencies().as_slice() {
+                writeln!(&mut out, "  {dependency:?} -> {:?}", node.id())
+                    .expect("writing to String cannot fail");
+            }
+        }
+
         out
     }
 }

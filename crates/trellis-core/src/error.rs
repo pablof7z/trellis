@@ -1,4 +1,4 @@
-use crate::{NodeId, ScopeId, TransactionId};
+use crate::{DeriveError, NodeId, ScopeId, TransactionId};
 use core::fmt;
 
 /// Result type used by graph metadata operations.
@@ -25,8 +25,18 @@ pub enum GraphError {
     TransactionClosed(TransactionId),
     /// A node is not an input node.
     NotInputNode(NodeId),
+    /// A node is not a derived node.
+    NotDerivedNode(NodeId),
     /// An input write used the wrong value type for the node.
     WrongInputType(NodeId),
+    /// A derived read used the wrong value type for the node.
+    WrongDerivedType(NodeId),
+    /// A dependency cycle was detected.
+    CycleDetected(NodeId),
+    /// A pure derive function failed.
+    DeriveFailed(NodeId, DeriveError),
+    /// Incremental derived state differs from full recompute.
+    FullRecomputeMismatch(NodeId),
 }
 
 impl fmt::Display for GraphError {
@@ -41,7 +51,14 @@ impl fmt::Display for GraphError {
             Self::NestedTransaction => write!(f, "a transaction is already open"),
             Self::TransactionClosed(id) => write!(f, "transaction already closed: {id:?}"),
             Self::NotInputNode(id) => write!(f, "node is not an input: {id:?}"),
+            Self::NotDerivedNode(id) => write!(f, "node is not derived: {id:?}"),
             Self::WrongInputType(id) => write!(f, "wrong input value type for node: {id:?}"),
+            Self::WrongDerivedType(id) => write!(f, "wrong derived value type for node: {id:?}"),
+            Self::CycleDetected(id) => write!(f, "dependency cycle detected at node: {id:?}"),
+            Self::DeriveFailed(id, error) => write!(f, "derive failed for {id:?}: {error:?}"),
+            Self::FullRecomputeMismatch(id) => {
+                write!(f, "full recompute mismatch for node: {id:?}")
+            }
         }
     }
 }

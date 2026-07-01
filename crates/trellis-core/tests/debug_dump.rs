@@ -14,6 +14,7 @@ fn debug_dump_is_deterministic() {
             .derived::<Vec<String>>(
                 "visible_projects",
                 DependencyList::new([active.id()]).unwrap(),
+                |_| Ok(Vec::new()),
             )
             .unwrap();
         let windows = tx
@@ -45,6 +46,10 @@ fn debug_dump_is_deterministic() {
             "  NodeId(1) kind=Input name=\"active_workspace\" scope=None deps=[]\n",
             "  NodeId(2) kind=Derived name=\"visible_projects\" scope=Some(ScopeId(2)) deps=[NodeId(1)]\n",
             "  NodeId(3) kind=Collection name=\"sync_windows\" scope=Some(ScopeId(2)) deps=[NodeId(1), NodeId(2)]\n",
+            "Dependency paths:\n",
+            "  NodeId(1) -> NodeId(2)\n",
+            "  NodeId(1) -> NodeId(3)\n",
+            "  NodeId(2) -> NodeId(3)\n",
         )
     );
 }

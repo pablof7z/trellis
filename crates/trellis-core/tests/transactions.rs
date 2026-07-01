@@ -191,7 +191,11 @@ fn non_input_node_cannot_be_set_as_input() {
     let mut tx = graph.begin_transaction().unwrap();
     let input = tx.input::<String>("input").unwrap();
     let derived = tx
-        .derived::<String>("derived", DependencyList::new([input.id()]).unwrap())
+        .derived::<String>(
+            "derived",
+            DependencyList::new([input.id()]).unwrap(),
+            |_| Ok(String::new()),
+        )
         .unwrap();
     tx.commit().unwrap();
     drop(tx);
