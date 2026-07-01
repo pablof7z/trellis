@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A Trellis example for market-data watchlists and revisioned terminal output.">
+  <title>Market Data Example - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide">Guide</a><a href="/examples" aria-current="page">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero"><span class="eyebrow">Example 6</span><h1>Market-data terminal</h1><p class="lead">Watchlists derive quote streams, depth subscriptions, alert jobs, and revisioned screen output.</p></section>
+    <section class="section"><div class="container content">
+      <article>
+        <pre><code>watchlist
+ -&gt; visible_symbols
+ -&gt; quote_and_depth_demand
+ -&gt; alert_jobs
+ -&gt; terminal_output #109</code></pre>
+        <div class="grid two">
+          <div class="card"><h3>Problem</h3><p>Symbol removals should close feeds and clear rows. Fast churn should not leave old depth subscriptions open.</p></div>
+          <div class="card"><h3>Trace</h3><p>Remove TSLA, add AMD. Plan closes TSLA quote/depth keys, opens AMD keys, and emits a terminal delta.</p></div>
+          <div class="card"><h3>Invariant</h3><p>Materialized output revision must match the latest committed visible-symbol set.</p></div>
+          <div class="card"><h3>Benchmark pressure</h3><p>High churn tests propagation cost, allocation, and full-recompute checking overhead.</p></div>
+        </div>
+      </article>
+      <aside class="toc"><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a></aside>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p>State changes. Resources follow.</p></div></footer>
+</body>
+</html>

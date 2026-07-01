@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Why Rust application kernels need deterministic reactive resource graphs, not only value reactivity.">
+  <title>Why Resource Graphs - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide" aria-current="page">Guide</a><a href="/examples">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero">
+      <span class="eyebrow">Guide</span>
+      <h1>Why signals are not enough.</h1>
+      <p class="lead">The hard part in many kernels is not recomputing a value. It is withdrawing obsolete resource demand, installing new demand, clearing stale output, and proving the transition stayed coherent.</p>
+    </section>
+    <section class="section"><div class="container content">
+      <article>
+        <h2>The hidden graph</h2>
+        <p>Local-first apps, language servers, dashboards, sync engines, plugin hosts, and market terminals often contain the same shape under different names.</p>
+        <div class="path-line mono"><span>canonical input</span><span>-&gt;</span><span>derived set</span><span>-&gt;</span><span>external demand</span><span>-&gt;</span><span>materialized output</span></div>
+        <p>When a source set shrinks, callbacks and handles are not enough. The kernel must know which live resources were implied by the old set and which output rows are no longer valid.</p>
+        <h2>The missing middle</h2>
+        <div class="grid two">
+          <div class="card"><h3>Ordinary value reactivity</h3><p>A changed, so B recomputes.</p></div>
+          <div class="card"><h3>Resource graph reactivity</h3><p>A changed, B derived a new collection, the collection diff produced a resource plan, and a coherent output revision was emitted.</p></div>
+        </div>
+        <p class="callout">Trellis targets the layer underneath systems where changing state must safely change the resources an application owns.</p>
+      </article>
+      <aside class="toc"><a href="/guide/core-model">Next: core model</a><a href="/comparisons/signals">Compare with signals</a></aside>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p>They solve neighboring problems. Trellis solves this one.</p></div></footer>
+</body>
+</html>

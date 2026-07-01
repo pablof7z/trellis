@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Start here for Trellis: deterministic reactive resource graphs for Rust application kernels.">
+  <title>Guide - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="/">Home</a><a href="/guide" aria-current="page">Guide</a><a href="/examples">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="container page-hero">
+      <span class="eyebrow">Start here</span>
+      <h1>You already have a hidden resource graph.</h1>
+      <p class="lead">Trellis makes the graph explicit: canonical inputs derive collections, collection changes produce diffs, diffs produce resource plans, and plans update revisioned outputs under scoped ownership.</p>
+    </section>
+    <section class="section">
+      <div class="container content">
+        <div>
+          <h2>The path</h2>
+          <p class="section-intro">Read these in order if you are deciding whether Trellis names a real problem in your kernel.</p>
+          <div class="grid two">
+            <a class="card" href="/guide/why-resource-graphs"><h3>Why resource graphs?</h3><p>Why value reactivity is not enough when derived state owns live resources.</p></a>
+            <a class="card" href="/guide/core-model"><h3>Core model</h3><p>Inputs, derived nodes, collection nodes, resource plans, scopes, transactions, outputs, and oracles.</p></a>
+            <a class="card" href="/guide/transactions"><h3>Transactions</h3><p>The deterministic phase order from staged input changes to returned plans and output frames.</p></a>
+            <a class="card" href="/guide/scopes"><h3>Scopes</h3><p>Lifetime ownership, teardown, shared resources, and output cleanup.</p></a>
+            <a class="card" href="/guide/testing"><h3>Testing</h3><p>Full-recompute oracles and invariant tests for incremental graph correctness.</p></a>
+            <a class="card" href="/examples"><h3>Examples</h3><p>Local-first sync, language servers, IoT dashboards, plugin runtimes, market data, and Nostr.</p></a>
+          </div>
+        </div>
+        <aside class="toc">
+          <strong>Guide thesis</strong>
+          <p class="mono">input -&gt; derive -&gt; diff -&gt; plan -&gt; output</p>
+          <p>Signals recompute values. Trellis reconciles resources.</p>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <footer class="footer"><div class="container"><p class="mono">Make the graph explicit.</p></div></footer>
+</body>
+</html>

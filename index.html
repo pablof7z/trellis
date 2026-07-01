@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Trellis is a Rust library for deterministic reactive resource graphs where derived state changes produce scoped resource plans and revisioned materialized outputs.">
+  <title>Trellis - Deterministic Reactive Resource Graphs</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="/" aria-current="page"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="/" aria-current="page">Home</a>
+        <a href="/guide">Guide</a>
+        <a href="/examples">Examples</a>
+        <a href="/concepts">Concepts</a>
+        <a href="/comparisons">Comparisons</a>
+        <a href="/docs">Docs</a>
+        <a href="/roadmap">Roadmap</a>
+        <a href="https://github.com/pablof7z/trellis">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="container hero">
+      <div>
+        <span class="eyebrow">Deterministic reactive resource graphs</span>
+        <h1>Trellis</h1>
+        <div class="thesis">
+          <span>Signals recompute values.</span>
+          <span>Trellis reconciles resources.</span>
+        </div>
+        <p class="lead">A Rust library for application kernels where derived state changes produce scoped resource plans and revisioned materialized outputs.</p>
+        <p class="lead">For kernels that own subscriptions, sync windows, file watchers, live queries, background jobs, hydration tasks, and output surfaces.</p>
+        <div class="button-row">
+          <a class="button primary" href="/guide">Read the guide</a>
+          <a class="button" href="/examples">View examples</a>
+          <a class="button" href="https://github.com/pablof7z/trellis">GitHub</a>
+        </div>
+      </div>
+      <aside class="diagram" aria-label="Trellis propagation diagram">
+        <div class="phase-row">
+          <div class="phase"><b>Input</b><small>workspace</small></div>
+          <div class="phase"><b>Derive</b><small>projects</small></div>
+          <div class="phase"><b>Diff</b><small>+/- set</small></div>
+          <div class="phase"><b>Plan</b><small>open/close</small></div>
+          <div class="phase"><b>Apply</b><small>host actor</small></div>
+          <div class="phase"><b>Output</b><small>#42</small></div>
+        </div>
+        <pre><code>[dependencies]
+# package name pending:
+# "trellis" is already taken on crates.io</code></pre>
+        <p class="badge">0.1 is early. API unstable. Designed for feedback.</p>
+      </aside>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>The missing middle</h2>
+        <p class="section-intro">Most reactive systems stop at value invalidation. A changed. B depends on A. Recompute B. Real application kernels often need more.</p>
+        <div class="grid two">
+          <div class="card">
+            <h3>Value invalidation</h3>
+            <p>A changed. B depends on A. Recompute B.</p>
+          </div>
+          <div class="card">
+            <h3>Resource reconciliation</h3>
+            <p>A changed. B derived a new set. That set shrank. Old resources must close, new resources must open, stale output must clear, and the next visible state must be coherent.</p>
+          </div>
+        </div>
+        <div class="path-line mono" aria-label="Resource graph path">
+          <span>Input</span><span>-&gt;</span><span>Derived Value</span><span>-&gt;</span><span>Collection Diff</span><span>-&gt;</span><span>Resource Plan</span><span>-&gt;</span><span>Materialized Output</span><span>-&gt;</span><span>Revision</span>
+        </div>
+        <p class="section-intro">Trellis turns dependency changes into inspectable resource plans, not hidden side effects.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>A realistic example</h2>
+        <p class="section-intro">Start with local-first sync, not Nostr. The reusable pattern is broader than any one protocol.</p>
+        <div class="grid">
+          <article class="card">
+            <h3>Local-first sync</h3>
+            <p class="mono">active workspace -&gt; visible projects -&gt; sync windows -&gt; replica demand -&gt; issue board</p>
+            <p>When the user switches workspaces, Trellis can derive the new project set, close obsolete sync windows, open new ones, replay cached rows, clear stale board rows, and emit a new output revision.</p>
+          </article>
+          <article class="card">
+            <h3>Language servers</h3>
+            <p class="mono">file changes -&gt; module graph -&gt; diagnostics -&gt; semantic tokens -&gt; editor output</p>
+            <p>When a file is deleted, stale diagnostics clear. When imports change, dependents invalidate. When a workspace closes, watchers and analysis tasks stop.</p>
+          </article>
+          <article class="card">
+            <h3>IoT dashboards</h3>
+            <p class="mono">selected site -&gt; visible devices -&gt; topic subscriptions -&gt; telemetry cards</p>
+            <p>When a filter shrinks, topic subscriptions shrink. Empty device sets subscribe to nothing, not accidentally broader demand.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Core model</h2>
+        <p class="section-intro">Trellis gives names to the pieces most systems already hand-roll.</p>
+        <div class="grid">
+          <div class="card"><h3>InputNode&lt;T&gt;</h3><p>Canonical state changed by one owner.</p></div>
+          <div class="card"><h3>DerivedNode&lt;T&gt;</h3><p>Deterministic value derived from explicit dependencies.</p></div>
+          <div class="card"><h3>CollectionNode&lt;K, V&gt;</h3><p>A derived set or map with structural diffs.</p></div>
+          <div class="card"><h3>ResourcePlan&lt;C&gt;</h3><p>Commands produced from changes. The graph does not run arbitrary I/O.</p></div>
+          <div class="card"><h3>Scope</h3><p>A lifetime owner for resources, outputs, and dependencies.</p></div>
+          <div class="card"><h3>MaterializedOutput&lt;O&gt;</h3><p>A revisioned output surface with baseline, delta, clear, and rebaseline semantics.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Why plans, not effects?</h2>
+        <p class="section-intro">Trellis does not encourage arbitrary effect closures that run because they happened to read a value. Propagation produces data: close this, open that, clear this output, emit this revision.</p>
+        <pre><code>let demand = graph.resource_plan(
+    "visible_device_topics",
+    visible_devices.diff(),
+    |diff| {
+        Plan::new()
+            .close_topics(diff.removed())
+            .open_topics(diff.added())
+            .clear_rows(diff.removed())
+    },
+);</code></pre>
+        <p class="section-intro">The result is inspectable, testable, replayable, and easier to audit.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Built-in invariants</h2>
+        <div class="grid">
+          <div class="card"><h3>Source shrink withdraws resources</h3><p>Removed collection members produce close commands.</p></div>
+          <div class="card"><h3>Empty sources fail closed</h3><p>Empty demand stays empty unless a fallback is explicit.</p></div>
+          <div class="card"><h3>Scope close releases ownership</h3><p>Closing a scope removes its resources and clears or rebaselines outputs.</p></div>
+          <div class="card"><h3>Output is revisioned</h3><p>Consumers receive coherent baseline, delta, clear, and rebaseline frames.</p></div>
+          <div class="card"><h3>Incremental equals truth</h3><p>Full recompute oracles can check incremental graph state.</p></div>
+          <div class="card"><h3>Effects are planned first</h3><p>The host actor applies commands after deterministic propagation.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Not another signal library</h2>
+        <p class="section-intro">Use UI signals for UI state. Use Trellis when a derived value owns external resources.</p>
+        <div class="grid">
+          <div class="card"><h3>Signals</h3><p>Great for values and views. Not enough for resource lifecycle.</p></div>
+          <div class="card"><h3>Rx</h3><p>Great for stream composition. Not enough for scoped resource reconciliation.</p></div>
+          <div class="card"><h3>Salsa</h3><p>Great for pure incremental queries. Not enough for live resource plans and materialized output.</p></div>
+          <div class="card"><h3>Trellis</h3><p>Built for deterministic state-derived resource lifecycle.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>0.1 status</h2>
+        <p class="section-intro">Trellis 0.1 is intentionally narrow. The goal is not to solve all reactivity. The goal is to prove one reusable kernel.</p>
+        <div class="grid two">
+          <div class="card">
+            <h3>Included</h3>
+            <ul><li>explicit nodes</li><li>collection diffs</li><li>resource plans</li><li>scopes</li><li>transactions</li><li>revisioned outputs</li><li>testing hooks</li></ul>
+          </div>
+          <div class="card">
+            <h3>Not included</h3>
+            <ul><li>UI bindings</li><li>automatic dependency discovery</li><li>distributed execution</li><li>database persistence</li><li>domain-specific adapters</li><li>production stability guarantees</li></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>Trellis is for Rust developers who have hand-rolled callback glue to keep derived state, subscriptions, jobs, caches, and output surfaces in sync.</p>
+      <p class="mono">Make the graph explicit.</p>
+    </div>
+  </footer>
+</body>
+</html>

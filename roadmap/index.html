@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Trellis roadmap for 0.1, 0.2, stability policy, examples, docs, and extraction status.">
+  <title>Roadmap - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide">Guide</a><a href="/examples">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap" aria-current="page">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero">
+      <span class="eyebrow">Roadmap</span>
+      <h1>Prove the reusable kernel before broadening the surface.</h1>
+      <p class="lead">Trellis 0.x is unstable. Minor versions may contain breaking API changes. The public model should stabilize around the vocabulary documented here.</p>
+    </section>
+    <section class="section"><div class="container">
+      <div class="grid">
+        <div class="card"><h3>0.1 preview</h3><p>Explicit input nodes, derived nodes, collection diffs, resource plans, scopes, transactions, revisioned outputs, audit traces, and full-recompute testing hooks.</p></div>
+        <div class="card"><h3>0.1 launch package</h3><p>Homepage, README, crate docs, one design essay, three runnable examples, release notes, changelog, roadmap, and comparison page.</p></div>
+        <div class="card"><h3>0.2 feedback pass</h3><p>Refine primitive names, error model, observability fields, example ergonomics, and package identity after early feedback.</p></div>
+        <div class="card"><h3>Stability policy</h3><p>Before 1.0, breaking changes are allowed but must be explicit in CHANGELOG.md with migration notes.</p></div>
+        <div class="card"><h3>Adapters</h3><p>Keep the core independent of async runtimes. Add tracing, serde, tokio, wasm, and proptest support as optional features.</p></div>
+        <div class="card"><h3>Extraction status</h3><p>The site sells the category now. The crate API should follow once the core invariants are executable and tested.</p></div>
+      </div>
+      <h2>Expected stable vocabulary</h2>
+      <div class="path-line mono"><span>InputNode</span><span>DerivedNode</span><span>CollectionNode</span><span>ResourcePlan</span><span>Scope</span><span>Transaction</span><span>MaterializedOutput</span><span>Revision</span><span>FullRecomputeOracle</span></div>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p>The goal is not to solve all reactivity. The goal is to prove one reusable kernel.</p></div></footer>
+</body>
+</html>

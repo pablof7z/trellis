@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Trellis compared with Rx-style stream composition.">
+  <title>Trellis vs Rx</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide">Guide</a><a href="/examples">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons" aria-current="page">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero"><span class="eyebrow">Comparison</span><h1>Trellis vs Rx</h1><p class="lead">Rx is strong for composing event streams. Trellis is about reconciling desired resource ownership from derived graph state.</p></section>
+    <section class="section"><div class="container">
+      <div class="comparison">
+        <div>Question</div><div>Rx</div><div>Trellis</div>
+        <div>Main unit</div><div>Observable streams and operators.</div><div>Transactions, diffs, plans, scopes, revisions.</div>
+        <div>Lifecycle</div><div>Subscription disposal is usually host discipline.</div><div>Scoped teardown is a graph invariant.</div>
+        <div>Best fit</div><div>Event pipelines and async composition.</div><div>State-derived resource lifecycle and materialized outputs.</div>
+      </div>
+      <p class="callout">Trellis can sit beside streams. It decides what streams should exist.</p>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p><a href="/comparisons/salsa">Next: Salsa</a></p></div></footer>
+</body>
+</html>

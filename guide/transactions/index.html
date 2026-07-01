@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Trellis transaction phases and deterministic propagation ordering.">
+  <title>Transactions - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide" aria-current="page">Guide</a><a href="/examples">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero">
+      <span class="eyebrow">Guide</span>
+      <h1>One input change becomes one deterministic transaction result.</h1>
+      <p class="lead">The host stages changes. The graph computes derived state, diffs, plans, output frames, revisions, and audit entries. The host applies returned commands after propagation.</p>
+    </section>
+    <section class="section"><div class="container">
+      <div class="diagram">
+        <div class="phase-row">
+          <div class="phase"><b>Stage</b><small>input and scope changes</small></div>
+          <div class="phase"><b>Validate</b><small>references and cycles</small></div>
+          <div class="phase"><b>Derive</b><small>dirty nodes</small></div>
+          <div class="phase"><b>Diff</b><small>collections</small></div>
+          <div class="phase"><b>Plan</b><small>resource commands</small></div>
+          <div class="phase"><b>Commit</b><small>revision and frames</small></div>
+        </div>
+      </div>
+      <div class="grid two">
+        <div class="card"><h3>Graph phase</h3><p>No external I/O, task spawning, host callbacks, or resource handle mutation.</p></div>
+        <div class="card"><h3>Host phase</h3><p>The actor applies resource plans, emits output frames, and reports later resource status as canonical input.</p></div>
+      </div>
+      <pre><code>trellis.transaction{id=42}: begin
+trellis.node{name="visible_devices"}: changed added=3 removed=1
+trellis.plan{name="mqtt_topics"}: open=3 close=1
+trellis.output{name="dashboard"}: revision=42 baseline=false rows=18
+trellis.transaction{id=42}: commit</code></pre>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p><a href="/guide/scopes">Next: scopes</a></p></div></footer>
+</body>
+</html>

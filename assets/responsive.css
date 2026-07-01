@@ -1,0 +1,41 @@
+@media (max-width: 860px) {
+  .hero,
+  .content,
+  .grid,
+  .grid.two {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    gap: 2rem;
+    min-height: auto;
+    padding-top: 3rem;
+  }
+
+  .nav-wrap {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .nav-links {
+    justify-content: flex-start;
+  }
+
+  .toc {
+    position: static;
+  }
+
+  .comparison {
+    grid-template-columns: 1fr;
+  }
+
+  .phase-row,
+  .hero .phase-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow-x: visible;
+  }
+
+  .comparison div {
+    border-bottom: 1px solid var(--border);
+  }
+}

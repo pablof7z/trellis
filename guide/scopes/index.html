@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Scopes in Trellis own resource lifetimes, dependencies, teardown, and materialized outputs.">
+  <title>Scopes - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide" aria-current="page">Guide</a><a href="/examples">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero">
+      <span class="eyebrow">Guide</span>
+      <h1>Scopes make teardown a graph property.</h1>
+      <p class="lead">A resource with no owning scope is a bug. Closing a scope deterministically withdraws ownership and produces close, clear, or rebaseline commands.</p>
+    </section>
+    <section class="section"><div class="container content">
+      <article>
+        <pre><code>scope: dashboard-panel-17
++------------------------------------------------+
+| selected_site -&gt; device_set -&gt; topic_plan      |
+|                              -&gt; output #42     |
++------------------------------------------------+</code></pre>
+        <div class="grid two">
+          <div class="card"><h3>Owned resources</h3><p>Subscriptions, file watchers, jobs, live queries, workers, and output surfaces are attached to scopes.</p></div>
+          <div class="card"><h3>Shared resources</h3><p>A resource can stay open while another scope still owns demand for the same key.</p></div>
+          <div class="card"><h3>Close semantics</h3><p>Scope close removes ownership, emits close commands for orphaned resources, and clears or rebaselines outputs.</p></div>
+          <div class="card"><h3>Auditability</h3><p>Ownership edges are inspectable, so teardown bugs are not hidden in forgotten callbacks.</p></div>
+        </div>
+      </article>
+      <aside class="toc"><a href="/guide/testing">Next: testing</a><a href="/examples/plugin-runtime">Plugin runtime example</a></aside>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p class="mono">[[ scope ]] owns lifecycle.</p></div></footer>
+</body>
+</html>
