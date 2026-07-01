@@ -80,13 +80,59 @@ across revisions.
   revisions, clear/rebaseline coherence, and closed-scope terminal-frame rules.
 - Audit helpers assert resource commands and output frames are explainable from
   graph-visible cause data.
-- `ConformanceSuite` and `ConformanceReport` make unsupported conformance
-  levels explicit instead of treating skipped checks as passes.
+- `ConformanceSuite`, `conformance()`, and `ConformanceReport` make
+  unsupported conformance levels explicit instead of treating skipped checks as
+  passes.
 
 Snapshots are useful for audit/debug output, not semantic correctness. Use
 `Scenario::to_redacted_debug_string` with an application redactor for
 `insta::assert_snapshot!` when a stable trace dump helps debug a failure. Keep
 the actual pass/fail condition structural.
+
+Use focused scenario tests when the application needs to prove one concrete
+behavior, such as "closing workspace A closes subscription X." Use the
+conformance suite when the application wants one executable gate that declares
+which Trellis invariant families it supports and which hooks are intentionally
+absent.
+
+Minimal apps can start with deterministic trace checks:
+
+```rust
+use trellis_testing::{
+    ConformanceCheckResult, ConformanceLevel, conformance,
+};
+
+#[test]
+fn trellis_conformance() {
+    let report = conformance()
+        .check(
+            ConformanceLevel::DeterministicTrace,
+            "same input sequence produces same trace",
+            || {
+                if replay_trace(build_graph) == replay_trace(build_graph) {
+                    ConformanceCheckResult::passed()
+                } else {
+                    ConformanceCheckResult::failed("scenario workspace-open trace differed")
+                }
+            },
+        )
+        .unsupported(
+            ConformanceLevel::GeneratedModelSequences,
+            "app has not opted into generated sequences yet",
+        )
+        .run()
+        .unwrap();
+
+    assert!(report.supports(ConformanceLevel::DeterministicTrace));
+}
+```
+
+For richer apps, register checks at the level where the app has supplied the
+required hooks: fixed scenarios for trace replay, `ResourceLedger` for lifecycle
+checks, `OutputLedger` for output coherence, `FullRecomputeOracle` for
+incremental/full equivalence, and generated sequence checks when the
+`proptest` feature is enabled. If a required level has no registered check or
+explicit unsupported reason, the runner reports that level as unsupported.
 
 The release-gate examples in `crates/trellis-testing/tests/release_gate.rs`
 cover:
@@ -124,6 +170,38 @@ serde      reserved for future serializable trace/debug data
 
 `proptest`, `insta`, `trybuild`, and cargo-fuzz are optional tools. They should
 not be required for basic downstream scenario tests.
+
+The `proptest` feature provides shrinkable sequence pieces rather than a new
+property-testing framework. Applications keep their own domain enum and compose
+Trellis generic pieces with app-owned strategies:
+
+```rust
+use proptest::prelude::*;
+use trellis_testing::proptest::{
+    InputChange, ModelSequence, OutputChange, ScopeChange, canonical_input_change,
+    model_sequence_strategy, output_rebaseline, scope_change,
+};
+
+#[derive(Clone, Debug)]
+enum AppStep {
+    Input(InputChange<WorkspaceId>),
+    Scope(ScopeChange<ScreenId>),
+    Output(OutputChange<OutputName>),
+}
+
+fn app_sequence_strategy() -> impl Strategy<Value = ModelSequence<AppStep>> {
+    let step = prop_oneof![
+        canonical_input_change(workspace_id_strategy()).prop_map(AppStep::Input),
+        scope_change(screen_id_strategy(), screen_id_strategy()).prop_map(AppStep::Scope),
+        output_rebaseline(output_name_strategy()).prop_map(AppStep::Output),
+    ];
+    model_sequence_strategy(step, 0..=64)
+}
+```
+
+`ModelSequence::to_replay_debug_string()` and the generated value's `Debug`
+output are intended for failure messages and snapshots, so a shrunk failure can
+be replayed as an ordered sequence.
 
 ## Oracle Tests
 

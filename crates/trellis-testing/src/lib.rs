@@ -26,7 +26,10 @@ pub use audit::{
     assert_every_output_frame_has_scope, assert_every_resource_command_has_cause,
     assert_no_unexplained_output_frame, assert_no_unexplained_plan,
 };
-pub use conformance::{ConformanceLevel, ConformanceReport, ConformanceSuite};
+pub use conformance::{
+    ConformanceCheckReport, ConformanceCheckResult, ConformanceFailure, ConformanceLevel,
+    ConformanceReport, ConformanceRunner, ConformanceSuite, conformance,
+};
 pub use host::{FakeHost, FakeHostEvent};
 pub use host_status::{HostStatusClass, HostStatusEvent, HostStatusRecord};
 pub use oracle::{
