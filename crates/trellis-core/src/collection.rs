@@ -1,14 +1,14 @@
 use crate::collection_diff::{MapDiff, SetDiff};
 use crate::input::downcast_input;
-use crate::{CollectionNode, DeriveError, DerivedNode, Graph, InputNode, NodeId};
-use core::any::Any;
-use core::marker::PhantomData;
+use crate::{
+    CollectionDiffTrace, CollectionNode, DeriveError, DerivedNode, Graph, InputNode, NodeId,
+};
+use core::{any::Any, marker::PhantomData};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-type ComputeFn<C, O> = dyn for<'ctx> Fn(
-    &CollectionContext<'ctx, C, O>,
-) -> Result<Box<dyn StoredCollection>, DeriveError>;
+type CollectionComputeResult = Result<Box<dyn StoredCollection>, DeriveError>;
+type ComputeFn<C, O> = dyn for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> CollectionComputeResult;
 
 pub(crate) struct MapCollectionShape<K, V>(PhantomData<fn() -> (K, V)>);
 pub(crate) struct SetCollectionShape<K>(PhantomData<fn() -> K>);
@@ -162,6 +162,7 @@ impl Clone for Box<dyn StoredCollection> {
 
 pub(crate) trait StoredDiff: Any {
     fn clone_box(&self) -> Box<dyn StoredDiff>;
+    fn trace(&self, node: NodeId) -> CollectionDiffTrace;
     fn as_any(&self) -> &dyn Any;
 }
 

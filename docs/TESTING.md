@@ -51,6 +51,8 @@ release checklist runs a crates.io dry run for the chosen public name. The old
 normalized `trellis_test` name.
 
 - `Scenario` for named transaction trace recording and deterministic replay;
+- `TransactionScript` and `TrellisHarness` for deterministic typed transaction
+  scripts against app-supplied graph builders;
 - `ResourceLedger` for scoped lifecycle assertions, forbidden broad demand,
   structural command-order assertions, and host-status classification;
 - `OutputLedger` for output revision and clear/rebaseline coherence;
@@ -69,6 +71,11 @@ across revisions.
 
 - `Scenario` records named transaction traces, checks deterministic replay, and
   asserts expected resource command or output frame traces by step.
+- `TransactionScript` records typed canonical input writes and custom
+  transaction operations, then replays them against a fresh builder.
+- `TrellisHarness` commits exactly one transaction per step, applies resource
+  and output ledgers, records invariant-hook results into the step trace, and
+  compares final deterministic graph dumps after replay.
 - `FullRecomputeOracle` lets the application own canonical truth while Trellis
   owns the comparison harness.
 - `ResourceLedger` applies resource plans without executing resources and checks
@@ -85,9 +92,10 @@ across revisions.
   passes.
 
 Snapshots are useful for audit/debug output, not semantic correctness. Use
-`Scenario::to_redacted_debug_string` with an application redactor for
-`insta::assert_snapshot!` when a stable trace dump helps debug a failure. Keep
-the actual pass/fail condition structural.
+`Scenario::to_redacted_debug_string`, `ResourceLedger::to_redacted_debug_string`,
+`OutputLedger::to_redacted_debug_string`, and `Graph::debug_dump` when a stable
+dump helps debug a failure. Redact application-specific resource keys and output
+payloads before snapshotting. Keep the actual pass/fail condition structural.
 
 Use focused scenario tests when the application needs to prove one concrete
 behavior, such as "closing workspace A closes subscription X." Use the
@@ -165,7 +173,7 @@ proptest   strategy helpers around Trellis model scripts
 insta      snapshot-friendly trace/debug output examples
 trybuild   compile-fail gate documentation; Trellis uses trybuild as a dev gate
 fuzz       shared helpers for cargo-fuzz targets outside normal cargo test
-serde      reserved for future serializable trace/debug data
+serde      optional serialization for structural trace/result data
 ```
 
 `proptest`, `insta`, `trybuild`, and cargo-fuzz are optional tools. They should

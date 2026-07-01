@@ -12,7 +12,7 @@ default = []
 fuzz = []
 insta = ["dep:insta"]
 proptest = ["dep:proptest"]
-serde = []
+serde = ["trellis-core/serde"]
 trybuild = []
 
 [dependencies]

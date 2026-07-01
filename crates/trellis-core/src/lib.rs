@@ -48,6 +48,7 @@ mod scope_lifecycle;
 mod trace;
 mod transaction;
 mod transaction_build;
+mod transaction_trace_build;
 mod transaction_types;
 
 pub(crate) use audit_types::AuditState;
@@ -79,7 +80,9 @@ pub use trace::{
 };
 pub use transaction::Transaction;
 pub use transaction_types::{
-    AuditEntry, AuditEvent, TransactionOptions, TransactionPhase, TransactionResult,
+    AuditEntry, AuditEvent, CollectionDiffKind, CollectionDiffTrace, InvariantResultTrace,
+    ScopeLifecycleKind, ScopeLifecycleTrace, StagedInputChange, StagedInputOutcome,
+    TransactionOptions, TransactionPhase, TransactionResult,
 };
 
 /// Deterministic model-test helpers for oracle and replay checks.

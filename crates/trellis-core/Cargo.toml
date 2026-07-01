@@ -6,4 +6,9 @@ license.workspace = true
 repository.workspace = true
 description = "Deterministic reactive resource graph core types."
 
+[features]
+default = []
+serde = ["dep:serde"]
+
 [dependencies]
+serde = { version = "1", features = ["derive"], optional = true }

@@ -17,6 +17,7 @@ impl Default for TransactionOptions {
 
 /// Deterministic audit record for an input transaction.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AuditEntry {
     /// Transaction that produced this audit entry.
     pub transaction_id: TransactionId,
@@ -28,6 +29,7 @@ pub struct AuditEntry {
 
 /// Deterministic transaction event emitted in the audit log.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum AuditEvent {
     /// An input value changed or was configured to count as changed.
     InputChanged(NodeId),
@@ -54,6 +56,7 @@ pub enum AuditEvent {
 
 /// Test-observable transaction propagation phase.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TransactionPhase {
     /// Staged operations were accepted for commit processing.
     StageOperations,
@@ -81,25 +84,118 @@ pub enum TransactionPhase {
     ReturnTransactionResult,
 }
 
+/// A staged canonical input write accepted by a transaction.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct StagedInputChange {
+    /// Input node that was staged.
+    pub node: NodeId,
+    /// Whether the staged value changed committed state.
+    pub outcome: StagedInputOutcome,
+}
+
+/// Test-observable outcome for a staged input write.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum StagedInputOutcome {
+    /// The staged write changed committed input state or was configured to count.
+    Changed,
+    /// The staged write was equal to committed state and skipped by options.
+    Unchanged,
+}
+
+/// Payload-neutral structural summary for a collection diff.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct CollectionDiffTrace {
+    /// Collection node that produced the diff.
+    pub node: NodeId,
+    /// Collection shape that produced the diff.
+    pub kind: CollectionDiffKind,
+    /// Number of added members or entries.
+    pub added: usize,
+    /// Number of removed members or entries.
+    pub removed: usize,
+    /// Number of updated map entries.
+    pub updated: usize,
+    /// Number of unchanged members or entries.
+    pub unchanged: usize,
+}
+
+/// Payload-neutral collection diff shape.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum CollectionDiffKind {
+    /// Set collection diff.
+    Set,
+    /// Map collection diff.
+    Map,
+}
+
+/// Scope lifecycle event emitted by a transaction.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ScopeLifecycleTrace {
+    /// Scope whose lifecycle changed.
+    pub scope: ScopeId,
+    /// Lifecycle transition that occurred.
+    pub kind: ScopeLifecycleKind,
+}
+
+/// Test-observable scope lifecycle transition.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum ScopeLifecycleKind {
+    /// Scope was created.
+    Created,
+    /// Scope was closed.
+    Closed,
+}
+
+/// Optional invariant result layered by testing support.
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct InvariantResultTrace {
+    /// Stable invariant name.
+    pub name: String,
+    /// Whether the invariant passed.
+    pub passed: bool,
+}
+
 /// Result returned by a committed input transaction.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TransactionResult<C = (), O = ()> {
     /// Committed transaction id.
     pub transaction_id: TransactionId,
     /// Graph revision after commit.
     pub revision: Revision,
+    /// Staged input writes in stable node-id order.
+    pub staged_input_changes: Vec<StagedInputChange>,
     /// Input nodes that changed in stable node-id order.
     pub changed_inputs: Vec<NodeId>,
+    /// Initial dirty roots in stable node-id order.
+    pub dirty_roots: Vec<NodeId>,
+    /// Derived nodes recomputed in deterministic topological order.
+    pub recomputed_derived_nodes: Vec<NodeId>,
     /// Derived nodes that changed in deterministic topological order.
     pub changed_derived_nodes: Vec<NodeId>,
+    /// Collection nodes recomputed in deterministic topological order.
+    pub recomputed_collection_nodes: Vec<NodeId>,
     /// Collection nodes that changed in deterministic topological order.
     pub changed_collection_nodes: Vec<NodeId>,
+    /// Payload-neutral collection diff summaries in stable node-id order.
+    pub collection_diffs: Vec<CollectionDiffTrace>,
     /// Data-only resource commands produced by graph propagation.
     pub resource_plan: ResourcePlan<C>,
     /// Data-only materialized output frames produced by graph propagation.
     pub output_frames: Vec<OutputFrame<O>>,
+    /// Scope lifecycle events emitted by this transaction.
+    pub scope_events: Vec<ScopeLifecycleTrace>,
     /// Deterministic audit entries for staged input writes.
     pub audit_log: Vec<AuditEntry>,
     /// Deterministic transaction phase trace.
     pub phase_trace: Vec<TransactionPhase>,
+    /// Optional invariant results layered by test support.
+    pub invariant_results: Vec<InvariantResultTrace>,
 }

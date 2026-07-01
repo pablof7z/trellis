@@ -112,10 +112,11 @@ impl<C, O> Graph<C, O> {
     pub(crate) fn recompute_dirty_derived(
         &mut self,
         initial_changed: &[NodeId],
-    ) -> GraphResult<Vec<NodeId>> {
+    ) -> GraphResult<RecomputeTrace> {
         let order = self.derived_topological_order()?;
         let mut changed: BTreeSet<NodeId> = initial_changed.iter().copied().collect();
         let mut changed_derived = Vec::new();
+        let mut recomputed = Vec::new();
 
         for node in order {
             let dependencies = self
@@ -134,6 +135,7 @@ impl<C, O> Graph<C, O> {
                 continue;
             }
 
+            recomputed.push(node);
             let next_value = self.compute_derived(node, dependencies.as_slice())?;
             let changed_value = self
                 .derived_values
@@ -147,7 +149,10 @@ impl<C, O> Graph<C, O> {
             }
         }
 
-        Ok(changed_derived)
+        Ok(RecomputeTrace {
+            recomputed,
+            changed: changed_derived,
+        })
     }
 
     pub(crate) fn compute_derived(
@@ -216,4 +221,9 @@ impl<C, O> Graph<C, O> {
         order.push(node);
         Ok(())
     }
+}
+
+pub(crate) struct RecomputeTrace {
+    pub(crate) recomputed: Vec<NodeId>,
+    pub(crate) changed: Vec<NodeId>,
 }
