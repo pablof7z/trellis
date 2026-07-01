@@ -1,14 +1,14 @@
 use crate::collection::{downcast_map, downcast_set};
 use crate::input::downcast_input;
 use crate::{
-    CollectionNode, DependencyList, DeriveError, DerivedNode, Graph, InputNode, NodeId, OutputKey,
-    Revision, ScopeId, TransactionId,
+    CollectionNode, DependencyList, DeriveError, DerivedNode, Graph, InputNode, NodeId,
+    OutputError, OutputKey, Revision, ScopeId, TransactionId,
 };
 use core::marker::PhantomData;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-type OutputFn<C, O> = dyn for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, DeriveError>;
+type OutputFn<C, O> = dyn for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, OutputError>;
 
 /// Typed handle for a materialized output surface.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -113,14 +113,14 @@ impl<C, O> Clone for OutputSpec<C, O> {
 
 impl<C, O> OutputSpec<C, O> {
     pub(crate) fn new(
-        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, DeriveError> + 'static,
+        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, OutputError> + 'static,
     ) -> Self {
         Self {
             materialize: Arc::new(materialize),
         }
     }
 
-    pub(crate) fn materialize(&self, ctx: &OutputContext<'_, C, O>) -> Result<O, DeriveError> {
+    pub(crate) fn materialize(&self, ctx: &OutputContext<'_, C, O>) -> Result<O, OutputError> {
         (self.materialize)(ctx)
     }
 }

@@ -4,6 +4,101 @@ use core::fmt;
 /// Result type used by graph metadata operations.
 pub type GraphResult<T> = Result<T, GraphError>;
 
+/// Top-level error category for deterministic failure handling.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum ErrorCategory {
+    /// Public API misuse or invalid graph references.
+    ProgrammerError,
+    /// User-defined derivation failed.
+    DeriveError,
+    /// User-defined resource planning failed.
+    PlanError,
+    /// User-defined output materialization failed.
+    OutputError,
+    /// Host-reported resource status, modeled as canonical input.
+    HostResourceStatus,
+}
+
+/// Deterministic audit event for a failed transaction.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ErrorAuditEvent {
+    /// Error category.
+    pub category: ErrorCategory,
+    /// Stable target involved in the error.
+    pub target: ErrorTarget,
+}
+
+/// Stable graph target involved in an error.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum ErrorTarget {
+    /// No narrower target exists.
+    Graph,
+    /// A node was involved.
+    Node(NodeId),
+    /// A scope was involved.
+    Scope(ScopeId),
+    /// A transaction was involved.
+    Transaction(TransactionId),
+    /// A materialized output was involved.
+    Output(OutputKey),
+}
+
+/// User-defined resource planning failure.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum PlanError {
+    /// Application-defined planning failure.
+    Message(String),
+}
+
+impl PlanError {
+    /// Creates an application-defined planning failure.
+    pub fn message(message: impl Into<String>) -> Self {
+        Self::Message(message.into())
+    }
+}
+
+/// User-defined output materialization failure.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum OutputError {
+    /// A materializer read failed.
+    Read(DeriveError),
+    /// Application-defined output failure.
+    Message(String),
+}
+
+impl OutputError {
+    /// Creates an application-defined output failure.
+    pub fn message(message: impl Into<String>) -> Self {
+        Self::Message(message.into())
+    }
+}
+
+impl From<DeriveError> for OutputError {
+    fn from(error: DeriveError) -> Self {
+        Self::Read(error)
+    }
+}
+
+/// Host-observed resource status that can be written as canonical input.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum HostResourceStatus {
+    /// The host has not reported a resource outcome.
+    Unknown,
+    /// The resource is live according to the host.
+    Open,
+    /// The resource failed outside graph propagation.
+    Failed(String),
+    /// The resource is closed according to the host.
+    Closed,
+}
+
+impl HostResourceStatus {
+    /// Returns the model category for host-reported resource status.
+    pub const fn category(&self) -> ErrorCategory {
+        ErrorCategory::HostResourceStatus
+    }
+}
+
 /// Errors for graph metadata and input transaction operations.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum GraphError {
@@ -40,7 +135,9 @@ pub enum GraphError {
     /// An output key is not present in the graph.
     UnknownOutput(OutputKey),
     /// A materialized output computation failed.
-    OutputFailed(OutputKey, DeriveError),
+    OutputFailed(OutputKey, OutputError),
+    /// A resource planner failed.
+    PlanFailed(ScopeId, PlanError),
     /// A resource command used a scope outside its registered planner scope.
     ResourceScopeMismatch(ScopeId),
     /// A resource command required an existing owned resource.
@@ -79,6 +176,9 @@ impl fmt::Display for GraphError {
             }
             Self::UnknownOutput(key) => write!(f, "unknown output: {key:?}"),
             Self::OutputFailed(key, error) => write!(f, "output failed for {key:?}: {error:?}"),
+            Self::PlanFailed(scope, error) => {
+                write!(f, "resource planner failed for {scope:?}: {error:?}")
+            }
             Self::ResourceScopeMismatch(id) => write!(f, "resource scope mismatch: {id:?}"),
             Self::ResourceNotOwned => write!(f, "resource is not owned"),
             Self::CycleDetected(id) => write!(f, "dependency cycle detected at node: {id:?}"),
@@ -95,6 +195,52 @@ impl fmt::Display for GraphError {
             Self::FullRecomputeMismatch(id) => {
                 write!(f, "full recompute mismatch for node: {id:?}")
             }
+        }
+    }
+}
+
+impl GraphError {
+    /// Returns this error's top-level category.
+    pub const fn category(&self) -> ErrorCategory {
+        match self {
+            Self::DeriveFailed(_, _) | Self::CollectionFailed(_, _) => ErrorCategory::DeriveError,
+            Self::PlanFailed(_, _) => ErrorCategory::PlanError,
+            Self::OutputFailed(_, _) => ErrorCategory::OutputError,
+            _ => ErrorCategory::ProgrammerError,
+        }
+    }
+
+    /// Returns a deterministic audit event for this error.
+    pub const fn audit_event(&self) -> ErrorAuditEvent {
+        ErrorAuditEvent {
+            category: self.category(),
+            target: match self {
+                Self::UnknownNode(node)
+                | Self::DuplicateDependency(node)
+                | Self::SelfDependency(node)
+                | Self::NodeAlreadyAttached(node)
+                | Self::NotInputNode(node)
+                | Self::NotDerivedNode(node)
+                | Self::NotCollectionNode(node)
+                | Self::WrongInputType(node)
+                | Self::WrongDerivedType(node)
+                | Self::WrongCollectionType(node)
+                | Self::CycleDetected(node)
+                | Self::CollectionDependencyNotAllowed(node)
+                | Self::DeriveFailed(node, _)
+                | Self::CollectionFailed(node, _)
+                | Self::FullRecomputeMismatch(node) => ErrorTarget::Node(*node),
+                Self::UnknownScope(scope)
+                | Self::ScopeAlreadyClosed(scope)
+                | Self::ScopeClosed(scope)
+                | Self::ResourceScopeMismatch(scope)
+                | Self::PlanFailed(scope, _) => ErrorTarget::Scope(*scope),
+                Self::TransactionClosed(transaction) => ErrorTarget::Transaction(*transaction),
+                Self::UnknownOutput(output) | Self::OutputFailed(output, _) => {
+                    ErrorTarget::Output(*output)
+                }
+                Self::NestedTransaction | Self::ResourceNotOwned => ErrorTarget::Graph,
+            },
         }
     }
 }

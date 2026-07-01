@@ -4,7 +4,8 @@
 //! metadata, declared dependencies, deterministic inspection, input
 //! transactions, pure derived node recomputation, collection diffs, and
 //! data-only resource plans with recursive scope teardown and materialized
-//! output frames. Transaction results include deterministic phase traces.
+//! output frames. Transaction results include deterministic phase traces, and
+//! failures expose typed categories.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
@@ -40,7 +41,10 @@ pub use collection::CollectionContext;
 pub use collection_diff::{Added, MapDiff, Removed, SetDiff, Unchanged, Updated};
 pub use dependency::DependencyList;
 pub use derive::{DeriveContext, DeriveError};
-pub use error::{GraphError, GraphResult};
+pub use error::{
+    ErrorAuditEvent, ErrorCategory, ErrorTarget, GraphError, GraphResult, HostResourceStatus,
+    OutputError, PlanError,
+};
 pub use graph::Graph;
 pub use ids::{NodeId, OutputKey, Revision, ScopeId, TransactionId};
 pub use node::{CollectionNode, DerivedNode, InputNode, NodeHandle, NodeKind, NodeMeta};

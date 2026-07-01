@@ -429,9 +429,8 @@ A transaction MUST NOT partially commit if validation or propagation fails.
 
 The initial implementation SHOULD treat user derivation, planning, or materialization failures as transaction failures unless a later ADR defines recoverable error nodes.
 
-For M8, failed transactions return typed errors and MUST NOT emit partial
-resource plans, output frames, or graph revisions. Recoverable status frames are
-part of the M9 error and status model.
+For M9, failed transactions return typed errors and MUST NOT emit partial
+resource plans, output frames, or graph revisions.
 
 The graph SHOULD distinguish:
 
@@ -444,6 +443,20 @@ The graph SHOULD distinguish:
 - host-reported resource status.
 
 Host-reported resource failure is not graph failure. It is canonical input.
+
+The M9 implementation exposes deterministic failure categories:
+
+```text
+ProgrammerError
+DeriveError
+PlanError
+OutputError
+HostResourceStatus
+```
+
+`HostResourceStatus` is plain input data. It does not retry, reopen, back off,
+or otherwise execute policy inside the graph. Applications that want retry
+policy must model it explicitly in host code or graph inputs/derived nodes.
 
 ## Audit semantics
 

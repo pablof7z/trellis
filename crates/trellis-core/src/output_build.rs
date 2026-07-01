@@ -1,5 +1,5 @@
 use crate::{
-    DependencyList, DeriveError, GraphError, GraphResult, MaterializedOutput, OutputContext,
+    DependencyList, GraphError, GraphResult, MaterializedOutput, OutputContext, OutputError,
     OutputMeta, OutputOptions, RebaselineReason, Transaction, output::OutputSpec,
 };
 
@@ -13,7 +13,7 @@ where
         debug_name: impl Into<String>,
         scope: crate::ScopeId,
         dependencies: DependencyList,
-        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, DeriveError> + 'static,
+        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, OutputError> + 'static,
     ) -> GraphResult<MaterializedOutput<O>> {
         self.materialized_output_with_options(
             debug_name,
@@ -31,7 +31,7 @@ where
         scope: crate::ScopeId,
         dependencies: DependencyList,
         options: OutputOptions,
-        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, DeriveError> + 'static,
+        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, OutputError> + 'static,
     ) -> GraphResult<MaterializedOutput<O>> {
         self.ensure_open()?;
         self.working.require_scope_open(scope)?;
