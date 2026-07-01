@@ -1,0 +1,24 @@
+name: "Prior-art comparison"
+description: Compare Trellis to adjacent tools without drifting the core contract.
+title: "Prior art: "
+labels: ["documentation"]
+body:
+  - type: textarea
+    id: system
+    attributes:
+      label: System or library
+      description: What prior art is being compared?
+    validations:
+      required: true
+  - type: textarea
+    id: overlap
+    attributes:
+      label: Overlap
+      description: What problem does it solve that resembles Trellis?
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Boundary
+      description: Where should Trellis stay different, especially around effects, resources, scopes, or host ownership?

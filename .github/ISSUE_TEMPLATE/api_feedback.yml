@@ -1,0 +1,29 @@
+name: "API feedback"
+description: Propose or critique public API shape.
+title: "API: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is awkward, misleading, too public, or hard to misuse-proof?
+    validations:
+      required: true
+  - type: textarea
+    id: invariant
+    attributes:
+      label: Invariant impact
+      description: Does this affect determinism, scopes, transaction boundaries, full recompute, or side-effect boundaries?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed shape
+      description: Prefer plain data, typed identifiers, explicit transactions, and small traits.
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-goals
+      description: What should not be added to core?

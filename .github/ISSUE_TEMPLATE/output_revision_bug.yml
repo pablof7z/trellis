@@ -1,0 +1,31 @@
+name: "Bug: output revision / materialization"
+description: Report incorrect output frames, revisions, baselines, deltas, clears, or rebaselines.
+title: "Bug: "
+labels: ["bug", "core", "quality-gate"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What output frame or revision behavior is wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: sequence
+    attributes:
+      label: Frame sequence
+      description: Include the baseline, delta, clear, or rebaseline sequence involved.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected materialized result
+      description: What should a consumer see without reading graph internals?
+    validations:
+      required: true
+  - type: textarea
+    id: test
+    attributes:
+      label: Missing or failing test
+      description: Which delta-equals-baseline or revision-ordering test should cover this?
