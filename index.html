@@ -32,31 +32,7 @@
           <a class="button" href="https://github.com/pablof7z/trellis">GitHub</a>
         </div>
       </div>
-      <aside class="trace-card hero-trace" aria-label="Transaction trace">
-        <div class="trace-head">
-          <span>Transaction #88</span>
-          <span>dashboard_cards.delta</span>
-        </div>
-        <div class="trace-block">
-          <strong>input</strong>
-          <p class="mono">selected_site = plant-12</p>
-        </div>
-        <div class="trace-block">
-          <strong>diff: visible_devices</strong>
-          <div class="trace-row"><span class="delta remove">- pump-1</span><span>closed</span></div>
-          <div class="trace-row"><span class="delta keep">= pump-2</span><span>kept</span></div>
-          <div class="trace-row"><span class="delta add">+ pump-3</span><span>opened</span></div>
-        </div>
-        <div class="trace-block">
-          <strong>plan</strong>
-          <div class="trace-row"><span>close topic:pump-1</span><span class="accent-red">remove</span></div>
-          <div class="trace-row"><span>open topic:pump-3</span><span class="accent-green">add</span></div>
-        </div>
-        <div class="trace-block">
-          <strong>output</strong>
-          <p class="mono">dashboard_cards.delta rev=88 stale=false</p>
-        </div>
-      </aside>
+      <iframe class="animation-embed hero-animation" src="/animations/hidden-graph" title="Hidden resource graph animation"></iframe>
     </section>
 
     <section class="container guarantee-strip" aria-label="Trellis guarantees">
@@ -105,60 +81,13 @@
     <section class="section" id="traces">
       <div class="container">
         <h2>Trace UI is the product surface</h2>
-        <p class="section-intro">Trellis should feel like a dependency graph debugger, a transaction inspector, and a resource ownership ledger.</p>
-        <div class="grid">
-          <article class="trace-card">
-            <div class="trace-head"><span>Collection</span><span>visible_devices</span></div>
-            <div class="trace-block">
-              <strong>before</strong>
-              <p class="mono">pump-1<br>pump-2</p>
-            </div>
-            <div class="trace-block">
-              <strong>after</strong>
-              <p class="mono"><span class="delta keep">pump-2</span><br><span class="delta add">pump-3</span></p>
-            </div>
-          </article>
-          <article class="trace-card">
-            <div class="trace-head"><span>ResourcePlan</span><span>mqtt_topics</span></div>
-            <div class="trace-block">
-              <div class="trace-row"><span>close topic:pump-1</span><span class="accent-red">close</span></div>
-              <div class="trace-row"><span>open topic:pump-3</span><span class="accent-green">open</span></div>
-              <div class="trace-row"><span>keep topic:pump-2</span><span class="muted">keep</span></div>
-            </div>
-          </article>
-          <article class="trace-card">
-            <div class="trace-head"><span>Scope</span><span>dashboard-panel-17</span></div>
-            <div class="trace-block">
-              <strong>owns</strong>
-              <p class="mono">topic:pump-2<br>topic:pump-3<br>output:dashboard-cards</p>
-            </div>
-            <div class="trace-block">
-              <strong>on close</strong>
-              <p class="mono">close topics<br>clear output</p>
-            </div>
-          </article>
-          <article class="trace-card">
-            <div class="trace-head"><span>Output</span><span>dashboard_cards</span></div>
-            <div class="trace-block">
-              <div class="trace-row"><span>revision</span><span class="accent-violet">#88</span></div>
-              <div class="trace-row"><span>type</span><span>delta</span></div>
-              <div class="trace-row"><span>stale</span><span>false</span></div>
-            </div>
-          </article>
-          <article class="trace-card">
-            <div class="trace-head"><span>Oracle</span><span>full recompute</span></div>
-            <div class="trace-block">
-              <div class="trace-row"><span>incremental rows</span><span>42</span></div>
-              <div class="trace-row"><span>full recompute rows</span><span>42</span></div>
-              <div class="trace-row"><span>status</span><span class="accent-green">pass</span></div>
-            </div>
-          </article>
-          <article class="trace-card">
-            <div class="trace-head"><span>Inspector</span><span>last transaction</span></div>
-            <div class="trace-block">
-              <p class="mono">removed=1 added=1 kept=1<br>commands=2 frames=1<br>scope=dashboard-panel-17</p>
-            </div>
-          </article>
+        <p class="section-intro">Trellis should feel like a dependency graph debugger, a transaction inspector, and a resource ownership ledger. The animations below show why value reactivity alone is not enough.</p>
+        <div class="animation-preview">
+          <iframe class="animation-embed" src="/animations/signal-vs-trellis" title="Signal graph versus Trellis graph animation"></iframe>
+          <iframe class="animation-embed" src="/animations/shrinking-set" title="Shrinking set structural diff animation"></iframe>
+        </div>
+        <div class="animation-link-row">
+          <a class="button" href="/animations">Open animation studies</a>
         </div>
       </div>
     </section>
@@ -214,7 +143,7 @@ for frame in tx.frames() {
   <footer class="footer">
     <div class="container">
       <p>Trellis is for Rust developers who have hand-rolled callback glue to keep derived state, subscriptions, jobs, caches, and output surfaces in sync.</p>
-      <p><a href="/roadmap">Roadmap</a> <span class="muted">/</span> <a href="/comparisons">Comparisons</a> <span class="muted">/</span> <a href="/concepts">Concepts</a></p>
+      <p><a href="/animations">Animations</a> <span class="muted">/</span> <a href="/roadmap">Roadmap</a> <span class="muted">/</span> <a href="/comparisons">Comparisons</a> <span class="muted">/</span> <a href="/concepts">Concepts</a></p>
       <p class="mono">Make the graph explicit.</p>
     </div>
   </footer>

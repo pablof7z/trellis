@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Animated Trellis explainers for resource graph reconciliation.">
+  <title>Animations - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a>
+      <nav class="nav-links" aria-label="Primary"><a href="/guide">Guide</a><a href="/examples">Examples</a><a href="/docs">Docs</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav>
+    </div>
+  </header>
+  <main>
+    <section class="container page-hero">
+      <span class="eyebrow">Animation studies</span>
+      <h1>Resource graph bugs, shown as traces.</h1>
+      <p class="lead">These loops illustrate the pain Trellis is built for: state changes, old resources stay open, stale output remains visible, and ownership is unclear until the graph becomes explicit.</p>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="grid">
+          <a class="card" href="/animations/hidden-graph"><h3>Hidden graph becomes explicit</h3><p>A normal app UI exposes stale resources, then rewinds into a deterministic Trellis transaction.</p></a>
+          <a class="card" href="/animations/signal-vs-trellis"><h3>Signal graph vs Trellis graph</h3><p>One side recomputes values; the other reconciles subscriptions, output, and revisions.</p></a>
+          <a class="card" href="/animations/shrinking-set"><h3>Shrinking set</h3><p>A collection diff withdraws removed resources, keeps stable members, opens new demand, and stamps an output revision.</p></a>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
