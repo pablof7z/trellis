@@ -25,6 +25,7 @@ name = "trellis-examples"
 version = "0.1.0"
 dependencies = [
  "trellis-core",
+ "trellis-test",
 ]
 
 [[package]]

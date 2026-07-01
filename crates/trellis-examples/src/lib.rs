@@ -16,5 +16,8 @@ pub mod mini_language_server;
 /// Telemetry dashboard proof shape.
 pub mod telemetry_dashboard;
 
+/// Wrapper-friendly protocol subscription proof shape.
+pub mod protocol_subscription;
+
 /// Internal alpha acceptance coverage.
 pub mod internal_alpha;
