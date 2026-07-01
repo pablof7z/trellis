@@ -421,6 +421,14 @@ Full recompute comparison SHOULD include:
 - output baseline equivalence;
 - relevant audit or cause information where practical.
 
+The M10 implementation provides `full_recompute()`,
+`full_recompute_check()`, and `assert_incremental_equals_full()` for supported
+graph shapes. The check recomputes derived scalar values and collections from
+canonical inputs, rebuilds desired resource ownership from current collection
+state, and rematerializes active output state. M10 also exposes deterministic
+payload-free transaction traces and generated model scripts for replay and
+property-style invariant tests.
+
 If a feature makes full recompute impossible, it MUST be rejected or require a new ADR explaining why the feature belongs in the core despite that cost.
 
 ## Error semantics

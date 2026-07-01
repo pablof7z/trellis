@@ -22,6 +22,7 @@ mod graph;
 mod graph_support;
 mod ids;
 mod input;
+mod model;
 mod node;
 mod oracle;
 mod output;
@@ -33,6 +34,7 @@ mod resource_build;
 mod resource_reconcile;
 mod scope;
 mod scope_lifecycle;
+mod trace;
 mod transaction;
 mod transaction_build;
 mod transaction_types;
@@ -47,6 +49,7 @@ pub use error::{
 };
 pub use graph::Graph;
 pub use ids::{NodeId, OutputKey, Revision, ScopeId, TransactionId};
+pub use model::{ModelGenerator, ModelScript, ModelStep, ModelTopology};
 pub use node::{CollectionNode, DerivedNode, InputNode, NodeHandle, NodeKind, NodeMeta};
 pub use oracle::FullRecomputeCheck;
 pub use output::{
@@ -55,6 +58,10 @@ pub use output::{
 };
 pub use resource::{PlanContext, ResourceCommand, ResourceKey, ResourcePlan, ResourcePlanner};
 pub use scope::ScopeMeta;
+pub use trace::{
+    OutputFrameKindTrace, OutputFrameTrace, ResourceCommandKind, ResourceCommandTrace,
+    TraceMismatch, TransactionTrace, assert_transaction_traces_match,
+};
 pub use transaction::Transaction;
 pub use transaction_types::{
     AuditEntry, AuditEvent, TransactionOptions, TransactionPhase, TransactionResult,
