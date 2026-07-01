@@ -15,3 +15,6 @@ pub mod mini_language_server;
 
 /// Telemetry dashboard proof shape.
 pub mod telemetry_dashboard;
+
+/// Internal alpha acceptance coverage.
+pub mod internal_alpha;
