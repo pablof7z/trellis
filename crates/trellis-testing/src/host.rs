@@ -13,6 +13,13 @@ pub struct FakeHostEvent {
     pub class: HostStatusClass,
 }
 
+impl FakeHostEvent {
+    /// Consumes the event into the host status application tests feed as input.
+    pub fn into_status(self) -> HostStatusEvent {
+        self.status
+    }
+}
+
 /// Deterministic fake host boundary for resource status simulations.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FakeHost {
@@ -28,9 +35,9 @@ impl FakeHost {
     }
 
     /// Applies a transaction result to the ledger and returns explicit statuses.
-    pub fn apply_result<C, O>(
+    pub fn apply_result<C: Clone, O>(
         &mut self,
-        ledger: &mut ResourceLedger,
+        ledger: &mut ResourceLedger<C>,
         result: &TransactionResult<C, O>,
     ) -> Vec<FakeHostEvent> {
         ledger.apply_result(result);
@@ -38,42 +45,166 @@ impl FakeHost {
             .resource_plan
             .commands()
             .iter()
-            .filter_map(|command| self.status_for_command(ledger, command, result.revision))
+            .map(|command| self.status_for_command(ledger, command, result.revision))
             .collect()
     }
 
-    /// Produces a custom host status event and classifies it through the ledger.
-    pub fn observe(
+    /// Produces a custom successful-open status event.
+    pub fn observe<C: Clone>(
         &mut self,
-        ledger: &mut ResourceLedger,
+        ledger: &mut ResourceLedger<C>,
         resource_key: ResourceKey,
         scope: ScopeId,
         command_revision: Revision,
+    ) -> FakeHostEvent {
+        self.observe_outcome(
+            ledger,
+            resource_key,
+            scope,
+            command_revision,
+            HostResourceOutcome::Open,
+        )
+    }
+
+    /// Produces a custom host outcome and classifies it through the ledger.
+    pub fn observe_outcome<C: Clone>(
+        &mut self,
+        ledger: &mut ResourceLedger<C>,
+        resource_key: ResourceKey,
+        scope: ScopeId,
+        command_revision: Revision,
+        status: HostResourceOutcome,
     ) -> FakeHostEvent {
         let status = HostStatusEvent {
             resource_key,
             scope,
             command_revision,
             status_revision: self.next_revision(),
-            status: HostResourceOutcome::Open,
+            status,
         };
         let class = ledger.classify_status(status.clone());
         FakeHostEvent { status, class }
     }
 
-    fn status_for_command<C>(
+    /// Reports that an open command succeeded.
+    pub fn open_succeeded<C: Clone>(
         &mut self,
-        ledger: &mut ResourceLedger,
+        ledger: &mut ResourceLedger<C>,
+        resource_key: ResourceKey,
+        scope: ScopeId,
+        command_revision: Revision,
+    ) -> FakeHostEvent {
+        self.observe(ledger, resource_key, scope, command_revision)
+    }
+
+    /// Reports that an earlier open command succeeded after later graph work.
+    pub fn open_succeeds_later<C: Clone>(
+        &mut self,
+        ledger: &mut ResourceLedger<C>,
+        resource_key: ResourceKey,
+        scope: ScopeId,
+        command_revision: Revision,
+    ) -> FakeHostEvent {
+        self.open_succeeded(ledger, resource_key, scope, command_revision)
+    }
+
+    /// Reports that an open command failed.
+    pub fn open_failed<C: Clone>(
+        &mut self,
+        ledger: &mut ResourceLedger<C>,
+        resource_key: ResourceKey,
+        scope: ScopeId,
+        command_revision: Revision,
+        reason: impl Into<String>,
+    ) -> FakeHostEvent {
+        self.observe_outcome(
+            ledger,
+            resource_key,
+            scope,
+            command_revision,
+            HostResourceOutcome::Failed(reason.into()),
+        )
+    }
+
+    /// Reports that a close command succeeded.
+    pub fn close_succeeded<C: Clone>(
+        &mut self,
+        ledger: &mut ResourceLedger<C>,
+        resource_key: ResourceKey,
+        scope: ScopeId,
+        command_revision: Revision,
+    ) -> FakeHostEvent {
+        self.observe_outcome(
+            ledger,
+            resource_key,
+            scope,
+            command_revision,
+            HostResourceOutcome::Closed,
+        )
+    }
+
+    /// Reports that a close command failed at the host boundary.
+    pub fn close_failed<C: Clone>(
+        &mut self,
+        ledger: &mut ResourceLedger<C>,
+        resource_key: ResourceKey,
+        scope: ScopeId,
+        command_revision: Revision,
+        reason: impl Into<String>,
+    ) -> FakeHostEvent {
+        self.observe_outcome(
+            ledger,
+            resource_key,
+            scope,
+            command_revision,
+            HostResourceOutcome::Failed(reason.into()),
+        )
+    }
+
+    /// Reports that a resource was externally lost outside graph propagation.
+    pub fn resource_lost<C: Clone>(
+        &mut self,
+        ledger: &mut ResourceLedger<C>,
+        resource_key: ResourceKey,
+        scope: ScopeId,
+        command_revision: Revision,
+        reason: impl Into<String>,
+    ) -> FakeHostEvent {
+        self.observe_outcome(
+            ledger,
+            resource_key,
+            scope,
+            command_revision,
+            HostResourceOutcome::Failed(reason.into()),
+        )
+    }
+
+    /// Re-delivers a previous host status without assigning a new host revision.
+    pub fn duplicate_status<C: Clone>(
+        &mut self,
+        ledger: &mut ResourceLedger<C>,
+        event: &FakeHostEvent,
+    ) -> FakeHostEvent {
+        let status = event.status.clone();
+        let class = ledger.classify_status(status.clone());
+        FakeHostEvent { status, class }
+    }
+
+    fn status_for_command<C: Clone>(
+        &mut self,
+        ledger: &mut ResourceLedger<C>,
         command: &ResourceCommand<C>,
         revision: Revision,
-    ) -> Option<FakeHostEvent> {
+    ) -> FakeHostEvent {
         match command {
             ResourceCommand::Open { key, scope, .. }
             | ResourceCommand::Replace { key, scope, .. }
             | ResourceCommand::Refresh { key, scope, .. } => {
-                Some(self.observe(ledger, key.clone(), *scope, revision))
+                self.open_succeeded(ledger, key.clone(), *scope, revision)
             }
-            ResourceCommand::Close { .. } => None,
+            ResourceCommand::Close { key, scope } => {
+                self.close_succeeded(ledger, key.clone(), *scope, revision)
+            }
         }
     }
 

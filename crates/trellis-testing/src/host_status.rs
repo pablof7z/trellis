@@ -1,4 +1,4 @@
-use trellis_core::{HostResourceStatus, ResourceKey, Revision, ScopeId};
+use trellis_core::{HostResourceStatus, ResourceKey, Revision, ScopeId, TransactionId};
 
 /// Explicit host status event fed to tests after plan application.
 pub type HostStatusEvent = HostResourceStatus;
@@ -10,6 +10,10 @@ pub struct HostStatusRecord {
     pub status: HostStatusEvent,
     /// Deterministic classification assigned by the ledger.
     pub class: HostStatusClass,
+    /// Last command transaction known for this resource key, if any.
+    pub last_transaction_id: Option<TransactionId>,
+    /// Last command revision known for this resource key, if any.
+    pub last_command_revision: Option<Revision>,
 }
 
 /// Classification for host status delivery.

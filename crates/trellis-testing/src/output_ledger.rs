@@ -1,7 +1,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use trellis_core::{
-    OutputFrame, OutputFrameKind, OutputKey, Revision, ScopeId, TransactionId, TransactionResult,
+    OutputFrame, OutputFrameKind, OutputFrameKindTrace, OutputFrameTrace, OutputKey, Revision,
+    ScopeId, TransactionId, TransactionResult,
 };
 
 /// Current ledger view for one materialized output.
@@ -17,6 +18,8 @@ pub struct OutputSnapshot<O> {
     pub state: Option<O>,
     /// Whether a clear frame has been observed.
     pub cleared: bool,
+    /// Last frame trace observed for this output.
+    pub frame: OutputFrameTrace,
 }
 
 /// Output ledger assertion failure.
@@ -24,24 +27,39 @@ pub struct OutputSnapshot<O> {
 pub enum OutputLedgerError {
     /// A frame revision moved backward.
     RevisionRegression {
-        /// Output key.
-        key: OutputKey,
+        /// Frame that regressed.
+        context: OutputFrameTrace,
         /// Previous revision.
         previous: Revision,
-        /// New revision.
-        next: Revision,
     },
     /// Output was not cleared.
-    NotCleared(OutputKey),
-    /// A closed scope emitted a non-terminal frame.
-    FrameAfterClosedScope {
+    NotCleared {
         /// Output key.
         key: OutputKey,
-        /// Scope that was already closed.
+        /// Last frame context for the output, if any.
+        context: Option<OutputFrameTrace>,
+    },
+    /// A closed scope emitted a non-terminal frame.
+    FrameAfterClosedScope {
+        /// Frame that targeted the closed scope.
+        context: OutputFrameTrace,
+    },
+    /// Outputs owned by a closed scope were not cleared.
+    ClosedScopeNotCleared {
+        /// Closed scope.
         scope: ScopeId,
+        /// Output keys that remain uncleared.
+        outputs: Vec<OutputKey>,
+        /// Last frame contexts for uncleared outputs.
+        contexts: Vec<OutputFrameTrace>,
     },
     /// Current state differs from an expected baseline/rebaseline.
-    StateMismatch(OutputKey),
+    StateMismatch {
+        /// Output key.
+        key: OutputKey,
+        /// Last frame context for the output, if any.
+        context: Option<OutputFrameTrace>,
+    },
 }
 
 /// Fake output consumer ledger for materialized output frames.
@@ -49,6 +67,7 @@ pub enum OutputLedgerError {
 pub struct OutputLedger<O> {
     outputs: BTreeMap<OutputKey, OutputSnapshot<O>>,
     closed_scopes: BTreeSet<ScopeId>,
+    frames: Vec<OutputFrameTrace>,
     errors: Vec<OutputLedgerError>,
 }
 
@@ -58,6 +77,7 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
         Self {
             outputs: BTreeMap::new(),
             closed_scopes: BTreeSet::new(),
+            frames: Vec::new(),
             errors: Vec::new(),
         }
     }
@@ -76,22 +96,22 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
 
     /// Applies a single output frame.
     pub fn apply_frame(&mut self, frame: &OutputFrame<O>) {
+        let trace = output_frame_trace(frame);
+        self.frames.push(trace.clone());
         if self.closed_scopes.contains(&frame.scope)
             && !matches!(frame.kind, OutputFrameKind::Clear(_))
         {
-            self.errors.push(OutputLedgerError::FrameAfterClosedScope {
-                key: frame.output_key,
-                scope: frame.scope,
-            });
+            self.errors
+                .push(OutputLedgerError::FrameAfterClosedScope { context: trace });
+            return;
         }
 
         if let Some(previous) = self.outputs.get(&frame.output_key)
             && frame.revision < previous.revision
         {
             self.errors.push(OutputLedgerError::RevisionRegression {
-                key: frame.output_key,
+                context: trace.clone(),
                 previous: previous.revision,
-                next: frame.revision,
             });
         }
 
@@ -109,6 +129,7 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
                 revision: frame.revision,
                 state,
                 cleared: matches!(frame.kind, OutputFrameKind::Clear(_)),
+                frame: trace,
             },
         );
     }
@@ -123,13 +144,18 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
         &self.errors
     }
 
+    /// Returns frame traces in applied delivery order.
+    pub fn frame_trace(&self) -> &[OutputFrameTrace] {
+        &self.frames
+    }
+
     /// Asserts no revision regressions or closed-scope frame errors occurred.
     pub fn assert_revision_monotonic(&self) -> Result<(), OutputLedgerError> {
-        if let Some(error) = self.errors.first() {
-            Err(error.clone())
-        } else {
-            Ok(())
-        }
+        self.errors
+            .iter()
+            .find(|error| matches!(error, OutputLedgerError::RevisionRegression { .. }))
+            .cloned()
+            .map_or(Ok(()), Err)
     }
 
     /// Asserts closed scopes emitted no non-terminal output frames.
@@ -143,6 +169,29 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
             .map_or(Ok(()), Err)
     }
 
+    /// Asserts every output owned by a closed scope has been cleared.
+    pub fn assert_closed_scope_cleared(&self, scope: ScopeId) -> Result<(), OutputLedgerError> {
+        let uncleared = self
+            .outputs
+            .iter()
+            .filter(|(_, snapshot)| snapshot.scope == scope && !snapshot.cleared)
+            .map(|(key, _)| *key)
+            .collect::<Vec<_>>();
+        if uncleared.is_empty() {
+            Ok(())
+        } else {
+            let contexts = uncleared
+                .iter()
+                .filter_map(|key| self.outputs.get(key).map(|snapshot| snapshot.frame.clone()))
+                .collect();
+            Err(OutputLedgerError::ClosedScopeNotCleared {
+                scope,
+                outputs: uncleared,
+                contexts,
+            })
+        }
+    }
+
     /// Asserts an output key is currently cleared.
     pub fn assert_cleared(&self, key: OutputKey) -> Result<(), OutputLedgerError> {
         if self
@@ -152,7 +201,13 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
         {
             Ok(())
         } else {
-            Err(OutputLedgerError::NotCleared(key))
+            Err(OutputLedgerError::NotCleared {
+                key,
+                context: self
+                    .outputs
+                    .get(&key)
+                    .map(|snapshot| snapshot.frame.clone()),
+            })
         }
     }
 
@@ -170,7 +225,46 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
         {
             Ok(())
         } else {
-            Err(OutputLedgerError::StateMismatch(key))
+            Err(OutputLedgerError::StateMismatch {
+                key,
+                context: self
+                    .outputs
+                    .get(&key)
+                    .map(|snapshot| snapshot.frame.clone()),
+            })
         }
+    }
+
+    /// Asserts the current delta-applied state matches a rebaseline value.
+    pub fn assert_delta_sequence_matches_rebaseline(
+        &self,
+        key: OutputKey,
+        rebaseline: &O,
+    ) -> Result<(), OutputLedgerError> {
+        self.assert_current_equals(key, rebaseline)
+    }
+
+    /// Asserts the ledger observed no structural frame errors.
+    pub fn assert_consumer_needs_no_hidden_graph_state(&self) -> Result<(), OutputLedgerError> {
+        self.errors.first().cloned().map_or(Ok(()), Err)
+    }
+}
+
+fn output_frame_trace<O>(frame: &OutputFrame<O>) -> OutputFrameTrace {
+    OutputFrameTrace {
+        output_key: frame.output_key,
+        scope: frame.scope,
+        transaction_id: frame.transaction_id,
+        revision: frame.revision,
+        kind: output_frame_kind(&frame.kind),
+    }
+}
+
+fn output_frame_kind<O>(kind: &OutputFrameKind<O>) -> OutputFrameKindTrace {
+    match kind {
+        OutputFrameKind::Baseline(_) => OutputFrameKindTrace::Baseline,
+        OutputFrameKind::Delta(_) => OutputFrameKindTrace::Delta,
+        OutputFrameKind::Clear(reason) => OutputFrameKindTrace::Clear(*reason),
+        OutputFrameKind::Rebaseline(_, reason) => OutputFrameKindTrace::Rebaseline(*reason),
     }
 }

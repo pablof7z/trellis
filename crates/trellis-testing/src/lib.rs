@@ -17,14 +17,17 @@ mod host;
 mod host_status;
 mod oracle;
 mod output_ledger;
+mod resource_assertions;
 mod resource_error;
 mod resource_ledger;
+mod resource_state;
 mod scenario;
 
 pub use audit::{
-    AuditAssertionError, assert_dependency_path_exists, assert_every_output_frame_has_revision,
-    assert_every_output_frame_has_scope, assert_every_resource_command_has_cause,
-    assert_no_unexplained_output_frame, assert_no_unexplained_plan,
+    AuditAssertionError, OutputAuditContext, ResourceAuditContext, assert_dependency_path_exists,
+    assert_every_output_frame_has_revision, assert_every_output_frame_has_scope,
+    assert_every_resource_command_has_cause, assert_no_unexplained_output_frame,
+    assert_no_unexplained_plan,
 };
 pub use conformance::{
     ConformanceCheckReport, ConformanceCheckResult, ConformanceFailure, ConformanceLevel,
@@ -36,8 +39,9 @@ pub use oracle::{
     FullRecomputeOracle, OracleCheck, OracleMismatch, assert_incremental_equals_full,
 };
 pub use output_ledger::{OutputLedger, OutputLedgerError, OutputSnapshot};
-pub use resource_error::ResourceLedgerError;
-pub use resource_ledger::{ResourceLedger, ResourceSnapshot};
+pub use resource_error::{ResourceCommandContext, ResourceLedgerError, ResourceStatusContext};
+pub use resource_ledger::ResourceLedger;
+pub use resource_state::{ResourceCommandRecord, ResourceSnapshot};
 pub use scenario::{NoRedaction, Scenario, ScenarioError, ScenarioStep, TraceRedactor};
 
 #[cfg(feature = "proptest")]
