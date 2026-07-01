@@ -4,26 +4,29 @@ use trellis_core::{DependencyList, Graph};
 fn debug_dump_is_deterministic() {
     fn build_graph() -> Graph {
         let mut graph = Graph::new();
-        let root = graph.create_scope("root");
-        let workspace = graph
+        let mut tx = graph.begin_transaction().unwrap();
+        let root = tx.create_scope("root").unwrap();
+        let workspace = tx
             .create_scope_with_parent("workspace", Some(root))
             .unwrap();
-        let active = graph.input::<String>("active_workspace");
-        let visible = graph
+        let active = tx.input::<String>("active_workspace").unwrap();
+        let visible = tx
             .derived::<Vec<String>>(
                 "visible_projects",
                 DependencyList::new([active.id()]).unwrap(),
             )
             .unwrap();
-        let windows = graph
+        let windows = tx
             .collection::<String, String>(
                 "sync_windows",
                 DependencyList::new([active.id(), visible.id()]).unwrap(),
             )
             .unwrap();
 
-        graph.attach_node_to_scope(visible, workspace).unwrap();
-        graph.attach_node_to_scope(windows, workspace).unwrap();
+        tx.attach_node_to_scope(visible, workspace).unwrap();
+        tx.attach_node_to_scope(windows, workspace).unwrap();
+        tx.commit().unwrap();
+        drop(tx);
         graph
     }
 
@@ -34,7 +37,7 @@ fn debug_dump_is_deterministic() {
     assert_eq!(
         first,
         concat!(
-            "Graph(revision=0)\n",
+            "Graph(revision=1)\n",
             "Scopes:\n",
             "  ScopeId(1) name=\"root\" parent=None closed=false\n",
             "  ScopeId(2) name=\"workspace\" parent=Some(ScopeId(1)) closed=false\n",

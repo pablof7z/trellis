@@ -59,6 +59,10 @@ impl Revision {
     pub const fn get(self) -> u64 {
         self.0
     }
+
+    pub(crate) const fn next(self) -> Self {
+        Self(self.0 + 1)
+    }
 }
 
 /// Monotonic transaction identity marker.
@@ -74,5 +78,9 @@ impl TransactionId {
     /// Returns the transaction id value.
     pub const fn get(self) -> u64 {
         self.0
+    }
+
+    pub(crate) const fn next(self) -> Self {
+        Self(self.0 + 1)
     }
 }
