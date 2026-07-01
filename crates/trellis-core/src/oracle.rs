@@ -9,7 +9,7 @@ pub struct FullRecomputeCheck {
     pub checked_collections: Vec<NodeId>,
 }
 
-impl Graph {
+impl<C> Graph<C> {
     /// Compares committed incremental state against full recompute.
     pub fn full_recompute_check(&self) -> GraphResult<FullRecomputeCheck> {
         let mut full = self.clone();

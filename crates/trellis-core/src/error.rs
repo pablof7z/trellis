@@ -19,6 +19,8 @@ pub enum GraphError {
     NodeAlreadyAttached(NodeId),
     /// A scope is closed and cannot accept new nodes.
     ScopeAlreadyClosed(ScopeId),
+    /// A scope was already closed.
+    ScopeClosed(ScopeId),
     /// A transaction is already open.
     NestedTransaction,
     /// A transaction was already closed and cannot be reused.
@@ -35,6 +37,10 @@ pub enum GraphError {
     WrongDerivedType(NodeId),
     /// A collection read used the wrong key or value type for the node.
     WrongCollectionType(NodeId),
+    /// A resource command used a scope outside its registered planner scope.
+    ResourceScopeMismatch(ScopeId),
+    /// A resource command required an existing owned resource.
+    ResourceNotOwned,
     /// A dependency cycle was detected.
     CycleDetected(NodeId),
     /// A scalar derived node declared a collection dependency.
@@ -56,6 +62,7 @@ impl fmt::Display for GraphError {
             Self::SelfDependency(id) => write!(f, "self dependency: {id:?}"),
             Self::NodeAlreadyAttached(id) => write!(f, "node already attached: {id:?}"),
             Self::ScopeAlreadyClosed(id) => write!(f, "scope already closed: {id:?}"),
+            Self::ScopeClosed(id) => write!(f, "scope already closed: {id:?}"),
             Self::NestedTransaction => write!(f, "a transaction is already open"),
             Self::TransactionClosed(id) => write!(f, "transaction already closed: {id:?}"),
             Self::NotInputNode(id) => write!(f, "node is not an input: {id:?}"),
@@ -66,6 +73,8 @@ impl fmt::Display for GraphError {
             Self::WrongCollectionType(id) => {
                 write!(f, "wrong collection value type for node: {id:?}")
             }
+            Self::ResourceScopeMismatch(id) => write!(f, "resource scope mismatch: {id:?}"),
+            Self::ResourceNotOwned => write!(f, "resource is not owned"),
             Self::CycleDetected(id) => write!(f, "dependency cycle detected at node: {id:?}"),
             Self::CollectionDependencyNotAllowed(id) => {
                 write!(

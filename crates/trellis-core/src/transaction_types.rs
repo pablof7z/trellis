@@ -1,4 +1,4 @@
-use crate::{NodeId, Revision, ScopeId, TransactionId};
+use crate::{NodeId, ResourcePlan, Revision, ScopeId, TransactionId};
 
 /// Configuration for committing input changes.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -39,6 +39,8 @@ pub enum AuditEvent {
     CollectionChanged(NodeId),
     /// A scope was created.
     ScopeCreated(ScopeId),
+    /// A scope was closed.
+    ScopeClosed(ScopeId),
     /// A node was created.
     NodeCreated(NodeId),
     /// A node was attached to a scope.
@@ -52,7 +54,7 @@ pub enum AuditEvent {
 
 /// Result returned by a committed input transaction.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct TransactionResult {
+pub struct TransactionResult<C = ()> {
     /// Committed transaction id.
     pub transaction_id: TransactionId,
     /// Graph revision after commit.
@@ -63,6 +65,8 @@ pub struct TransactionResult {
     pub changed_derived_nodes: Vec<NodeId>,
     /// Collection nodes that changed in deterministic topological order.
     pub changed_collection_nodes: Vec<NodeId>,
+    /// Data-only resource commands produced by graph propagation.
+    pub resource_plan: ResourcePlan<C>,
     /// Deterministic audit entries for staged input writes.
     pub audit_log: Vec<AuditEntry>,
 }

@@ -38,4 +38,8 @@ impl ScopeMeta {
     pub fn is_closed(&self) -> bool {
         self.closed
     }
+
+    pub(crate) fn close(&mut self) {
+        self.closed = true;
+    }
 }

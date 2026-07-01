@@ -3,19 +3,26 @@ use crate::{DerivedNode, Graph, GraphError, GraphResult, InputNode, NodeId, Node
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-type ComputeFn =
-    dyn for<'ctx> Fn(&DeriveContext<'ctx>) -> Result<Box<dyn StoredInput>, DeriveError>;
+type ComputeFn<C> =
+    dyn for<'ctx> Fn(&DeriveContext<'ctx, C>) -> Result<Box<dyn StoredInput>, DeriveError>;
 
-#[derive(Clone)]
-pub(crate) struct DerivedSpec {
-    compute: Arc<ComputeFn>,
+pub(crate) struct DerivedSpec<C> {
+    compute: Arc<ComputeFn<C>>,
 }
 
-impl DerivedSpec {
+impl<C> Clone for DerivedSpec<C> {
+    fn clone(&self) -> Self {
+        Self {
+            compute: Arc::clone(&self.compute),
+        }
+    }
+}
+
+impl<C> DerivedSpec<C> {
     pub(crate) fn new<T, F>(derive: F) -> Self
     where
         T: Clone + PartialEq + 'static,
-        F: for<'ctx> Fn(&DeriveContext<'ctx>) -> Result<T, DeriveError> + 'static,
+        F: for<'ctx> Fn(&DeriveContext<'ctx, C>) -> Result<T, DeriveError> + 'static,
     {
         Self {
             compute: Arc::new(move |ctx| derive(ctx).map(boxed_input)),
@@ -24,20 +31,20 @@ impl DerivedSpec {
 
     pub(crate) fn compute(
         &self,
-        ctx: &DeriveContext<'_>,
+        ctx: &DeriveContext<'_, C>,
     ) -> Result<Box<dyn StoredInput>, DeriveError> {
         (self.compute)(ctx)
     }
 }
 
 /// Read-only context passed to pure derived node computations.
-pub struct DeriveContext<'graph> {
-    graph: &'graph Graph,
+pub struct DeriveContext<'graph, C = ()> {
+    graph: &'graph Graph<C>,
     declared_dependencies: &'graph [NodeId],
 }
 
-impl<'graph> DeriveContext<'graph> {
-    pub(crate) fn new(graph: &'graph Graph, declared_dependencies: &'graph [NodeId]) -> Self {
+impl<'graph, C> DeriveContext<'graph, C> {
+    pub(crate) fn new(graph: &'graph Graph<C>, declared_dependencies: &'graph [NodeId]) -> Self {
         Self {
             graph,
             declared_dependencies,
@@ -101,7 +108,7 @@ impl DeriveError {
     }
 }
 
-impl Graph {
+impl<C> Graph<C> {
     pub(crate) fn recompute_dirty_derived(
         &mut self,
         initial_changed: &[NodeId],

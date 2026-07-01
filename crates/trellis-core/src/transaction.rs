@@ -6,21 +6,22 @@ use crate::{
 use std::collections::BTreeMap;
 
 /// Staged canonical input transaction.
-pub struct Transaction<'graph> {
-    pub(crate) graph: &'graph mut Graph,
-    pub(crate) working: Graph,
+pub struct Transaction<'graph, C = ()> {
+    pub(crate) graph: &'graph mut Graph<C>,
+    pub(crate) working: Graph<C>,
     id: TransactionId,
     options: TransactionOptions,
     staged_inputs: BTreeMap<NodeId, Box<dyn StoredInput>>,
     pub(crate) staged_events: Vec<AuditEvent>,
+    pub(crate) staged_resource_planner_collections: Vec<NodeId>,
     pub(crate) graph_mutated: bool,
     pub(crate) failed: Option<GraphError>,
     closed: bool,
 }
 
-impl<'graph> Transaction<'graph> {
+impl<'graph, C> Transaction<'graph, C> {
     pub(crate) fn new(
-        graph: &'graph mut Graph,
+        graph: &'graph mut Graph<C>,
         id: TransactionId,
         options: TransactionOptions,
     ) -> Self {
@@ -33,6 +34,7 @@ impl<'graph> Transaction<'graph> {
             options,
             staged_inputs: BTreeMap::new(),
             staged_events: Vec::new(),
+            staged_resource_planner_collections: Vec::new(),
             graph_mutated: false,
             failed: None,
             closed: false,
@@ -67,7 +69,7 @@ impl<'graph> Transaction<'graph> {
     }
 
     /// Commits staged input changes atomically.
-    pub fn commit(&mut self) -> GraphResult<TransactionResult> {
+    pub fn commit(&mut self) -> GraphResult<TransactionResult<C>> {
         self.ensure_open()?;
         if let Some(error) = self.failed.clone() {
             self.close();
@@ -155,6 +157,23 @@ impl<'graph> Transaction<'graph> {
             }
             audit_events.push(AuditEvent::CollectionChanged(*node));
         }
+        self.working
+            .baseline_collection_diffs(&self.staged_resource_planner_collections);
+        let closed_scopes: Vec<_> = self
+            .staged_events
+            .iter()
+            .filter_map(|event| match event {
+                AuditEvent::ScopeClosed(scope) => Some(*scope),
+                _ => None,
+            })
+            .collect();
+        let resource_plan = match self.working.produce_resource_plan(&closed_scopes) {
+            Ok(plan) => plan,
+            Err(error) => {
+                self.close();
+                return Err(error);
+            }
+        };
         let audit_log = audit_events
             .into_iter()
             .map(|event| AuditEntry {
@@ -173,6 +192,7 @@ impl<'graph> Transaction<'graph> {
             changed_inputs,
             changed_derived_nodes,
             changed_collection_nodes,
+            resource_plan,
             audit_log,
         };
         *self.graph = self.working.clone();
@@ -195,7 +215,7 @@ impl<'graph> Transaction<'graph> {
     }
 }
 
-impl Drop for Transaction<'_> {
+impl<C> Drop for Transaction<'_, C> {
     fn drop(&mut self) {
         if !self.closed {
             self.graph.transaction_open = false;

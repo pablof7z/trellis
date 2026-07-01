@@ -2,7 +2,7 @@ use crate::collection::{CollectionContext, StoredCollection};
 use crate::{Graph, GraphError, GraphResult, NodeId, NodeKind};
 use std::collections::BTreeSet;
 
-impl Graph {
+impl<C> Graph<C> {
     pub(crate) fn recompute_dirty_collections(
         &mut self,
         initial_changed: &[NodeId],
@@ -53,7 +53,7 @@ impl Graph {
 
     pub(crate) fn compare_full_recomputed_collections(
         &self,
-        full: &Graph,
+        full: &Graph<C>,
         order: &[NodeId],
     ) -> GraphResult<()> {
         for node in order {
@@ -70,6 +70,21 @@ impl Graph {
             }
         }
         Ok(())
+    }
+
+    pub(crate) fn baseline_collection_diffs(&mut self, collections: &[NodeId]) {
+        for node in collections {
+            if self.collection_diffs.contains_key(node) {
+                continue;
+            }
+            let Some(current) = self.collection_values.get(node) else {
+                continue;
+            };
+            let previous = current.empty_box();
+            let diff = previous.diff(current.as_ref());
+            self.previous_collection_values.insert(*node, previous);
+            self.collection_diffs.insert(*node, diff);
+        }
     }
 
     pub(crate) fn collection_topological_order(&self) -> GraphResult<Vec<NodeId>> {
