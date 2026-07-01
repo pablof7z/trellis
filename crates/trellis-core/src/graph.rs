@@ -117,7 +117,7 @@ impl<C, O> Graph<C, O> {
         debug_name: impl Into<String>,
     ) -> GraphResult<InputNode<T>>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         let meta = NodeMeta::new(
             id,
@@ -137,10 +137,12 @@ impl<C, O> Graph<C, O> {
         debug_name: impl Into<String>,
         dependencies: DependencyList,
         derive: impl for<'ctx> Fn(&crate::DeriveContext<'ctx, C, O>) -> Result<T, crate::DeriveError>
+        + Send
+        + Sync
         + 'static,
     ) -> GraphResult<DerivedNode<T>>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         self.validate_dependencies(id, &dependencies)?;
         self.reject_collection_dependencies(&dependencies)?;

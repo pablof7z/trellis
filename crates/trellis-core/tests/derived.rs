@@ -1,5 +1,7 @@
-use std::cell::Cell;
-use std::rc::Rc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicUsize, Ordering},
+};
 
 use trellis_core::{DependencyList, DeriveError, Graph, GraphError};
 
@@ -34,8 +36,8 @@ fn derived_node_recomputes_when_input_changes() {
 
 #[test]
 fn unaffected_derived_node_does_not_recompute() {
-    let left_runs = Rc::new(Cell::new(0));
-    let right_runs = Rc::new(Cell::new(0));
+    let left_runs = Arc::new(AtomicUsize::new(0));
+    let right_runs = Arc::new(AtomicUsize::new(0));
 
     let mut graph = Graph::new();
     let mut tx = graph.begin_transaction().unwrap();
@@ -44,25 +46,25 @@ fn unaffected_derived_node_does_not_recompute() {
     tx.set_input(left_input, 1).unwrap();
     tx.set_input(right_input, 10).unwrap();
 
-    let left_runs_for_derive = Rc::clone(&left_runs);
+    let left_runs_for_derive = Arc::clone(&left_runs);
     let left = tx
         .derived::<u64>(
             "left",
             DependencyList::new([left_input.id()]).unwrap(),
             move |ctx| {
-                left_runs_for_derive.set(left_runs_for_derive.get() + 1);
+                left_runs_for_derive.fetch_add(1, Ordering::Relaxed);
                 Ok(*ctx.input(left_input)? + 1)
             },
         )
         .unwrap();
 
-    let right_runs_for_derive = Rc::clone(&right_runs);
+    let right_runs_for_derive = Arc::clone(&right_runs);
     let right = tx
         .derived::<u64>(
             "right",
             DependencyList::new([right_input.id()]).unwrap(),
             move |ctx| {
-                right_runs_for_derive.set(right_runs_for_derive.get() + 1);
+                right_runs_for_derive.fetch_add(1, Ordering::Relaxed);
                 Ok(*ctx.input(right_input)? + 1)
             },
         )
@@ -70,8 +72,8 @@ fn unaffected_derived_node_does_not_recompute() {
     tx.commit().unwrap();
     drop(tx);
 
-    assert_eq!(left_runs.get(), 1);
-    assert_eq!(right_runs.get(), 1);
+    assert_eq!(left_runs.load(Ordering::Relaxed), 1);
+    assert_eq!(right_runs.load(Ordering::Relaxed), 1);
 
     let mut tx = graph.begin_transaction().unwrap();
     tx.set_input(left_input, 2).unwrap();
@@ -81,8 +83,8 @@ fn unaffected_derived_node_does_not_recompute() {
     assert_eq!(result.changed_derived_nodes, vec![left.id()]);
     assert_eq!(graph.derived_value(left).unwrap(), Some(&3));
     assert_eq!(graph.derived_value(right).unwrap(), Some(&11));
-    assert_eq!(left_runs.get(), 2);
-    assert_eq!(right_runs.get(), 1);
+    assert_eq!(left_runs.load(Ordering::Relaxed), 2);
+    assert_eq!(right_runs.load(Ordering::Relaxed), 1);
 }
 
 #[test]
@@ -138,7 +140,7 @@ fn derived_self_cycle_is_rejected() {
 
 #[test]
 fn equal_recompute_does_not_propagate_by_default() {
-    let downstream_runs = Rc::new(Cell::new(0));
+    let downstream_runs = Arc::new(AtomicUsize::new(0));
 
     let mut graph = Graph::new();
     let mut tx = graph.begin_transaction().unwrap();
@@ -151,13 +153,13 @@ fn equal_recompute_does_not_propagate_by_default() {
             move |ctx| Ok(*ctx.input(input)? % 2),
         )
         .unwrap();
-    let downstream_runs_for_derive = Rc::clone(&downstream_runs);
+    let downstream_runs_for_derive = Arc::clone(&downstream_runs);
     let downstream = tx
         .derived::<String>(
             "downstream",
             DependencyList::new([parity.id()]).unwrap(),
             move |ctx| {
-                downstream_runs_for_derive.set(downstream_runs_for_derive.get() + 1);
+                downstream_runs_for_derive.fetch_add(1, Ordering::Relaxed);
                 Ok(format!("parity={}", ctx.derived(parity)?))
             },
         )
@@ -176,7 +178,7 @@ fn equal_recompute_does_not_propagate_by_default() {
         graph.derived_value(downstream).unwrap(),
         Some(&"parity=1".to_owned())
     );
-    assert_eq!(downstream_runs.get(), 1);
+    assert_eq!(downstream_runs.load(Ordering::Relaxed), 1);
 }
 
 #[test]

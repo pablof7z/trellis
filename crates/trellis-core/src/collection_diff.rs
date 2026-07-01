@@ -77,7 +77,7 @@ where
 
 impl<K> StoredDiff for SetDiff<K>
 where
-    K: Clone + Ord + 'static,
+    K: Clone + Ord + Send + Sync + 'static,
 {
     fn clone_box(&self) -> Box<dyn StoredDiff> {
         Box::new(self.clone())
@@ -165,8 +165,8 @@ where
 
 impl<K, V> StoredDiff for MapDiff<K, V>
 where
-    K: Clone + Ord + 'static,
-    V: Clone + PartialEq + 'static,
+    K: Clone + Ord + Send + Sync + 'static,
+    V: Clone + PartialEq + Send + Sync + 'static,
 {
     fn clone_box(&self) -> Box<dyn StoredDiff> {
         Box::new(self.clone())

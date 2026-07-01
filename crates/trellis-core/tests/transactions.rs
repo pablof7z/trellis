@@ -2,7 +2,7 @@ use trellis_core::{AuditEvent, DependencyList, Graph, GraphError, NodeId, Transa
 
 fn input_graph<T>(name: &str) -> (Graph, trellis_core::InputNode<T>)
 where
-    T: Clone + PartialEq + 'static,
+    T: Clone + PartialEq + Send + Sync + 'static,
 {
     let mut graph = Graph::new();
     let mut tx = graph.begin_transaction().unwrap();

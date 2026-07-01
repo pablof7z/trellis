@@ -1,6 +1,6 @@
 use core::any::{Any, TypeId};
 
-pub(crate) trait StoredInput: Any {
+pub(crate) trait StoredInput: Any + Send + Sync {
     fn clone_box(&self) -> Box<dyn StoredInput>;
     fn equals(&self, other: &dyn StoredInput) -> bool;
     fn as_any(&self) -> &dyn Any;
@@ -29,7 +29,7 @@ impl<T> InputValue<T> {
 
 impl<T> StoredInput for InputValue<T>
 where
-    T: Clone + PartialEq + 'static,
+    T: Clone + PartialEq + Send + Sync + 'static,
 {
     fn clone_box(&self) -> Box<dyn StoredInput> {
         Box::new(self.clone())
@@ -49,14 +49,14 @@ where
 
 pub(crate) fn boxed_input<T>(value: T) -> Box<dyn StoredInput>
 where
-    T: Clone + PartialEq + 'static,
+    T: Clone + PartialEq + Send + Sync + 'static,
 {
     Box::new(InputValue::new(value))
 }
 
 pub(crate) fn downcast_input<T>(value: &dyn StoredInput) -> Option<&T>
 where
-    T: Clone + PartialEq + 'static,
+    T: Clone + PartialEq + Send + Sync + 'static,
 {
     value
         .as_any()

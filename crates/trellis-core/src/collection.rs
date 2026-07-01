@@ -8,7 +8,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 type CollectionComputeResult = Result<Box<dyn StoredCollection>, DeriveError>;
-type ComputeFn<C, O> = dyn for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> CollectionComputeResult;
+type ComputeFn<C, O> =
+    dyn for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> CollectionComputeResult + Send + Sync;
 
 pub(crate) struct MapCollectionShape<K, V>(PhantomData<fn() -> (K, V)>);
 pub(crate) struct SetCollectionShape<K>(PhantomData<fn() -> K>);
@@ -26,9 +27,11 @@ impl<C, O> Clone for CollectionSpec<C, O> {
 impl<C, O> CollectionSpec<C, O> {
     pub(crate) fn map<K, V, F>(derive: F) -> Self
     where
-        K: Clone + Ord + 'static,
-        V: Clone + PartialEq + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
+        V: Clone + PartialEq + Send + Sync + 'static,
         F: for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeMap<K, V>, DeriveError>
+            + Send
+            + Sync
             + 'static,
     {
         Self {
@@ -38,8 +41,10 @@ impl<C, O> CollectionSpec<C, O> {
 
     pub(crate) fn set<K, F>(derive: F) -> Self
     where
-        K: Clone + Ord + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
         F: for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeSet<K>, DeriveError>
+            + Send
+            + Sync
             + 'static,
     {
         Self {
@@ -71,7 +76,7 @@ impl<'graph, C, O> CollectionContext<'graph, C, O> {
     /// Reads a declared input dependency.
     pub fn input<T>(&self, input: InputNode<T>) -> Result<&'graph T, DeriveError>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         let node = input.id();
         self.require_declared(node)?;
@@ -85,7 +90,7 @@ impl<'graph, C, O> CollectionContext<'graph, C, O> {
     /// Reads a declared scalar derived dependency.
     pub fn derived<T>(&self, derived: DerivedNode<T>) -> Result<&'graph T, DeriveError>
     where
-        T: Clone + PartialEq + 'static,
+        T: Clone + PartialEq + Send + Sync + 'static,
     {
         let node = derived.id();
         self.require_declared(node)?;
@@ -102,8 +107,8 @@ impl<'graph, C, O> CollectionContext<'graph, C, O> {
         collection: CollectionNode<K, V>,
     ) -> Result<&'graph BTreeMap<K, V>, DeriveError>
     where
-        K: Clone + Ord + 'static,
-        V: Clone + PartialEq + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
+        V: Clone + PartialEq + Send + Sync + 'static,
     {
         let node = collection.id();
         self.require_declared(node)?;
@@ -123,7 +128,7 @@ impl<'graph, C, O> CollectionContext<'graph, C, O> {
         collection: CollectionNode<K, ()>,
     ) -> Result<&'graph BTreeSet<K>, DeriveError>
     where
-        K: Clone + Ord + 'static,
+        K: Clone + Ord + Send + Sync + 'static,
     {
         let node = collection.id();
         self.require_declared(node)?;
@@ -146,7 +151,7 @@ impl<'graph, C, O> CollectionContext<'graph, C, O> {
     }
 }
 
-pub(crate) trait StoredCollection: Any {
+pub(crate) trait StoredCollection: Any + Send + Sync {
     fn clone_box(&self) -> Box<dyn StoredCollection>;
     fn empty_box(&self) -> Box<dyn StoredCollection>;
     fn equals(&self, other: &dyn StoredCollection) -> bool;
@@ -160,7 +165,7 @@ impl Clone for Box<dyn StoredCollection> {
     }
 }
 
-pub(crate) trait StoredDiff: Any {
+pub(crate) trait StoredDiff: Any + Send + Sync {
     fn clone_box(&self) -> Box<dyn StoredDiff>;
     fn trace(&self, node: NodeId) -> CollectionDiffTrace;
     fn as_any(&self) -> &dyn Any;
@@ -184,8 +189,8 @@ struct SetCollection<K> {
 
 impl<K, V> StoredCollection for MapCollection<K, V>
 where
-    K: Clone + Ord + 'static,
-    V: Clone + PartialEq + 'static,
+    K: Clone + Ord + Send + Sync + 'static,
+    V: Clone + PartialEq + Send + Sync + 'static,
 {
     fn clone_box(&self) -> Box<dyn StoredCollection> {
         Box::new(self.clone())
@@ -217,7 +222,7 @@ where
 
 impl<K> StoredCollection for SetCollection<K>
 where
-    K: Clone + Ord + 'static,
+    K: Clone + Ord + Send + Sync + 'static,
 {
     fn clone_box(&self) -> Box<dyn StoredCollection> {
         Box::new(self.clone())
@@ -249,23 +254,23 @@ where
 
 pub(crate) fn boxed_map<K, V>(value: BTreeMap<K, V>) -> Box<dyn StoredCollection>
 where
-    K: Clone + Ord + 'static,
-    V: Clone + PartialEq + 'static,
+    K: Clone + Ord + Send + Sync + 'static,
+    V: Clone + PartialEq + Send + Sync + 'static,
 {
     Box::new(MapCollection { value })
 }
 
 pub(crate) fn boxed_set<K>(value: BTreeSet<K>) -> Box<dyn StoredCollection>
 where
-    K: Clone + Ord + 'static,
+    K: Clone + Ord + Send + Sync + 'static,
 {
     Box::new(SetCollection { value })
 }
 
 pub(crate) fn downcast_map<K, V>(value: &dyn StoredCollection) -> Option<&BTreeMap<K, V>>
 where
-    K: Clone + Ord + 'static,
-    V: Clone + PartialEq + 'static,
+    K: Clone + Ord + Send + Sync + 'static,
+    V: Clone + PartialEq + Send + Sync + 'static,
 {
     value
         .as_any()
@@ -275,7 +280,7 @@ where
 
 pub(crate) fn downcast_set<K>(value: &dyn StoredCollection) -> Option<&BTreeSet<K>>
 where
-    K: Clone + Ord + 'static,
+    K: Clone + Ord + Send + Sync + 'static,
 {
     value
         .as_any()
@@ -285,15 +290,15 @@ where
 
 pub(crate) fn downcast_map_diff<K, V>(value: &dyn StoredDiff) -> Option<&MapDiff<K, V>>
 where
-    K: Clone + Ord + 'static,
-    V: Clone + PartialEq + 'static,
+    K: Clone + Ord + Send + Sync + 'static,
+    V: Clone + PartialEq + Send + Sync + 'static,
 {
     value.as_any().downcast_ref::<MapDiff<K, V>>()
 }
 
 pub(crate) fn downcast_set_diff<K>(value: &dyn StoredDiff) -> Option<&SetDiff<K>>
 where
-    K: Clone + Ord + 'static,
+    K: Clone + Ord + Send + Sync + 'static,
 {
     value.as_any().downcast_ref::<SetDiff<K>>()
 }
