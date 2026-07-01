@@ -1,6 +1,6 @@
 use crate::{
     CollectionNode, GraphError, GraphResult, MapDiff, PlanContext, PlanError, ResourcePlan,
-    ResourcePlanner, SetDiff, Transaction,
+    SetDiff, Transaction, resource::ResourcePlanner,
 };
 
 impl<C: 'static, O> Transaction<'_, C, O>

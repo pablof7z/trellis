@@ -176,8 +176,7 @@ impl<'graph, D> PlanContext<'graph, D> {
 
 type PlannerFn<C, O> = dyn Fn(&Graph<C, O>) -> GraphResult<ResourcePlan<C>>;
 
-/// Registered pure resource planner.
-pub struct ResourcePlanner<C, O> {
+pub(crate) struct ResourcePlanner<C, O> {
     pub(crate) collection: NodeId,
     pub(crate) scope: ScopeId,
     run: Arc<PlannerFn<C, O>>,
