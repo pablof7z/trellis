@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The Trellis core model: inputs, derived nodes, collection diffs, resource plans, scopes, transactions, materialized outputs, and oracles.">
+  <title>Core Model - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide" aria-current="page">Guide</a><a href="/examples">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero">
+      <span class="eyebrow">Guide</span>
+      <h1>Inputs derive collections. Collections produce diffs. Diffs produce plans.</h1>
+      <p class="lead">The core API names resource reconciliation as first-class data instead of hiding it inside effect closures.</p>
+    </section>
+    <section class="section"><div class="container">
+      <div class="grid">
+        <div class="card"><h3>InputNode&lt;T&gt;</h3><p>Canonical state changed by the host actor in a transaction.</p></div>
+        <div class="card"><h3>DerivedNode&lt;T&gt;</h3><p>A deterministic value computed from declared dependencies.</p></div>
+        <div class="card"><h3>CollectionNode&lt;K, V&gt;</h3><p>A derived set or map that emits structural diffs.</p></div>
+        <div class="card"><h3>ResourcePlan&lt;C&gt;</h3><p>Plain commands for opening, closing, replacing, clearing, or rebaselining resources.</p></div>
+        <div class="card"><h3>Scope</h3><p>The lifetime owner for resources, outputs, and dependency attachments.</p></div>
+        <div class="card"><h3>Transaction</h3><p>One propagation cycle with deterministic phase ordering.</p></div>
+        <div class="card"><h3>MaterializedOutput&lt;O&gt;</h3><p>Revisioned output frames: baseline, delta, clear, and rebaseline.</p></div>
+        <div class="card"><h3>FullRecomputeOracle</h3><p>A testing hook that checks incremental state against truth.</p></div>
+        <div class="card"><h3>AuditEntry</h3><p>Diagnostic data explaining changes, plans, ownership, and revisions.</p></div>
+      </div>
+      <pre><code>canonical input changed
+ -&gt; explicit derived state changed
+ -&gt; structural diff produced
+ -&gt; resource plan emitted
+ -&gt; materialized output revised
+ -&gt; full-recompute check remains possible</code></pre>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p><a href="/guide/transactions">Next: transactions</a></p></div></footer>
+</body>
+</html>

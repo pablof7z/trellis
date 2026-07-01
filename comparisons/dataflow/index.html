@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Trellis compared with dataflow systems.">
+  <title>Trellis vs Dataflow</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide">Guide</a><a href="/examples">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons" aria-current="page">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero"><span class="eyebrow">Comparison</span><h1>Trellis vs dataflow</h1><p class="lead">Dataflow systems often focus on moving and transforming records. Trellis focuses on actor-owned application state deciding which resources should exist.</p></section>
+    <section class="section"><div class="container">
+      <div class="comparison">
+        <div>Question</div><div>Dataflow</div><div>Trellis</div>
+        <div>Main unit</div><div>Operators, streams, records, distributed execution.</div><div>Application graph nodes, collection diffs, resource plans.</div>
+        <div>Runtime</div><div>Often owns scheduling and execution.</div><div>Host owns runtime and I/O; graph returns data.</div>
+        <div>Best fit</div><div>Analytics, streaming jobs, ETL, distributed compute.</div><div>Local app kernels with scoped resources and output surfaces.</div>
+      </div>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p><a href="/comparisons/controllers">Next: controllers</a></p></div></footer>
+</body>
+</html>

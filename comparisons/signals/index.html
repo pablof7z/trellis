@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Trellis compared with signal libraries.">
+  <title>Trellis vs Signals</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide">Guide</a><a href="/examples">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons" aria-current="page">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero"><span class="eyebrow">Comparison</span><h1>Trellis vs signals</h1><p class="lead">Signals are excellent when reads establish value dependencies and changed values rerender views. Trellis starts where those values imply live resources.</p></section>
+    <section class="section"><div class="container">
+      <div class="comparison">
+        <div>Question</div><div>Signals</div><div>Trellis</div>
+        <div>Main unit</div><div>Reactive value.</div><div>Explicit graph node, collection diff, resource plan, output frame.</div>
+        <div>Effects</div><div>Often closures rerun after reads.</div><div>Effects are data: plans returned to the host actor.</div>
+        <div>Best fit</div><div>UI state and view updates.</div><div>Application kernels where state owns resources.</div>
+      </div>
+      <p class="callout">Use UI signals for UI state. Use Trellis when source shrink must close resources and clear stale output.</p>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p><a href="/comparisons/rx">Next: Rx</a></p></div></footer>
+</body>
+</html>

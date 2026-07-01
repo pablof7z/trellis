@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A Trellis example for local-first sync windows and materialized issue boards.">
+  <title>Local-first Sync Example - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide">Guide</a><a href="/examples" aria-current="page">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero"><span class="eyebrow">Example 1</span><h1>Local-first issue tracker</h1><p class="lead">The active workspace determines visible projects, sync shapes, local replica demand, and the materialized issue board.</p></section>
+    <section class="section"><div class="container content">
+      <article>
+        <pre><code>active_workspace
+ -&gt; visible_projects
+ -&gt; sync_shapes
+ -&gt; issue_rows
+ -&gt; issue_board #42</code></pre>
+        <div class="grid two">
+          <div class="card"><h3>Problem</h3><p>Workspace switches and permission revokes must close obsolete sync windows and clear stale rows.</p></div>
+          <div class="card"><h3>Trace</h3><p>Old workspace {A, B}. New workspace {B, C}. Plan closes A, opens C, keeps B, and emits a board revision.</p></div>
+          <div class="card"><h3>Invariant</h3><p>Permission shrink withdraws demand. Empty permission sets fail closed.</p></div>
+          <div class="card"><h3>Oracle</h3><p>Incremental board rows must match a full recompute from workspace, permissions, cache, and live scopes.</p></div>
+        </div>
+      </article>
+      <aside class="toc"><a href="/examples/language-server">Next example</a><a href="/guide/why-resource-graphs">Why this matters</a></aside>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p class="mono">workspace -&gt; projects -&gt; diff -&gt; sync plan -&gt; board revision</p></div></footer>
+</body>
+</html>

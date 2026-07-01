@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Trellis examples for local-first sync, language servers, IoT dashboards, plugin runtimes, Nostr feeds, and market data.">
+  <title>Examples - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide">Guide</a><a href="/examples" aria-current="page">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero">
+      <span class="eyebrow">Examples</span>
+      <h1>Proof that this is not Nostr-specific.</h1>
+      <p class="lead">Each example starts with canonical input, derives a collection, computes structural diffs, produces resource plans, and emits revisioned output.</p>
+    </section>
+    <section class="section"><div class="container">
+      <div class="grid">
+        <a class="card" href="/examples/local-first-sync"><h3>1. Local-first issue tracker</h3><p>Workspace switches, permission revokes, offline replay, stale row clearing, and sync window teardown.</p></a>
+        <a class="card" href="/examples/language-server"><h3>2. Mini language server</h3><p>File deletion clears diagnostics, import changes invalidate dependents, and watcher scopes close.</p></a>
+        <a class="card" href="/examples/iot-dashboard"><h3>3. MQTT fleet dashboard</h3><p>Filter shrink unsubscribes topics, empty sets subscribe to nothing, and shared topics stay alive.</p></a>
+        <a class="card" href="/examples/plugin-runtime"><h3>4. Plugin runtime</h3><p>Plugin disable tears down commands, watchers, workers, and panels.</p></a>
+        <a class="card" href="/examples/nostr-feed"><h3>5. Nostr feed</h3><p>Account switches, contact-list replacement, source shrink, and projection rebaseline.</p></a>
+        <a class="card" href="/examples/market-data"><h3>6. Market-data terminal</h3><p>Watchlist changes reconcile quote streams, depth subscriptions, and revisioned screen output.</p></a>
+      </div>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p>The examples are the API pressure test.</p></div></footer>
+</body>
+</html>

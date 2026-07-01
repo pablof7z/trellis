@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Testing Trellis graphs with full recompute oracles and resource lifecycle invariants.">
+  <title>Testing - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide" aria-current="page">Guide</a><a href="/examples">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero">
+      <span class="eyebrow">Guide</span>
+      <h1>Correctness is the product.</h1>
+      <p class="lead">Trellis should make the bugs that hurt application kernels explicit: source shrink, empty sources, scope teardown, transaction ordering, output revision drift, and incremental/full-recompute mismatch.</p>
+    </section>
+    <section class="section"><div class="container">
+      <div class="grid">
+        <div class="card"><h3>incremental == full recompute</h3><p>Property tests compare current graph state with a fresh recomputation from canonical inputs.</p></div>
+        <div class="card"><h3>source shrink withdraws</h3><p>Removed set members produce close commands and stale output clears.</p></div>
+        <div class="card"><h3>empty fails closed</h3><p>Empty derived sources produce empty demand, never wildcard demand.</p></div>
+        <div class="card"><h3>scope close releases</h3><p>Closing a scope removes ownership and emits teardown plans.</p></div>
+        <div class="card"><h3>revision is coherent</h3><p>Output frames carry revisions so consumers can reject stale transitions.</p></div>
+        <div class="card"><h3>plan idempotence</h3><p>Repeating unchanged inputs does not reopen already-satisfied resource demand.</p></div>
+      </div>
+      <pre><code>given previous = {A, B, C}
+and next = {B, C, D}
+expect removed = {A}
+expect added = {D}
+expect plan = [close A, open D]</code></pre>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p><a href="/examples">Next: examples</a></p></div></footer>
+</body>
+</html>

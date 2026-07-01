@@ -1,0 +1,147 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  background: var(--panel);
+  box-shadow: 0 16px 36px var(--shadow);
+}
+
+.card p,
+.card ul {
+  margin: 0.6rem 0 0;
+  color: var(--muted);
+}
+
+.card ul,
+.plain-list {
+  padding-left: 1.05rem;
+}
+
+.diagram {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  background: #0a0f15;
+}
+
+.phase-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(92px, 1fr));
+  gap: 0.55rem;
+  overflow-x: auto;
+}
+
+.phase {
+  min-width: 0;
+  min-height: 74px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0.65rem;
+  background: var(--panel);
+}
+
+.hero .phase-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow-x: visible;
+}
+
+.phase b {
+  display: block;
+  color: var(--text);
+}
+
+.phase small {
+  color: var(--muted);
+}
+
+.path-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  margin: 1rem 0 0;
+  color: var(--muted);
+}
+
+.path-line span {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  background: var(--panel);
+}
+
+.accent-green {
+  color: var(--green);
+}
+
+.accent-blue {
+  color: var(--blue);
+}
+
+.accent-violet {
+  color: var(--violet);
+}
+
+.accent-amber {
+  color: var(--amber);
+}
+
+.accent-red {
+  color: var(--red);
+}
+
+.toc {
+  position: sticky;
+  top: 88px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  background: var(--panel);
+}
+
+.toc a {
+  display: block;
+  padding: 0.25rem 0;
+  color: var(--muted);
+}
+
+.callout {
+  border-left: 3px solid var(--blue);
+  padding: 0.8rem 1rem;
+  background: rgba(88, 166, 255, 0.08);
+  color: var(--text);
+}
+
+.comparison {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) minmax(0, 1fr);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.comparison div {
+  padding: 0.8rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.comparison div:nth-child(3n + 1) {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.comparison div:nth-last-child(-n + 3) {
+  border-bottom: 0;
+}

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Trellis compared with Salsa-style incremental query systems.">
+  <title>Trellis vs Salsa</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide">Guide</a><a href="/examples">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons" aria-current="page">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero"><span class="eyebrow">Comparison</span><h1>Trellis vs Salsa</h1><p class="lead">Salsa is a strong model for pure incremental queries. Trellis is for resource plans and materialized output lifecycles driven by derived collections.</p></section>
+    <section class="section"><div class="container">
+      <div class="comparison">
+        <div>Question</div><div>Salsa</div><div>Trellis</div>
+        <div>Main unit</div><div>Inputs and memoized queries.</div><div>Inputs, derived collections, diffs, plans, scopes, outputs.</div>
+        <div>Effects</div><div>Generally outside pure query computation.</div><div>Planned as data and applied by the host.</div>
+        <div>Best fit</div><div>Compilers, analyzers, pure derived facts.</div><div>Live app kernels where derived facts own resources.</div>
+      </div>
+      <p class="callout">A language server may need both: pure query recomputation and live watcher/output reconciliation.</p>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p><a href="/comparisons/dataflow">Next: dataflow</a></p></div></footer>
+</body>
+</html>

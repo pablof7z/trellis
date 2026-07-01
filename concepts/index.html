@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Trellis concepts: nodes, diffs, resource plans, scopes, transactions, revisions, outputs, and oracles.">
+  <title>Concepts - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide">Guide</a><a href="/examples">Examples</a><a href="/concepts" aria-current="page">Concepts</a><a href="/comparisons">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero">
+      <span class="eyebrow">Concepts</span>
+      <h1>A small vocabulary for a common kernel shape.</h1>
+      <p class="lead">Trellis is designed around explicit dependency identity, structural collection diffs, scoped resource ownership, and revisioned materialized output.</p>
+    </section>
+    <section class="section"><div class="container">
+      <div class="grid">
+        <div class="card"><h3>Input node</h3><p><span class="mono">o</span> Canonical host-owned fact changed only through transactions.</p></div>
+        <div class="card"><h3>Derived node</h3><p><span class="mono">&lt;&gt;</span> Deterministic value from declared dependencies.</p></div>
+        <div class="card"><h3>Collection node</h3><p><span class="mono">[#]</span> Derived set or map that produces structural diffs.</p></div>
+        <div class="card"><h3>Diff</h3><p><span class="mono">+/-</span> Added, removed, updated, and unchanged members in deterministic order.</p></div>
+        <div class="card"><h3>Resource plan</h3><p><span class="mono">-&gt;</span> Plain commands that the host actor applies after propagation.</p></div>
+        <div class="card"><h3>Scope</h3><p><span class="mono">[[ ]]</span> Lifetime owner for resources, outputs, and dependency attachments.</p></div>
+        <div class="card"><h3>Revision</h3><p><span class="mono">#42</span> Coherent output version emitted with frames and audit data.</p></div>
+        <div class="card"><h3>Materialized output</h3><p>External-facing baseline, delta, clear, and rebaseline frames.</p></div>
+        <div class="card"><h3>Full recompute oracle</h3><p>A test hook that checks incremental state against a recomputed truth model.</p></div>
+      </div>
+      <div class="diagram">
+        <div class="phase-row">
+          <div class="phase"><b>Input</b><small>o workspace</small></div>
+          <div class="phase"><b>Derived</b><small>&lt;&gt; projects</small></div>
+          <div class="phase"><b>Collection</b><small>[#] sync shapes</small></div>
+          <div class="phase"><b>Diff</b><small>+/- project set</small></div>
+          <div class="phase"><b>Plan</b><small>open/close</small></div>
+          <div class="phase"><b>Revision</b><small>#42 board</small></div>
+        </div>
+      </div>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p>Use precise names. Avoid magic effect vocabulary.</p></div></footer>
+</body>
+</html>

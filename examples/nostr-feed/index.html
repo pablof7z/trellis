@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A Trellis example for Nostr feed demand, contact-list replacement, and projection rebaseline.">
+  <title>Nostr Feed Example - Trellis</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/">Home</a><a href="/guide">Guide</a><a href="/examples" aria-current="page">Examples</a><a href="/concepts">Concepts</a><a href="/comparisons">Comparisons</a><a href="/docs">Docs</a><a href="/roadmap">Roadmap</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <main>
+    <section class="container page-hero"><span class="eyebrow">Example 5</span><h1>Nostr feed demand</h1><p class="lead">Nostr is a strong example of the pattern, not the brand center. Account state derives follow sets, feed demand, subscriptions, and feed output.</p></section>
+    <section class="section"><div class="container content">
+      <article>
+        <pre><code>active_account
+ -&gt; follow_set
+ -&gt; feed_demand
+ -&gt; relay_subscriptions
+ -&gt; feed_output #31</code></pre>
+        <div class="grid two">
+          <div class="card"><h3>Problem</h3><p>Account switches and contact-list replacement must withdraw old source demand and rebaseline projections.</p></div>
+          <div class="card"><h3>Trace</h3><p>Follow set shrinks from {A, B, C} to {B, C, D}. Close A filters, open D filters, preserve B/C where possible, emit a projection revision.</p></div>
+          <div class="card"><h3>Invariant</h3><p>Source shrink must withdraw resources. Stale feed rows must not survive as visible output.</p></div>
+          <div class="card"><h3>Boundary</h3><p>The host owns relay I/O and retries. Trellis computes demand and output frames.</p></div>
+        </div>
+      </article>
+      <aside class="toc"><a href="/examples/market-data">Next example</a><a href="/comparisons/rx">Compare with Rx</a></aside>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><p class="mono">Nostr is one instance of derived state driving scoped resource lifecycle.</p></div></footer>
+</body>
+</html>
