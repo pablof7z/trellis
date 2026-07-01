@@ -66,3 +66,14 @@ Covered behavior:
 - empty customer/device set subscribes to nothing;
 - shared topic remains live while another panel needs it;
 - incremental result is checked against full recompute.
+
+## Internal Alpha Prototype
+
+File: `crates/trellis-examples/src/internal_alpha.rs`
+
+This is not a fourth domain proof example. It is the M17 acceptance harness for
+one serious prototype path: filtered demand, scoped resource plans,
+materialized rows, audit explanations, shared ownership, and full-recompute
+checks.
+
+The alpha result and seeded-bug coverage are documented in `docs/ALPHA.md`.
