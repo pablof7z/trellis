@@ -9,7 +9,7 @@ use crate::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 
-impl Graph {
+impl<C> Graph<C> {
     /// Returns the committed value for a typed input node.
     pub fn input_value<T>(&self, input: InputNode<T>) -> GraphResult<Option<&T>>
     where

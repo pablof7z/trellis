@@ -4,31 +4,33 @@ use crate::{
     collection::{CollectionSpec, StoredCollection, StoredDiff},
     derive::DerivedSpec,
     input::{StoredInput, value_type},
+    resource::{ResourceKey, ResourcePlanner},
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Trellis graph skeleton with transactional input mutation.
-#[derive(Clone)]
-pub struct Graph {
+pub struct Graph<C = ()> {
     pub(crate) next_node_id: u64,
     pub(crate) next_scope_id: u64,
-    next_transaction_id: TransactionId,
+    pub(crate) next_transaction_id: TransactionId,
     pub(crate) revision: Revision,
     pub(crate) nodes: BTreeMap<NodeId, NodeMeta>,
-    scopes: BTreeMap<ScopeId, ScopeMeta>,
+    pub(crate) scopes: BTreeMap<ScopeId, ScopeMeta>,
     pub(crate) input_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
-    pub(crate) derived_specs: BTreeMap<NodeId, DerivedSpec>,
+    pub(crate) derived_specs: BTreeMap<NodeId, DerivedSpec<C>>,
     pub(crate) derived_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
-    pub(crate) collection_specs: BTreeMap<NodeId, CollectionSpec>,
+    pub(crate) collection_specs: BTreeMap<NodeId, CollectionSpec<C>>,
     pub(crate) collection_values: BTreeMap<NodeId, Box<dyn StoredCollection>>,
     pub(crate) previous_collection_values: BTreeMap<NodeId, Box<dyn StoredCollection>>,
     pub(crate) collection_diffs: BTreeMap<NodeId, Box<dyn StoredDiff>>,
+    pub(crate) resource_planners: Vec<ResourcePlanner<C>>,
+    pub(crate) resource_owners: BTreeMap<ResourceKey, BTreeSet<ScopeId>>,
     pub(crate) transaction_open: bool,
 }
 
-impl Graph {
+impl<C> Graph<C> {
     /// Creates an empty graph.
-    pub fn new() -> Self {
+    pub fn new_with_command_type() -> Self {
         Self {
             next_node_id: 1,
             next_scope_id: 1,
@@ -43,6 +45,8 @@ impl Graph {
             collection_values: BTreeMap::new(),
             previous_collection_values: BTreeMap::new(),
             collection_diffs: BTreeMap::new(),
+            resource_planners: Vec::new(),
+            resource_owners: BTreeMap::new(),
             transaction_open: false,
         }
     }
@@ -53,7 +57,7 @@ impl Graph {
     }
 
     /// Begins an input transaction with default options.
-    pub fn begin_transaction(&mut self) -> GraphResult<Transaction<'_>> {
+    pub fn begin_transaction(&mut self) -> GraphResult<Transaction<'_, C>> {
         self.begin_transaction_with_options(TransactionOptions::default())
     }
 
@@ -61,7 +65,7 @@ impl Graph {
     pub fn begin_transaction_with_options(
         &mut self,
         options: TransactionOptions,
-    ) -> GraphResult<Transaction<'_>> {
+    ) -> GraphResult<Transaction<'_, C>> {
         if self.transaction_open {
             return Err(GraphError::NestedTransaction);
         }
@@ -111,7 +115,7 @@ impl Graph {
         id: NodeId,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&crate::DeriveContext<'ctx>) -> Result<T, crate::DeriveError>
+        derive: impl for<'ctx> Fn(&crate::DeriveContext<'ctx, C>) -> Result<T, crate::DeriveError>
         + 'static,
     ) -> GraphResult<DerivedNode<T>>
     where
@@ -152,6 +156,22 @@ impl Graph {
         }
 
         node_meta.attach_scope(scope);
+        Ok(())
+    }
+
+    pub(crate) fn close_scope_direct(&mut self, scope: ScopeId) -> GraphResult<()> {
+        let scope_meta = self
+            .scopes
+            .get_mut(&scope)
+            .ok_or(GraphError::UnknownScope(scope))?;
+        if scope_meta.is_closed() {
+            self.resource_planners
+                .retain(|planner| planner.scope != scope);
+            return Ok(());
+        }
+        scope_meta.close();
+        self.resource_planners
+            .retain(|planner| planner.scope != scope);
         Ok(())
     }
 
@@ -246,11 +266,5 @@ impl Graph {
             .as_slice()
             .iter()
             .any(|dependency| *dependency == target || self.depends_on(*dependency, target))
-    }
-}
-
-impl Default for Graph {
-    fn default() -> Self {
-        Self::new()
     }
 }

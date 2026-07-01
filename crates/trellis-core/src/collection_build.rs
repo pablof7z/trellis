@@ -5,14 +5,14 @@ use crate::input::value_type;
 use crate::{CollectionNode, DependencyList, Graph, GraphResult, NodeId, NodeKind, NodeMeta};
 use std::collections::{BTreeMap, BTreeSet};
 
-impl Graph {
+impl<C: 'static> Graph<C> {
     pub(crate) fn collection_map_direct<K, V>(
         &mut self,
         id: NodeId,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
         derive: impl for<'ctx> Fn(
-            &CollectionContext<'ctx>,
+            &CollectionContext<'ctx, C>,
         ) -> Result<BTreeMap<K, V>, crate::DeriveError>
         + 'static,
     ) -> GraphResult<CollectionNode<K, V>>
@@ -40,7 +40,9 @@ impl Graph {
         id: NodeId,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&CollectionContext<'ctx>) -> Result<BTreeSet<K>, crate::DeriveError>
+        derive: impl for<'ctx> Fn(
+            &CollectionContext<'ctx, C>,
+        ) -> Result<BTreeSet<K>, crate::DeriveError>
         + 'static,
     ) -> GraphResult<CollectionNode<K, ()>>
     where

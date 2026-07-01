@@ -4,7 +4,7 @@ use crate::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 
-impl Transaction<'_> {
+impl<C: 'static> Transaction<'_, C> {
     /// Stages creation of a root scope with no parent.
     pub fn create_scope(&mut self, debug_name: impl Into<String>) -> GraphResult<ScopeId> {
         self.ensure_open()?;
@@ -41,6 +41,22 @@ impl Transaction<'_> {
         }
     }
 
+    /// Stages closing a scope for resource ownership teardown.
+    pub fn close_scope(&mut self, scope: ScopeId) -> GraphResult<()> {
+        self.ensure_open()?;
+        match self.working.close_scope_direct(scope) {
+            Ok(()) => {
+                self.graph_mutated = true;
+                self.staged_events.push(AuditEvent::ScopeClosed(scope));
+                Ok(())
+            }
+            Err(error) => {
+                self.failed.get_or_insert_with(|| error.clone());
+                Err(error)
+            }
+        }
+    }
+
     /// Stages creation of an input node.
     pub fn input<T>(&mut self, debug_name: impl Into<String>) -> GraphResult<InputNode<T>>
     where
@@ -59,7 +75,7 @@ impl Transaction<'_> {
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&DeriveContext<'ctx>) -> Result<T, DeriveError> + 'static,
+        derive: impl for<'ctx> Fn(&DeriveContext<'ctx, C>) -> Result<T, DeriveError> + 'static,
     ) -> GraphResult<DerivedNode<T>>
     where
         T: Clone + PartialEq + 'static,
@@ -88,7 +104,7 @@ impl Transaction<'_> {
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&CollectionContext<'ctx>) -> Result<BTreeMap<K, V>, DeriveError>
+        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeMap<K, V>, DeriveError>
         + 'static,
     ) -> GraphResult<CollectionNode<K, V>>
     where
@@ -103,7 +119,7 @@ impl Transaction<'_> {
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&CollectionContext<'ctx>) -> Result<BTreeMap<K, V>, DeriveError>
+        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeMap<K, V>, DeriveError>
         + 'static,
     ) -> GraphResult<CollectionNode<K, V>>
     where
@@ -134,7 +150,7 @@ impl Transaction<'_> {
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&CollectionContext<'ctx>) -> Result<BTreeSet<K>, DeriveError>
+        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeSet<K>, DeriveError>
         + 'static,
     ) -> GraphResult<CollectionNode<K, ()>>
     where
