@@ -45,9 +45,12 @@ impl<C: 'static> Transaction<'_, C> {
     pub fn close_scope(&mut self, scope: ScopeId) -> GraphResult<()> {
         self.ensure_open()?;
         match self.working.close_scope_direct(scope) {
-            Ok(()) => {
-                self.graph_mutated = true;
-                self.staged_events.push(AuditEvent::ScopeClosed(scope));
+            Ok(closed_scopes) => {
+                if !closed_scopes.is_empty() {
+                    self.graph_mutated = true;
+                }
+                self.staged_events
+                    .extend(closed_scopes.into_iter().map(AuditEvent::ScopeClosed));
                 Ok(())
             }
             Err(error) => {

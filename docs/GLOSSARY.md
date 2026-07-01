@@ -261,7 +261,9 @@ A lifetime owner inside the graph.
 
 Scopes own nodes, desired resources, materialized outputs, and possibly child scopes.
 
-Closing a scope removes its ownership and produces deterministic resource teardown and output clear/rebaseline frames.
+Closing a scope deterministically closes its child scopes first, removes its
+resource demand, detaches scoped node metadata, and later clears or rebaselines
+owned outputs once materialized outputs exist.
 
 ## Source
 

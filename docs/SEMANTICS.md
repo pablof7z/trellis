@@ -320,6 +320,24 @@ Closing a parent scope MUST close child scopes or otherwise remove their ownersh
 
 The graph MUST provide a way to detect orphaned resources and outputs in tests.
 
+The initial scope teardown order is:
+
+```text
+1. Resolve the scope subtree in deterministic child-before-parent order.
+2. Reject unknown scopes before mutating the candidate graph.
+3. For each newly closed scope in that order:
+   a. mark the scope closed;
+   b. remove resource planners owned by that scope;
+   c. detach nodes owned by that scope from scope ownership metadata.
+4. Remove closed-scope resource ownership in the same child-before-parent order.
+5. Emit resource close commands when a resource loses its final live owner.
+6. Produce output clear/rebaseline frames for closed-scope outputs once outputs exist.
+```
+
+M6 implements this order for scopes, nodes, and resources. Materialized outputs
+are not implemented until M7, so output clear/rebaseline frames are a reserved
+teardown phase rather than a current transaction result field.
+
 ## Shared resources
 
 A resource MAY be desired by multiple scopes.
