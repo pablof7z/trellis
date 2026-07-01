@@ -42,9 +42,12 @@ Signals recompute values.
 Trellis reconciles resources.
 ```
 
-> Project status: early design / 0.1 preview. The examples in this README show the intended shape of the API. Names and exact signatures may change before stabilization.
+> Project status: early design / 0.1 preview. The public API is unstable:
+> names and exact signatures may change before stabilization. The semantics are
+> more stable than the names. The proof examples are normative design pressure,
+> and the core invariants are non-negotiable.
 
-> Current implementation status: `trellis-core` contains the M12 graph skeleton:
+> Current implementation status: `trellis-core` contains the M13 graph skeleton:
 > typed identities, node handles, scopes, dependency lists, deterministic debug
 > output, atomic canonical input transactions, and pure derived scalar node
 > recomputation, plus typed collection nodes with deterministic structural

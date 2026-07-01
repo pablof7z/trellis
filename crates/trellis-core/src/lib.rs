@@ -6,6 +6,14 @@
 //! data-only resource plans with recursive scope teardown and materialized
 //! output frames. Transaction results include deterministic phase traces, and
 //! failures expose typed categories.
+//!
+//! # API stability
+//!
+//! Trellis is pre-1.0. Core semantics are intended to be more stable than item
+//! names and exact signatures: resource plans are data, graph mutation is
+//! transactional, dependencies are explicit, scopes own lifecycle, outputs are
+//! revisioned, and incremental behavior must remain checkable against full
+//! recompute.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
@@ -56,14 +64,13 @@ pub use error::{
 };
 pub use graph::Graph;
 pub use ids::{NodeId, OutputKey, Revision, ScopeId, TransactionId};
-pub use model::{ModelGenerator, ModelScript, ModelStep, ModelTopology};
 pub use node::{CollectionNode, DerivedNode, InputNode, NodeHandle, NodeKind, NodeMeta};
 pub use oracle::FullRecomputeCheck;
 pub use output::{
     ClearReason, MaterializedOutput, OutputContext, OutputFrame, OutputFrameKind, OutputMeta,
     OutputOptions, RebaselineReason,
 };
-pub use resource::{PlanContext, ResourceCommand, ResourceKey, ResourcePlan, ResourcePlanner};
+pub use resource::{PlanContext, ResourceCommand, ResourceKey, ResourcePlan};
 pub use scope::ScopeMeta;
 pub use trace::{
     OutputFrameKindTrace, OutputFrameTrace, ResourceCommandKind, ResourceCommandTrace,
@@ -73,3 +80,8 @@ pub use transaction::Transaction;
 pub use transaction_types::{
     AuditEntry, AuditEvent, TransactionOptions, TransactionPhase, TransactionResult,
 };
+
+/// Deterministic model-test helpers for oracle and replay checks.
+pub mod testing {
+    pub use crate::model::{ModelGenerator, ModelScript, ModelStep, ModelTopology};
+}

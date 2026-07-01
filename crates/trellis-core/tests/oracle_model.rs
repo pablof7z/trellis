@@ -1,8 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use trellis_core::{
-    DependencyList, Graph, ModelGenerator, ModelScript, ModelStep, ModelTopology, OutputFrameKind,
-    ResourceCommand, ResourceKey, ResourcePlan, TransactionTrace, assert_transaction_traces_match,
+    DependencyList, Graph, OutputFrameKind, ResourceCommand, ResourceKey, ResourcePlan,
+    TransactionTrace, assert_transaction_traces_match,
+    testing::{ModelGenerator, ModelScript, ModelStep, ModelTopology},
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
