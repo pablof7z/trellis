@@ -47,7 +47,7 @@ Trellis reconciles resources.
 > more stable than the names. The proof examples are normative design pressure,
 > and the core invariants are non-negotiable.
 
-> Current implementation status: `trellis-core` contains the M18 graph skeleton:
+> Current implementation status: `trellis-core` contains the M19 graph skeleton:
 > typed identities, node handles, scopes, dependency lists, deterministic debug
 > output, atomic canonical input transactions, and pure derived scalar node
 > recomputation, plus typed collection nodes with deterministic structural
@@ -68,8 +68,10 @@ Trellis reconciles resources.
 > and `docs/ALPHA.md` records the internal alpha product gate backed by
 > example-crate seeded-bug coverage. `trellis-test` contains release-candidate
 > testing helpers for scenarios, resource ledgers, output ledgers, and
-> conformance support reporting. It does not implement async behavior, hidden
-> retry logic, or automatic dependency tracking yet.
+> conformance support reporting. `docs/DESIGN_ESSAY.md` and
+> `docs/RELEASE_NOTES_0_1.md` position 0.1 as an early design-feedback release.
+> It does not implement async behavior, hidden retry logic, or automatic
+> dependency tracking yet.
 
 ---
 
