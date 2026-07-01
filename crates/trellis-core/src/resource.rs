@@ -12,6 +12,14 @@ impl ResourceKey {
         Self(key.into())
     }
 
+    /// Creates an explicit broad-resource key.
+    ///
+    /// Core treats this as an opaque identity; tests and applications decide
+    /// whether the key represents a forbidden fallback or wildcard resource.
+    pub fn wildcard(key: impl AsRef<str>) -> Self {
+        Self::new(format!("wildcard:{}", key.as_ref()))
+    }
+
     /// Returns this key as a string slice.
     pub fn as_str(&self) -> &str {
         &self.0

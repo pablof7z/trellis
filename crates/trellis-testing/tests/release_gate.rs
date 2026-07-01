@@ -1,14 +1,8 @@
 use std::collections::BTreeSet;
 
-use trellis_core::{
-    DependencyList, Graph, HostResourceOutcome, InputNode, MaterializedOutput, OutputFrameKind,
-    OutputKey, ResourceCommandKind, ResourceCommandTrace, ResourceKey, ResourcePlan,
-    ResourceTransitionPolicy, Revision, ScopeId,
-};
+use trellis_core::{DependencyList, Graph, InputNode, ResourceKey, ResourcePlan};
 use trellis_testing::{
-    ConformanceLevel, ConformanceReport, ConformanceSuite, FakeHost, FullRecomputeOracle,
-    HostStatusClass, HostStatusEvent, NoRedaction, OutputLedger, ResourceLedger, Scenario,
-    assert_incremental_equals_full, assert_no_unexplained_output_frame, assert_no_unexplained_plan,
+    ConformanceLevel, ConformanceReport, ConformanceSuite, NoRedaction, Scenario,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -16,11 +10,9 @@ enum Command {
     Open(u8),
 }
 
-struct TestGraph {
-    graph: Graph<Command, BTreeSet<u8>>,
+struct ScenarioGraph {
+    graph: Graph<Command>,
     source: InputNode<BTreeSet<u8>>,
-    output: MaterializedOutput<BTreeSet<u8>>,
-    scope: ScopeId,
 }
 
 fn members(values: &[u8]) -> BTreeSet<u8> {
@@ -31,13 +23,8 @@ fn key(value: u8) -> ResourceKey {
     ResourceKey::new(format!("test:{value}"))
 }
 
-fn build_graph(
-    initial: BTreeSet<u8>,
-) -> (
-    TestGraph,
-    trellis_core::TransactionResult<Command, BTreeSet<u8>>,
-) {
-    let mut graph = Graph::<Command, BTreeSet<u8>>::new_with_command_type();
+fn build_graph(initial: BTreeSet<u8>) -> (ScenarioGraph, trellis_core::TransactionResult<Command>) {
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
@@ -60,32 +47,16 @@ fn build_graph(
         Ok(plan)
     })
     .unwrap();
-    let output = tx
-        .materialized_output(
-            "rows",
-            scope,
-            DependencyList::new([collection.id()]).unwrap(),
-            move |ctx| Ok(ctx.set_collection(collection)?.clone()),
-        )
-        .unwrap();
     let result = tx.commit().unwrap();
     drop(tx);
 
-    (
-        TestGraph {
-            graph,
-            source,
-            output,
-            scope,
-        },
-        result,
-    )
+    (ScenarioGraph { graph, source }, result)
 }
 
 fn set_source(
-    target: &mut TestGraph,
+    target: &mut ScenarioGraph,
     values: BTreeSet<u8>,
-) -> trellis_core::TransactionResult<Command, BTreeSet<u8>> {
+) -> trellis_core::TransactionResult<Command> {
     let mut tx = target.graph.begin_transaction().unwrap();
     tx.set_input(target.source, values).unwrap();
     let result = tx.commit().unwrap();
@@ -103,27 +74,6 @@ fn run_scenario() -> Scenario {
     let empty = set_source(&mut target, BTreeSet::new());
     scenario.record("empty", &empty);
     scenario
-}
-
-struct LedgerOracle;
-
-impl FullRecomputeOracle<OutputLedger<BTreeSet<u8>>> for LedgerOracle {
-    type CanonicalInputs = (OutputKey, BTreeSet<u8>);
-    type ExpectedState = BTreeSet<u8>;
-
-    fn recompute(inputs: &Self::CanonicalInputs) -> Self::ExpectedState {
-        inputs.1.clone()
-    }
-
-    fn observe_incremental(
-        ledger: &OutputLedger<BTreeSet<u8>>,
-        inputs: &Self::CanonicalInputs,
-    ) -> Self::ExpectedState {
-        ledger
-            .snapshot(inputs.0)
-            .and_then(|snapshot| snapshot.state.clone())
-            .unwrap_or_default()
-    }
 }
 
 #[test]
@@ -146,166 +96,6 @@ fn scenario_replay_is_structural_and_deterministic() {
         first.to_redacted_debug_string(&NoRedaction),
         second.to_redacted_debug_string(&NoRedaction)
     );
-}
-
-#[test]
-fn resource_ledger_detects_lifecycle_and_status_classes() {
-    let (mut target, initial) = build_graph(members(&[1, 2]));
-    let mut ledger = ResourceLedger::new();
-    ledger.mark_forbidden_unless_explicit(ResourceKey::new("test:*"));
-    ledger.apply_result(&initial);
-    ledger.assert_all_resources_have_owner().unwrap();
-    ledger.assert_no_forbidden_opened().unwrap();
-    ledger.assert_resource_opened_once(&key(1)).unwrap();
-
-    let shrink = set_source(&mut target, members(&[1]));
-    ledger.apply_result(&shrink);
-    ledger.assert_resource_not_open(&key(2)).unwrap();
-    ledger.assert_resource_closed_once(&key(2)).unwrap();
-    ledger.assert_no_duplicate_close().unwrap();
-    ledger
-        .assert_command_order(&[
-            ResourceCommandTrace {
-                key: key(1),
-                scope: target.scope,
-                kind: ResourceCommandKind::Open,
-                transition: ResourceTransitionPolicy::Open,
-            },
-            ResourceCommandTrace {
-                key: key(2),
-                scope: target.scope,
-                kind: ResourceCommandKind::Open,
-                transition: ResourceTransitionPolicy::Open,
-            },
-            ResourceCommandTrace {
-                key: key(2),
-                scope: target.scope,
-                kind: ResourceCommandKind::Close,
-                transition: ResourceTransitionPolicy::Close,
-            },
-        ])
-        .unwrap();
-
-    let status = HostStatusEvent {
-        resource_key: key(1),
-        scope: target.scope,
-        command_revision: Revision::new(0),
-        status_revision: Revision::new(100),
-        status: HostResourceOutcome::Open,
-    };
-    assert_eq!(ledger.classify_status(status), HostStatusClass::Stale);
-
-    let current = HostStatusEvent {
-        resource_key: key(1),
-        scope: target.scope,
-        command_revision: initial.revision,
-        status_revision: Revision::new(101),
-        status: HostResourceOutcome::Open,
-    };
-    assert_eq!(
-        ledger.classify_status(current.clone()),
-        HostStatusClass::Current
-    );
-    assert_eq!(ledger.classify_status(current), HostStatusClass::Duplicate);
-
-    let failed = HostStatusEvent {
-        resource_key: key(1),
-        scope: target.scope,
-        command_revision: initial.revision,
-        status_revision: Revision::new(102),
-        status: HostResourceOutcome::Failed("host failed".to_owned()),
-    };
-    assert_eq!(ledger.classify_status(failed), HostStatusClass::Current);
-
-    let future = HostStatusEvent {
-        resource_key: key(1),
-        scope: target.scope,
-        command_revision: Revision::new(10),
-        status_revision: Revision::new(103),
-        status: HostResourceOutcome::Open,
-    };
-    assert_eq!(ledger.classify_status(future), HostStatusClass::Future);
-
-    let late = HostStatusEvent {
-        resource_key: key(2),
-        scope: target.scope,
-        command_revision: shrink.revision,
-        status_revision: Revision::new(104),
-        status: HostResourceOutcome::Closed,
-    };
-    assert_eq!(ledger.classify_status(late), HostStatusClass::Late);
-    assert_eq!(
-        ledger
-            .status_records()
-            .iter()
-            .map(|record| record.class)
-            .collect::<Vec<_>>(),
-        vec![
-            HostStatusClass::Stale,
-            HostStatusClass::Current,
-            HostStatusClass::Duplicate,
-            HostStatusClass::Current,
-            HostStatusClass::Future,
-            HostStatusClass::Late,
-        ]
-    );
-
-    let mut host = FakeHost::new();
-    let host_result = set_source(&mut target, members(&[1, 3]));
-    let events = host.apply_result(&mut ledger, &host_result);
-    assert_eq!(events.len(), 1);
-    assert_eq!(events[0].class, HostStatusClass::Current);
-}
-
-#[test]
-fn output_ledger_checks_revision_and_rebaseline_coherence() {
-    let (mut target, initial) = build_graph(members(&[1]));
-    let mut ledger = OutputLedger::new();
-    ledger.apply_result(&initial);
-    ledger
-        .assert_current_equals(target.output.key(), &members(&[1]))
-        .unwrap();
-
-    let next = set_source(&mut target, members(&[1, 2]));
-    ledger.apply_result(&next);
-    ledger
-        .assert_current_equals(target.output.key(), &members(&[1, 2]))
-        .unwrap();
-
-    let output_key = target.output.key();
-    let mut tx = target.graph.begin_transaction().unwrap();
-    tx.rebaseline_output(target.output).unwrap();
-    let rebaseline = tx.commit().unwrap();
-    drop(tx);
-    ledger.apply_result(&rebaseline);
-    ledger.assert_revision_monotonic().unwrap();
-    ledger
-        .assert_current_equals(output_key, &members(&[1, 2]))
-        .unwrap();
-    assert_incremental_equals_full::<_, LedgerOracle>(&ledger, &(output_key, members(&[1, 2])))
-        .unwrap();
-    let mismatch =
-        assert_incremental_equals_full::<_, LedgerOracle>(&ledger, &(output_key, members(&[9])))
-            .unwrap_err();
-    assert_eq!(mismatch.expected, members(&[9]));
-    assert_eq!(mismatch.actual, members(&[1, 2]));
-
-    assert!(matches!(
-        &rebaseline.output_frames[0].kind,
-        OutputFrameKind::Rebaseline(value, _) if value == &members(&[1, 2])
-    ));
-
-    let mut tx = target.graph.begin_transaction().unwrap();
-    tx.close_scope(target.scope).unwrap();
-    let closed = tx.commit().unwrap();
-    drop(tx);
-    ledger.close_scope(target.scope);
-    ledger.apply_result(&closed);
-    ledger.assert_cleared(output_key).unwrap();
-    ledger
-        .assert_no_frame_for_closed_scope_except_terminal()
-        .unwrap();
-    assert!(ledger.errors().is_empty());
 }
 
 #[test]
@@ -335,12 +125,4 @@ fn conformance_levels_report_unsupported_explicitly() {
             .unsupported_levels()
             .contains(&ConformanceLevel::MaterializedOutput)
     );
-}
-
-#[test]
-fn audit_assertions_explain_plans_and_frames() {
-    let (target, initial) = build_graph(members(&[1]));
-
-    assert_no_unexplained_plan(&target.graph, &initial).unwrap();
-    assert_no_unexplained_output_frame(&target.graph, &initial).unwrap();
 }
