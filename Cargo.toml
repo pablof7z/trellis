@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/trellis-adapter",
+    "crates/trellis-bench",
     "crates/trellis-core",
     "crates/trellis-examples",
 ]

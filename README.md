@@ -47,7 +47,7 @@ Trellis reconciles resources.
 > more stable than the names. The proof examples are normative design pressure,
 > and the core invariants are non-negotiable.
 
-> Current implementation status: `trellis-core` contains the M14 graph skeleton:
+> Current implementation status: `trellis-core` contains the M15 graph skeleton:
 > typed identities, node handles, scopes, dependency lists, deterministic debug
 > output, atomic canonical input transactions, and pure derived scalar node
 > recomputation, plus typed collection nodes with deterministic structural
@@ -62,8 +62,10 @@ Trellis reconciles resources.
 > contains three proof examples outside core: workspace-driven sync, mini
 > language server, and telemetry dashboard. `trellis-adapter` defines a
 > runtime-neutral boundary for applying returned resource plans and emitting
-> returned output frames outside graph propagation. It does not implement async
-> behavior, hidden retry logic, or automatic dependency tracking yet.
+> returned output frames outside graph propagation. `trellis-bench` contains a
+> stable benchmark-smoke harness for transaction, diff, scope, output, oracle,
+> and replay paths. It does not implement async behavior, hidden retry logic, or
+> automatic dependency tracking yet.
 
 ---
 
