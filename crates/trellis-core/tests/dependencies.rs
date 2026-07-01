@@ -7,7 +7,11 @@ fn dependencies_are_inspectable_and_ordered() {
     let mut tx = graph.begin_transaction().unwrap();
     let input = tx.input::<String>("input").unwrap();
     let derived = tx
-        .derived::<usize>("derived", DependencyList::new([input.id()]).unwrap())
+        .derived::<usize>(
+            "derived",
+            DependencyList::new([input.id()]).unwrap(),
+            |_| Ok(0),
+        )
         .unwrap();
     let collection = tx
         .collection::<String, usize>(
@@ -59,6 +63,7 @@ fn graph_rejects_unknown_dependency() {
         .derived::<usize>(
             "derived",
             DependencyList::new([unknown.id()]).expect("foreign id is still typed"),
+            |_| Ok(0),
         )
         .unwrap_err();
 
@@ -75,6 +80,7 @@ fn graph_rejects_unknown_dependency() {
         .derived::<usize>(
             "derived",
             DependencyList::new([known.id(), unknown.id()]).unwrap(),
+            |_| Ok(0),
         )
         .unwrap_err();
 

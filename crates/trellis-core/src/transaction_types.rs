@@ -33,6 +33,8 @@ pub enum AuditEvent {
     InputChanged(NodeId),
     /// An equal input write was skipped by transaction options.
     InputUnchanged(NodeId),
+    /// A derived value changed.
+    DerivedChanged(NodeId),
     /// A scope was created.
     ScopeCreated(ScopeId),
     /// A node was created.
@@ -55,6 +57,8 @@ pub struct TransactionResult {
     pub revision: Revision,
     /// Input nodes that changed in stable node-id order.
     pub changed_inputs: Vec<NodeId>,
+    /// Derived nodes that changed in deterministic topological order.
+    pub changed_derived_nodes: Vec<NodeId>,
     /// Deterministic audit entries for staged input writes.
     pub audit_log: Vec<AuditEntry>,
 }

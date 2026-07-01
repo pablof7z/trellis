@@ -2,7 +2,8 @@ use crate::{
     CollectionNode, DependencyList, DerivedNode, GraphError, GraphResult, InputNode, NodeHandle,
     NodeId, NodeKind, NodeMeta, Revision, ScopeId, ScopeMeta, Transaction, TransactionId,
     TransactionOptions,
-    input::{StoredInput, downcast_input, value_type},
+    derive::DerivedSpec,
+    input::{StoredInput, value_type},
 };
 use std::collections::BTreeMap;
 
@@ -16,6 +17,8 @@ pub struct Graph {
     pub(crate) nodes: BTreeMap<NodeId, NodeMeta>,
     scopes: BTreeMap<ScopeId, ScopeMeta>,
     pub(crate) input_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
+    pub(crate) derived_specs: BTreeMap<NodeId, DerivedSpec>,
+    pub(crate) derived_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
     pub(crate) transaction_open: bool,
 }
 
@@ -30,6 +33,8 @@ impl Graph {
             nodes: BTreeMap::new(),
             scopes: BTreeMap::new(),
             input_values: BTreeMap::new(),
+            derived_specs: BTreeMap::new(),
+            derived_values: BTreeMap::new(),
             transaction_open: false,
         }
     }
@@ -98,7 +103,12 @@ impl Graph {
         id: NodeId,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-    ) -> GraphResult<DerivedNode<T>> {
+        derive: impl for<'ctx> Fn(&crate::DeriveContext<'ctx>) -> Result<T, crate::DeriveError>
+        + 'static,
+    ) -> GraphResult<DerivedNode<T>>
+    where
+        T: Clone + PartialEq + 'static,
+    {
         self.validate_dependencies(id, &dependencies)?;
         let meta = NodeMeta::new(
             id,
@@ -106,9 +116,10 @@ impl Graph {
             debug_name,
             dependencies,
             self.revision,
-            None,
+            Some(value_type::<T>()),
         );
         self.nodes.insert(id, meta);
+        self.derived_specs.insert(id, DerivedSpec::new(derive));
         Ok(DerivedNode::new(id))
     }
 
@@ -174,26 +185,6 @@ impl Graph {
         self.node_meta(node).map(NodeMeta::dependencies)
     }
 
-    /// Returns the committed value for a typed input node.
-    pub fn input_value<T>(&self, input: InputNode<T>) -> GraphResult<Option<&T>>
-    where
-        T: Clone + PartialEq + 'static,
-    {
-        self.input_value_by_id(input.id())
-    }
-
-    /// Returns the committed value for an input node id.
-    pub fn input_value_by_id<T>(&self, node: NodeId) -> GraphResult<Option<&T>>
-    where
-        T: Clone + PartialEq + 'static,
-    {
-        self.validate_input_write::<T>(node)?;
-        Ok(self
-            .input_values
-            .get(&node)
-            .and_then(|value| downcast_input::<T>(value.as_ref())))
-    }
-
     /// Returns all node metadata in stable id order.
     pub fn nodes(&self) -> impl Iterator<Item = &NodeMeta> {
         self.nodes.values()
@@ -237,22 +228,21 @@ impl Graph {
             if !self.nodes.contains_key(dependency) {
                 return Err(GraphError::UnknownNode(*dependency));
             }
+            if self.depends_on(*dependency, node_id) {
+                return Err(GraphError::CycleDetected(node_id));
+            }
         }
         Ok(())
     }
 
-    pub(crate) fn validate_input_write<T>(&self, node: NodeId) -> GraphResult<()>
-    where
-        T: 'static,
-    {
-        let meta = self.nodes.get(&node).ok_or(GraphError::UnknownNode(node))?;
-        if meta.kind() != NodeKind::Input {
-            return Err(GraphError::NotInputNode(node));
-        }
-        if meta.value_type() != Some(value_type::<T>()) {
-            return Err(GraphError::WrongInputType(node));
-        }
-        Ok(())
+    fn depends_on(&self, start: NodeId, target: NodeId) -> bool {
+        let Some(meta) = self.nodes.get(&start) else {
+            return false;
+        };
+        meta.dependencies()
+            .as_slice()
+            .iter()
+            .any(|dependency| *dependency == target || self.depends_on(*dependency, target))
     }
 }
 
