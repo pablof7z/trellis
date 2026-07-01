@@ -1,7 +1,8 @@
 use crate::{
-    AuditEvent, CollectionNode, DependencyList, DeriveContext, DeriveError, DerivedNode,
-    GraphResult, InputNode, ScopeId, Transaction,
+    AuditEvent, CollectionContext, CollectionNode, DependencyList, DeriveContext, DeriveError,
+    DerivedNode, GraphResult, InputNode, ScopeId, Transaction,
 };
+use std::collections::{BTreeMap, BTreeSet};
 
 impl Transaction<'_> {
     /// Stages creation of a root scope with no parent.
@@ -82,15 +83,69 @@ impl Transaction<'_> {
         }
     }
 
-    /// Stages creation of a collection node with explicit dependencies.
+    /// Stages creation of a map collection node with explicit dependencies.
     pub fn collection<K, V>(
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-    ) -> GraphResult<CollectionNode<K, V>> {
+        derive: impl for<'ctx> Fn(&CollectionContext<'ctx>) -> Result<BTreeMap<K, V>, DeriveError>
+        + 'static,
+    ) -> GraphResult<CollectionNode<K, V>>
+    where
+        K: Clone + Ord + 'static,
+        V: Clone + PartialEq + 'static,
+    {
+        self.map_collection(debug_name, dependencies, derive)
+    }
+
+    /// Stages creation of a map collection node with explicit dependencies.
+    pub fn map_collection<K, V>(
+        &mut self,
+        debug_name: impl Into<String>,
+        dependencies: DependencyList,
+        derive: impl for<'ctx> Fn(&CollectionContext<'ctx>) -> Result<BTreeMap<K, V>, DeriveError>
+        + 'static,
+    ) -> GraphResult<CollectionNode<K, V>>
+    where
+        K: Clone + Ord + 'static,
+        V: Clone + PartialEq + 'static,
+    {
         self.ensure_open()?;
         let id = self.graph.allocate_node_id();
-        match self.working.collection_direct(id, debug_name, dependencies) {
+        match self
+            .working
+            .collection_map_direct(id, debug_name, dependencies, derive)
+        {
+            Ok(collection) => {
+                self.graph_mutated = true;
+                self.staged_events
+                    .push(AuditEvent::NodeCreated(collection.id()));
+                Ok(collection)
+            }
+            Err(error) => {
+                self.failed.get_or_insert_with(|| error.clone());
+                Err(error)
+            }
+        }
+    }
+
+    /// Stages creation of a set collection node with explicit dependencies.
+    pub fn set_collection<K>(
+        &mut self,
+        debug_name: impl Into<String>,
+        dependencies: DependencyList,
+        derive: impl for<'ctx> Fn(&CollectionContext<'ctx>) -> Result<BTreeSet<K>, DeriveError>
+        + 'static,
+    ) -> GraphResult<CollectionNode<K, ()>>
+    where
+        K: Clone + Ord + 'static,
+    {
+        self.ensure_open()?;
+        let id = self.graph.allocate_node_id();
+        match self
+            .working
+            .collection_set_direct(id, debug_name, dependencies, derive)
+        {
             Ok(collection) => {
                 self.graph_mutated = true;
                 self.staged_events

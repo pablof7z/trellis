@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use trellis_core::{DependencyList, Graph, GraphError, NodeKind};
 
 #[test]
@@ -17,6 +19,7 @@ fn dependencies_are_inspectable_and_ordered() {
         .collection::<String, usize>(
             "collection",
             DependencyList::new([input.id(), derived.id()]).unwrap(),
+            |_| Ok(BTreeMap::new()),
         )
         .unwrap();
     tx.commit().unwrap();

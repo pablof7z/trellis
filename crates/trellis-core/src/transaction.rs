@@ -140,6 +140,21 @@ impl<'graph> Transaction<'graph> {
             }
             audit_events.push(AuditEvent::DerivedChanged(*node));
         }
+        initial_changed.extend(changed_derived_nodes.iter().copied());
+        let changed_collection_nodes =
+            match self.working.recompute_dirty_collections(&initial_changed) {
+                Ok(nodes) => nodes,
+                Err(error) => {
+                    self.close();
+                    return Err(error);
+                }
+            };
+        for node in &changed_collection_nodes {
+            if let Some(meta) = self.working.nodes.get_mut(node) {
+                meta.mark_changed(next_revision);
+            }
+            audit_events.push(AuditEvent::CollectionChanged(*node));
+        }
         let audit_log = audit_events
             .into_iter()
             .map(|event| AuditEntry {
@@ -157,6 +172,7 @@ impl<'graph> Transaction<'graph> {
             revision: next_revision,
             changed_inputs,
             changed_derived_nodes,
+            changed_collection_nodes,
             audit_log,
         };
         *self.graph = self.working.clone();

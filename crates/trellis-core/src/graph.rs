@@ -1,7 +1,7 @@
 use crate::{
-    CollectionNode, DependencyList, DerivedNode, GraphError, GraphResult, InputNode, NodeHandle,
-    NodeId, NodeKind, NodeMeta, Revision, ScopeId, ScopeMeta, Transaction, TransactionId,
-    TransactionOptions,
+    DependencyList, DerivedNode, GraphError, GraphResult, InputNode, NodeHandle, NodeId, NodeKind,
+    NodeMeta, Revision, ScopeId, ScopeMeta, Transaction, TransactionId, TransactionOptions,
+    collection::{CollectionSpec, StoredCollection, StoredDiff},
     derive::DerivedSpec,
     input::{StoredInput, value_type},
 };
@@ -19,6 +19,10 @@ pub struct Graph {
     pub(crate) input_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
     pub(crate) derived_specs: BTreeMap<NodeId, DerivedSpec>,
     pub(crate) derived_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
+    pub(crate) collection_specs: BTreeMap<NodeId, CollectionSpec>,
+    pub(crate) collection_values: BTreeMap<NodeId, Box<dyn StoredCollection>>,
+    pub(crate) previous_collection_values: BTreeMap<NodeId, Box<dyn StoredCollection>>,
+    pub(crate) collection_diffs: BTreeMap<NodeId, Box<dyn StoredDiff>>,
     pub(crate) transaction_open: bool,
 }
 
@@ -35,6 +39,10 @@ impl Graph {
             input_values: BTreeMap::new(),
             derived_specs: BTreeMap::new(),
             derived_values: BTreeMap::new(),
+            collection_specs: BTreeMap::new(),
+            collection_values: BTreeMap::new(),
+            previous_collection_values: BTreeMap::new(),
+            collection_diffs: BTreeMap::new(),
             transaction_open: false,
         }
     }
@@ -110,6 +118,7 @@ impl Graph {
         T: Clone + PartialEq + 'static,
     {
         self.validate_dependencies(id, &dependencies)?;
+        self.reject_collection_dependencies(&dependencies)?;
         let meta = NodeMeta::new(
             id,
             NodeKind::Derived,
@@ -121,25 +130,6 @@ impl Graph {
         self.nodes.insert(id, meta);
         self.derived_specs.insert(id, DerivedSpec::new(derive));
         Ok(DerivedNode::new(id))
-    }
-
-    pub(crate) fn collection_direct<K, V>(
-        &mut self,
-        id: NodeId,
-        debug_name: impl Into<String>,
-        dependencies: DependencyList,
-    ) -> GraphResult<CollectionNode<K, V>> {
-        self.validate_dependencies(id, &dependencies)?;
-        let meta = NodeMeta::new(
-            id,
-            NodeKind::Collection,
-            debug_name,
-            dependencies,
-            self.revision,
-            None,
-        );
-        self.nodes.insert(id, meta);
-        Ok(CollectionNode::new(id))
     }
 
     pub(crate) fn attach_node_to_scope_direct(
@@ -216,7 +206,7 @@ impl Graph {
         self.scopes.get(&id).ok_or(GraphError::UnknownScope(id))
     }
 
-    fn validate_dependencies(
+    pub(crate) fn validate_dependencies(
         &self,
         node_id: NodeId,
         dependencies: &DependencyList,
@@ -230,6 +220,19 @@ impl Graph {
             }
             if self.depends_on(*dependency, node_id) {
                 return Err(GraphError::CycleDetected(node_id));
+            }
+        }
+        Ok(())
+    }
+
+    fn reject_collection_dependencies(&self, dependencies: &DependencyList) -> GraphResult<()> {
+        for dependency in dependencies.as_slice() {
+            if self
+                .nodes
+                .get(dependency)
+                .is_some_and(|meta| meta.kind() == NodeKind::Collection)
+            {
+                return Err(GraphError::CollectionDependencyNotAllowed(*dependency));
             }
         }
         Ok(())

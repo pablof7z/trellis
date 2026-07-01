@@ -35,6 +35,8 @@ pub enum AuditEvent {
     InputUnchanged(NodeId),
     /// A derived value changed.
     DerivedChanged(NodeId),
+    /// A collection value changed and produced a structural diff.
+    CollectionChanged(NodeId),
     /// A scope was created.
     ScopeCreated(ScopeId),
     /// A node was created.
@@ -59,6 +61,8 @@ pub struct TransactionResult {
     pub changed_inputs: Vec<NodeId>,
     /// Derived nodes that changed in deterministic topological order.
     pub changed_derived_nodes: Vec<NodeId>,
+    /// Collection nodes that changed in deterministic topological order.
+    pub changed_collection_nodes: Vec<NodeId>,
     /// Deterministic audit entries for staged input writes.
     pub audit_log: Vec<AuditEntry>,
 }

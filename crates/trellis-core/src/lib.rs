@@ -2,12 +2,16 @@
 //!
 //! This crate currently defines typed identities, graph metadata, scope
 //! metadata, declared dependencies, deterministic inspection, input
-//! transactions, and pure derived node recomputation. It does not implement
-//! collection diffs, resource plans, or materialized outputs.
+//! transactions, pure derived node recomputation, and collection diffs. It does
+//! not implement resource plans or materialized outputs.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+mod collection;
+mod collection_build;
+mod collection_diff;
+mod collection_recompute;
 mod debug;
 mod dependency;
 mod derive;
@@ -16,18 +20,22 @@ mod graph;
 mod ids;
 mod input;
 mod node;
+mod oracle;
 mod read;
 mod scope;
 mod transaction;
 mod transaction_build;
 mod transaction_types;
 
+pub use collection::CollectionContext;
+pub use collection_diff::{Added, MapDiff, Removed, SetDiff, Unchanged, Updated};
 pub use dependency::DependencyList;
-pub use derive::{DeriveContext, DeriveError, FullRecomputeCheck};
+pub use derive::{DeriveContext, DeriveError};
 pub use error::{GraphError, GraphResult};
 pub use graph::Graph;
 pub use ids::{NodeId, Revision, ScopeId, TransactionId};
 pub use node::{CollectionNode, DerivedNode, InputNode, NodeHandle, NodeKind, NodeMeta};
+pub use oracle::FullRecomputeCheck;
 pub use scope::ScopeMeta;
 pub use transaction::Transaction;
 pub use transaction_types::{AuditEntry, AuditEvent, TransactionOptions, TransactionResult};
