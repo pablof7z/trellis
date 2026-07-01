@@ -88,6 +88,8 @@ pub enum DeriveError {
     UndeclaredDependency(NodeId),
     /// A dependency had no committed value.
     MissingValue(NodeId),
+    /// A collection dependency was read with the wrong set/map shape or value type.
+    WrongCollectionType(NodeId),
     /// User-defined derivation failed.
     Message(String),
 }
@@ -97,13 +99,6 @@ impl DeriveError {
     pub fn message(message: impl Into<String>) -> Self {
         Self::Message(message.into())
     }
-}
-
-/// Result of comparing incremental derived state against full recompute.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FullRecomputeCheck {
-    /// Derived nodes checked in deterministic topological order.
-    pub checked_derived: Vec<NodeId>,
 }
 
 impl Graph {
@@ -148,43 +143,7 @@ impl Graph {
         Ok(changed_derived)
     }
 
-    /// Compares committed incremental derived values against full recompute.
-    pub fn full_recompute_check(&self) -> GraphResult<FullRecomputeCheck> {
-        let mut full = self.clone();
-        full.derived_values.clear();
-        let order = full.derived_topological_order()?;
-
-        for node in &order {
-            let dependencies = full
-                .nodes
-                .get(node)
-                .expect("derived node metadata exists")
-                .dependencies()
-                .clone();
-            let value = full.compute_derived(*node, dependencies.as_slice())?;
-            full.derived_values.insert(*node, value);
-        }
-
-        for node in &order {
-            let incremental = self
-                .derived_values
-                .get(node)
-                .ok_or(GraphError::FullRecomputeMismatch(*node))?;
-            let recomputed = full
-                .derived_values
-                .get(node)
-                .ok_or(GraphError::FullRecomputeMismatch(*node))?;
-            if !incremental.equals(recomputed.as_ref()) {
-                return Err(GraphError::FullRecomputeMismatch(*node));
-            }
-        }
-
-        Ok(FullRecomputeCheck {
-            checked_derived: order,
-        })
-    }
-
-    fn compute_derived(
+    pub(crate) fn compute_derived(
         &self,
         node: NodeId,
         dependencies: &[NodeId],
@@ -198,7 +157,7 @@ impl Graph {
             .map_err(|error| GraphError::DeriveFailed(node, error))
     }
 
-    fn derived_topological_order(&self) -> GraphResult<Vec<NodeId>> {
+    pub(crate) fn derived_topological_order(&self) -> GraphResult<Vec<NodeId>> {
         let mut order = Vec::new();
         let mut temporary = BTreeSet::new();
         let mut permanent = BTreeSet::new();

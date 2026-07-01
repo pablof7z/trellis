@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use trellis_core::{DependencyList, Graph};
 
 #[test]
@@ -21,6 +23,7 @@ fn debug_dump_is_deterministic() {
             .collection::<String, String>(
                 "sync_windows",
                 DependencyList::new([active.id(), visible.id()]).unwrap(),
+                |_| Ok(BTreeMap::new()),
             )
             .unwrap();
 
