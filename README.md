@@ -47,7 +47,7 @@ Trellis reconciles resources.
 > more stable than the names. The proof examples are normative design pressure,
 > and the core invariants are non-negotiable.
 
-> Current implementation status: `trellis-core` contains the M15 graph skeleton:
+> Current implementation status: `trellis-core` contains the M16 graph skeleton:
 > typed identities, node handles, scopes, dependency lists, deterministic debug
 > output, atomic canonical input transactions, and pure derived scalar node
 > recomputation, plus typed collection nodes with deterministic structural
@@ -64,8 +64,9 @@ Trellis reconciles resources.
 > runtime-neutral boundary for applying returned resource plans and emitting
 > returned output frames outside graph propagation. `trellis-bench` contains a
 > stable benchmark-smoke harness for transaction, diff, scope, output, oracle,
-> and replay paths. It does not implement async behavior, hidden retry logic, or
-> automatic dependency tracking yet.
+> and replay paths. `docs/INVARIANTS.md` maps specification invariants to tests.
+> It does not implement async behavior, hidden retry logic, or automatic
+> dependency tracking yet.
 
 ---
 
@@ -937,14 +938,14 @@ A revision is not a wall-clock timestamp. It is a graph-state version.
 
 ---
 
-### `FullRecomputeOracle`
+### `FullRecomputeCheck`
 
-A full-recompute oracle is a test hook.
+A full-recompute check is a test hook.
 
 It recomputes the expected current state from canonical inputs and compares it to the incremental graph state.
 
 ```rust
-graph.assert_incremental_equals_full_recompute();
+graph.assert_incremental_equals_full();
 ```
 
 This is useful for property tests:
@@ -2348,30 +2349,26 @@ graph.register_oracle("record_list", |inputs| {
     full_recompute_record_list(inputs)
 });
 
-graph.assert_incremental_equals_full_recompute();
+graph.assert_incremental_equals_full();
 ```
 
 ---
 
-## Cargo features
+## Future Feature Direction
 
-Proposed features:
+The current workspace does not publish a stable feature matrix. Before public
+0.1, feature flags should be documented only after they exist in the crate
+manifests and CI exercises them.
 
-```toml
-[dependencies]
-trellis = { version = "0.1", features = ["std"] }
-```
-
-Feature flags:
+Candidate boundaries are:
 
 ```text
-std          enables standard library types
-alloc        enables allocation without std
-serde        derives serialization for graph inspection types
-tracing      emits tracing spans for transactions and plans
-test         enables oracle and property-test helpers
-inspect      enables graph inspection reports
-tokio        optional helpers for Tokio command application
+serde       serialization for graph inspection and trace types
+tracing     transaction and plan spans
+test        oracle and property-test helpers
+inspect     graph inspection reports
+tokio       optional adapter crate helpers
+wasm        optional adapter crate helpers
 ```
 
 The core graph should not require a specific async runtime. Runtime-specific

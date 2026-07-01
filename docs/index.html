@@ -29,24 +29,20 @@
           <div class="card"><h3>plan</h3><p>ResourcePlan and plain command payloads returned to the host actor.</p></div>
           <div class="card"><h3>scope</h3><p>Scope ownership, teardown, shared resource ownership, and output attachment.</p></div>
           <div class="card"><h3>output</h3><p>MaterializedOutput frames, revisions, baselines, deltas, clears, and rebaselines.</p></div>
-          <div class="card"><h3>testing</h3><p>FullRecomputeOracle, invariant helpers, and property-test support.</p></div>
+          <div class="card"><h3>testing</h3><p>FullRecomputeCheck, invariant helpers, and replay/model-test support.</p></div>
         </div>
         <h2>Feature policy</h2>
-        <p>Core should stay independent of async runtimes. Runtime adapters should be optional features.</p>
-        <pre><code>default = ["std"]
-std
-alloc
-tracing
-serde
-tokio-adapter
-wasm
-proptest-support</code></pre>
+        <p>The current workspace does not publish a stable feature matrix. Core should stay independent of async runtimes, and runtime-specific dependencies belong in adapter crates.</p>
       </article>
       <aside class="toc">
         <strong>Source docs</strong>
         <a href="https://github.com/pablof7z/trellis/blob/master/README.md">README</a>
         <a href="https://github.com/pablof7z/trellis/blob/master/docs/CHARTER.md">Charter</a>
         <a href="https://github.com/pablof7z/trellis/blob/master/docs/SEMANTICS.md">Semantics</a>
+        <a href="https://github.com/pablof7z/trellis/blob/master/docs/INVARIANTS.md">Invariants</a>
+        <a href="https://github.com/pablof7z/trellis/blob/master/docs/TESTING.md">Testing</a>
+        <a href="https://github.com/pablof7z/trellis/blob/master/docs/ADAPTERS.md">Adapters</a>
+        <a href="https://github.com/pablof7z/trellis/blob/master/docs/PERFORMANCE.md">Performance</a>
         <a href="https://github.com/pablof7z/trellis/blob/master/docs/GLOSSARY.md">Glossary</a>
       </aside>
     </div></section>
