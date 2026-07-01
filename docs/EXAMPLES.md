@@ -67,6 +67,35 @@ Covered behavior:
 - shared topic remains live while another panel needs it;
 - incremental result is checked against full recompute.
 
+## Protocol Subscription Wrapper
+
+File: `crates/trellis-examples/src/protocol_subscription.rs`
+
+Shape:
+
+```text
+session params
+ -> source set
+ -> desired interest set
+ -> replay selector
+ -> live subscription shape
+ -> admitted local rows
+ -> output frames
+ -> scoped teardown
+```
+
+The public wrapper API exposes `ArticleFeedHandle`, `ArticleFeedParams`,
+`SubscriptionEffect`, and `ArticleFeedFrame`. Trellis graph identities,
+resource plans, and output frames remain internal to the example.
+
+Covered behavior:
+
+- closing a handle tears down scope-owned subscriptions and clears output;
+- source shrink withdraws demand and removes admitted rows;
+- an empty source set opens no broad demand;
+- replay requests replace subscription shape and emit coherent rebaselines;
+- `trellis-test` ledgers assert lifecycle and output invariants.
+
 ## Internal Alpha Prototype
 
 File: `crates/trellis-examples/src/internal_alpha.rs`

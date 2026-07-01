@@ -8,3 +8,6 @@ description = "Proof examples for Trellis graph shapes."
 
 [dependencies]
 trellis-core = { version = "0.1.0", path = "../trellis-core" }
+
+[dev-dependencies]
+trellis-test = { path = "../trellis-test" }
