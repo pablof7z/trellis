@@ -1,6 +1,6 @@
 use crate::{
-    CollectionNode, GraphError, GraphResult, MapDiff, PlanContext, PlanError, ResourcePlan,
-    SetDiff, Transaction, resource::ResourcePlanner,
+    CollectionNode, GraphError, GraphResult, MapDiff, PlanContext, PlanError, ResourceKey,
+    ResourcePlan, SetDiff, Transaction, resource::ResourcePlanner,
 };
 
 impl<C: 'static, O> Transaction<'_, C, O>
@@ -70,5 +70,28 @@ where
         self.working.resource_planners.push(resource_planner);
         self.graph_mutated = true;
         Ok(())
+    }
+
+    /// Stages a set-diff planner that opens added members and closes removed members.
+    pub fn open_close_planner<K>(
+        &mut self,
+        collection: CollectionNode<K, ()>,
+        scope: crate::ScopeId,
+        key: impl Fn(&K) -> ResourceKey + Send + Sync + 'static,
+        open: impl Fn(&K) -> C + Send + Sync + 'static,
+    ) -> GraphResult<()>
+    where
+        K: Clone + Ord + Send + Sync + 'static,
+    {
+        self.set_resource_planner(collection, scope, move |ctx| {
+            let mut plan = ResourcePlan::new();
+            for added in &ctx.diff().added {
+                plan.open(key(&added.value), ctx.scope(), open(&added.value));
+            }
+            for removed in &ctx.diff().removed {
+                plan.close(key(&removed.value), ctx.scope());
+            }
+            Ok(plan)
+        })
     }
 }

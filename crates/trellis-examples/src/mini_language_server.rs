@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use trellis_core::{DependencyList, Graph, ResourceKey, ResourcePlan};
+use trellis_core::{DependencyList, Graph, ResourceKey};
 
 /// Host command payload for file watcher resources.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -105,20 +105,12 @@ pub fn build_graph(initial_files: BTreeMap<String, String>) -> MiniLanguageServe
             },
         )
         .unwrap();
-    tx.set_resource_planner(affected, scope, move |ctx| {
-        let mut plan = ResourcePlan::new();
-        for added in &ctx.diff().added {
-            plan.open(
-                key(&added.value),
-                ctx.scope(),
-                WatchCommand::Watch(added.value.clone()),
-            );
-        }
-        for removed in &ctx.diff().removed {
-            plan.close(key(&removed.value), ctx.scope());
-        }
-        Ok(plan)
-    })
+    tx.open_close_planner(
+        affected,
+        scope,
+        |file| key(file),
+        |file| WatchCommand::Watch(file.clone()),
+    )
     .unwrap();
     tx.materialized_output(
         "diagnostics",

@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use trellis_core::{ResourceCommandTrace, ResourceKey, Revision, ScopeId};
+use trellis_core::{Graph, ResourceCommandTrace, ResourceKey, Revision, ScopeId};
 
 use crate::{
     HostStatusClass, HostStatusRecord, ResourceLedger, ResourceLedgerError, ResourceSnapshot,
@@ -39,6 +39,21 @@ impl<C> ResourceLedger<C> {
     /// Asserts every tracked live resource has at least one owner.
     pub fn assert_no_orphan_resources(&self) -> Result<(), ResourceLedgerError> {
         self.assert_all_resources_have_owner()
+    }
+
+    /// Asserts the wrapped graph reports no graph-level orphan resources.
+    pub fn assert_graph_has_no_orphan_resources<O>(
+        &self,
+        graph: &Graph<C, O>,
+    ) -> Result<(), ResourceLedgerError> {
+        if let Some(key) = graph.orphan_resources().into_iter().next() {
+            Err(ResourceLedgerError::Orphan {
+                context: self.context_for_key(&key),
+                key,
+            })
+        } else {
+            Ok(())
+        }
     }
 
     /// Asserts no duplicate close was observed.

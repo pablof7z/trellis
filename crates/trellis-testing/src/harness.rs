@@ -199,6 +199,12 @@ where
 
         self.resource_ledger.apply_result(&result);
         self.output_ledger.apply_result(&result);
+        self.resource_ledger
+            .assert_graph_has_no_orphan_resources(self.target.graph())
+            .map_err(|error| ScenarioError::ResourceLedgerInvariantFailed {
+                step: name.to_owned(),
+                error: Box::new(error),
+            })?;
         self.scenario.record_trace(name, trace);
 
         if let Some(expected) = expected_resource_commands {

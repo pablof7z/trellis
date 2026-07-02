@@ -5,7 +5,7 @@ mod shared_resource;
 
 use trellis_core::{
     DependencyList, Graph, InputNode, MaterializedOutput, OutputFrameKind, ResourceCommand,
-    ResourceCommandKind, ResourceKey, ResourcePlan, ScopeId, TransactionResult, TransactionTrace,
+    ResourceCommandKind, ResourceKey, ScopeId, TransactionResult, TransactionTrace,
     assert_transaction_traces_match,
 };
 
@@ -141,20 +141,12 @@ fn build_alpha(source_members: BTreeSet<u8>, allowed_members: BTreeSet<u8>) -> A
             move |ctx| Ok(ctx.derived(visible)?.clone()),
         )
         .unwrap();
-    tx.set_resource_planner(demand, scope, move |ctx| {
-        let mut plan = ResourcePlan::new();
-        for added in &ctx.diff().added {
-            plan.open(
-                key(added.value),
-                ctx.scope(),
-                AlphaCommand::Open(added.value),
-            );
-        }
-        for removed in &ctx.diff().removed {
-            plan.close(key(removed.value), ctx.scope());
-        }
-        Ok(plan)
-    })
+    tx.open_close_planner(
+        demand,
+        scope,
+        |value| key(*value),
+        |value| AlphaCommand::Open(*value),
+    )
     .unwrap();
     let output = tx
         .materialized_output(

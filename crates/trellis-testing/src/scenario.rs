@@ -3,7 +3,10 @@ use trellis_core::{
     TransactionId, TransactionResult, TransactionTrace, assert_transaction_traces_match,
 };
 
-use crate::{FullRecomputeOracle, OracleCheck, OracleMismatch, assert_incremental_equals_full};
+use crate::{
+    FullRecomputeOracle, OracleCheck, OracleMismatch, ResourceLedgerError,
+    assert_incremental_equals_full,
+};
 
 /// Named transaction trace captured by a scenario test.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -64,6 +67,13 @@ pub enum ScenarioError {
         step: String,
         /// Graph error returned by core.
         error: GraphError,
+    },
+    /// A resource-ledger invariant failed after a committed step.
+    ResourceLedgerInvariantFailed {
+        /// Step whose transaction produced the failed invariant.
+        step: String,
+        /// Ledger error returned by the invariant.
+        error: Box<ResourceLedgerError>,
     },
     /// A step-level invariant hook failed.
     InvariantFailed {
