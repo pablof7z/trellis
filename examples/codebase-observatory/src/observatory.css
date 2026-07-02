@@ -1,0 +1,159 @@
+.observatory {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  border-right: 0;
+  background: var(--surface-1);
+}
+
+.observatory-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+  border-bottom: 1px solid var(--border-soft);
+  padding: 12px 14px;
+}
+
+.observatory-head h2 {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 760;
+}
+
+.observatory-scroll {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  overflow: auto;
+  padding: 12px;
+}
+
+.story-card,
+.trace-row,
+.invariant {
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: rgba(20, 28, 39, 0.72);
+}
+
+.story-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.story-card p,
+.cause-path li {
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.story-card.success {
+  border-color: rgba(62, 207, 142, 0.24);
+  background: var(--success-bg);
+}
+
+.story-card.fail {
+  border-color: rgba(255, 100, 117, 0.26);
+  background: var(--danger-bg);
+}
+
+.story-card.pass {
+  border-color: rgba(62, 207, 142, 0.24);
+}
+
+.result-list,
+.mini-list {
+  display: grid;
+  gap: 6px;
+}
+
+.result-row,
+.trace-row {
+  display: grid;
+  align-items: center;
+  width: 100%;
+  min-height: 32px;
+  text-align: left;
+}
+
+.result-row {
+  border-color: transparent;
+  background: rgba(62, 207, 142, 0.08);
+  color: var(--text);
+}
+
+.result-row::before {
+  content: "✓";
+  margin-right: 8px;
+  color: var(--success);
+}
+
+.result-row.warn {
+  background: var(--warning-bg);
+}
+
+.result-row.warn::before {
+  content: "!";
+  color: var(--warning);
+}
+
+.trace-row {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  height: auto;
+  padding: 9px 10px;
+}
+
+.trace-row span,
+.mini-list div {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: var(--font-code);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-list div {
+  border-radius: 7px;
+  background: rgba(11, 15, 20, 0.38);
+  padding: 7px 8px;
+}
+
+.invariant {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-height: 34px;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.invariant span {
+  border-radius: 999px;
+  margin-right: 8px;
+  padding: 3px 7px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.invariant.pass span {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.invariant.fail span {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.invariant small {
+  grid-column: 2;
+  color: var(--danger);
+}
+
+.cause-path {
+  margin: 0;
+  padding-left: 18px;
+}

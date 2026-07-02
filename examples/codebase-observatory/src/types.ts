@@ -27,6 +27,7 @@ export type AppState = {
     revisionsByOutputKey: Record<string, number>;
   };
   traces: TransactionTrace[];
+  actionLog: Record<string, unknown>[];
   selectedWhy: string | null;
   replayResult: ReplayResult | null;
 };
