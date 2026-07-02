@@ -2,9 +2,26 @@
   "name": "trellis-site",
   "version": "0.1.0",
   "private": true,
-  "description": "Static public website for Trellis.",
+  "description": "Static public website and showcase workspace for Trellis.",
   "scripts": {
-    "check": "node scripts/check-site.mjs"
+    "check": "node scripts/check-site.mjs",
+    "build:observatory:wasm": "wasm-pack build crates/trellis-observatory-engine --target web --out-dir ../../examples/codebase-observatory/src/wasm",
+    "dev:observatory": "npm run build:observatory:wasm && vite --config examples/codebase-observatory/vite.config.ts",
+    "build:observatory": "npm run build:observatory:wasm && vite build --config examples/codebase-observatory/vite.config.ts",
+    "test:observatory": "vitest run --config examples/codebase-observatory/vite.config.ts"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "@vitejs/plugin-react": "^5.1.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0",
+    "vitest": "^4.0.16"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3"
   },
   "engines": {
     "node": ">=20"

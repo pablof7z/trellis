@@ -36,6 +36,8 @@ function walk(dir) {
   return readdirSync(dir).flatMap((entry) => {
     const path = join(dir, entry);
     if (entry === ".git" || entry === "node_modules") return [];
+    if (path.includes("examples/codebase-observatory")) return [];
+    if (path.includes("dist/codebase-observatory")) return [];
     return statSync(path).isDirectory() ? walk(path) : [path];
   });
 }

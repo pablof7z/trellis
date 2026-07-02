@@ -1,0 +1,91 @@
+.runtime {
+  border-top: 1px solid #262c36;
+  border-right: 0;
+  overflow: hidden;
+}
+
+.tabbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-bottom: 1px solid #262c36;
+  padding: 8px;
+}
+
+.tabbar button.active {
+  border-color: #5b8def;
+  background: #18243a;
+}
+
+.tabbar.compact button {
+  padding: 5px 7px;
+  font-size: 11px;
+}
+
+.runtime-list,
+.stack {
+  display: grid;
+  gap: 8px;
+  overflow: auto;
+  max-height: 100%;
+  padding: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.observatory {
+  border-right: 0;
+  overflow: hidden;
+}
+
+.trace-card,
+.invariant {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  border: 1px solid #333b46;
+  border-radius: 8px;
+  padding: 10px;
+  background: #171b22;
+  color: #d8dee9;
+  text-align: left;
+}
+
+.trace-card h2,
+.trace-card h3 {
+  font-size: 13px;
+}
+
+.trace-card p,
+.why li {
+  color: #9fb0c5;
+  font-size: 12px;
+}
+
+.selectable.blue,
+.trace-card.pass {
+  border-color: #1d4e65;
+}
+
+.selectable.gray {
+  border-color: #505761;
+}
+
+.selectable.warn {
+  border-color: #80651d;
+  background: #2a230f;
+}
+
+.invariant {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.invariant small {
+  grid-column: 2;
+  color: #ff9aa5;
+}
+
+.why ol {
+  margin: 0;
+  padding-left: 18px;
+}

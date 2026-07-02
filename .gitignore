@@ -1,3 +1,7 @@
 /target/
 /.worktrees/
 .vercel
+/dist/
+/node_modules/
+node_modules/
+/examples/codebase-observatory/src/wasm/
