@@ -1,8 +1,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use trellis_core::{
-    HostResourceOutcome, ResourceCommand, ResourceCommandTrace, ResourceKey, Revision,
-    TransactionResult,
+    HostResourceCommandState, ResourceCommand, ResourceCommandTrace, ResourceKey, Revision,
+    TransactionResult, classify_host_resource_status,
 };
 
 use crate::host_status::{HostStatusClass, HostStatusEvent, HostStatusIdentity, HostStatusRecord};
@@ -193,80 +193,26 @@ impl<C: Clone> ResourceLedger<C> {
         let historical = known.or_else(|| self.history.get(&status.resource_key));
         let last_transaction_id = historical.map(|snapshot| snapshot.last_transaction_id);
         let last_command_revision = historical.map(|snapshot| snapshot.command_revision);
-        let Some(snapshot) = known else {
-            if let Some(snapshot) = historical
-                && matches!(status.status, HostResourceOutcome::Closed)
-                && snapshot.last_command.context.scope == status.scope
-            {
-                if status.command_revision < snapshot.command_revision {
-                    return (
-                        HostStatusClass::Stale,
-                        last_transaction_id,
-                        last_command_revision,
-                    );
-                }
-                if status.command_revision > snapshot.command_revision {
-                    return (
-                        HostStatusClass::Future,
-                        last_transaction_id,
-                        last_command_revision,
-                    );
-                }
-                if self
-                    .accepted_status
-                    .contains(&HostStatusIdentity::from(status))
-                {
-                    return (
-                        HostStatusClass::Duplicate,
-                        last_transaction_id,
-                        last_command_revision,
-                    );
-                }
-                return (
-                    HostStatusClass::Current,
-                    last_transaction_id,
-                    last_command_revision,
-                );
-            }
-            return (
-                HostStatusClass::Late,
-                last_transaction_id,
-                last_command_revision,
-            );
+        let state = if let Some(snapshot) = known {
+            Some(HostResourceCommandState {
+                scope: snapshot.last_command.context.scope,
+                command_revision: snapshot.command_revision,
+                resource_is_live: true,
+                scope_owns_resource: snapshot.owners.contains(&status.scope),
+            })
+        } else {
+            historical.map(|snapshot| HostResourceCommandState {
+                scope: snapshot.last_command.context.scope,
+                command_revision: snapshot.command_revision,
+                resource_is_live: false,
+                scope_owns_resource: false,
+            })
         };
-        if !snapshot.owners.contains(&status.scope) {
-            return (
-                HostStatusClass::Late,
-                last_transaction_id,
-                last_command_revision,
-            );
-        }
-        if status.command_revision < snapshot.command_revision {
-            return (
-                HostStatusClass::Stale,
-                last_transaction_id,
-                last_command_revision,
-            );
-        }
-        if status.command_revision > snapshot.command_revision {
-            return (
-                HostStatusClass::Future,
-                last_transaction_id,
-                last_command_revision,
-            );
-        }
-        if self
+        let duplicate = self
             .accepted_status
-            .contains(&HostStatusIdentity::from(status))
-        {
-            return (
-                HostStatusClass::Duplicate,
-                last_transaction_id,
-                last_command_revision,
-            );
-        }
+            .contains(&HostStatusIdentity::from(status));
         (
-            HostStatusClass::Current,
+            classify_host_resource_status(status, state, duplicate),
             last_transaction_id,
             last_command_revision,
         )

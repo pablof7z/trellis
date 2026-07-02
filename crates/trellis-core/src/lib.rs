@@ -67,7 +67,10 @@ pub use error::{
     FullRecomputeResourceMismatch, GraphError, GraphResult, OutputError, PlanError,
 };
 pub use graph::Graph;
-pub use host_status::{HostResourceOutcome, HostResourceStatus};
+pub use host_status::{
+    HostResourceCommandState, HostResourceOutcome, HostResourceStatus, HostStatusClass,
+    classify_host_resource_status,
+};
 pub use ids::{NodeId, OutputKey, Revision, ScopeId, TransactionId};
 pub use node::{CollectionNode, DerivedNode, InputNode, NodeHandle, NodeKind, NodeMeta};
 pub use oracle::FullRecomputeCheck;
