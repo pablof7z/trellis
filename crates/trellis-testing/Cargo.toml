@@ -12,12 +12,14 @@ default = []
 fuzz = []
 insta = ["dep:insta"]
 proptest = ["dep:proptest"]
-serde = ["trellis-core/serde"]
+serde = ["dep:serde", "dep:serde_json", "trellis-core/serde"]
 trybuild = []
 
 [dependencies]
 insta = { version = "1", optional = true }
 proptest = { version = "1", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
 trellis-core = { version = "0.1.2", path = "../trellis-core" }
 
 [dev-dependencies]
