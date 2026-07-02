@@ -24,6 +24,34 @@ export const scenarioActions = [
   ["Close app tab", { type: "closeAppTab" }],
 ] as const;
 
+export const scenarioSteps = [
+  {
+    label: "Delete imported file",
+    action: { type: "deleteFile", path: "src/legacy_user.tl" },
+    story: "Remove legacy_user.tl and let Trellis clear owned diagnostics, links, tokens, jobs, and watchers.",
+  },
+  {
+    label: "Rename import target",
+    action: { type: "renameSchema" },
+    story: "Rename schema.tl to schema_v2.tl and rebaseline visible document links without reopening the editor.",
+  },
+  {
+    label: "Start slow analysis",
+    action: { type: "startSlowAnalysis" },
+    story: "Start a revisioned analysis job for the currently visible editor.",
+  },
+  {
+    label: "Fix app.tl",
+    action: { type: "fixApp" },
+    story: "Commit a newer app.tl revision that should supersede older host results.",
+  },
+  {
+    label: "Inject late result",
+    action: { type: "injectStaleAnalysisResult" },
+    story: "Deliver the old analysis result and verify it is visible as stale but cannot mutate editor output.",
+  },
+] as const;
+
 export function latestTrace(state: AppState) {
   return state.traces[state.traces.length - 1];
 }
