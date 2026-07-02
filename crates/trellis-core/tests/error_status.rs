@@ -54,13 +54,13 @@ fn plan_error_does_not_emit_partial_plan_or_mutate_ownership() {
 
 #[test]
 fn output_error_does_not_corrupt_graph_state() {
-    let mut graph = Graph::<(), String>::new_with_output_type();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<String>("source").unwrap();
     tx.set_input(source, "ok".to_owned()).unwrap();
     let output = tx
-        .materialized_output(
+        .materialized_output::<String>(
             "output",
             scope,
             DependencyList::new([source.id()]).unwrap(),

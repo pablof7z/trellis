@@ -1,18 +1,17 @@
-use core::fmt::{Debug, Write};
+use core::fmt::Write;
+
+use trellis_core::OutputPayload;
 
 use crate::OutputLedger;
 
-impl<O> OutputLedger<O> {
+impl OutputLedger {
     /// Returns deterministic debug output for output ledger snapshots.
-    pub fn to_debug_string(&self) -> String
-    where
-        O: Debug,
-    {
+    pub fn to_debug_string(&self) -> String {
         self.to_redacted_debug_string(|value| format!("{value:?}"))
     }
 
     /// Returns deterministic redacted debug output for output ledger snapshots.
-    pub fn to_redacted_debug_string(&self, redact: impl Fn(&O) -> String) -> String {
+    pub fn to_redacted_debug_string(&self, redact: impl Fn(&OutputPayload) -> String) -> String {
         let mut out = String::new();
         writeln!(&mut out, "OutputLedger").expect("writing to String cannot fail");
 

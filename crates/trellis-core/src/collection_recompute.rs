@@ -2,7 +2,7 @@ use crate::collection::{CollectionContext, StoredCollection};
 use crate::{Graph, GraphError, GraphResult, NodeId, NodeKind};
 use std::collections::BTreeSet;
 
-impl<C, O> Graph<C, O> {
+impl<C> Graph<C> {
     pub(crate) fn recompute_dirty_collections(
         &mut self,
         initial_changed: &[NodeId],
@@ -58,7 +58,7 @@ impl<C, O> Graph<C, O> {
 
     pub(crate) fn compare_full_recomputed_collections(
         &self,
-        full: &Graph<C, O>,
+        full: &Graph<C>,
         order: &[NodeId],
     ) -> GraphResult<()> {
         for node in order {

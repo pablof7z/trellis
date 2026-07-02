@@ -10,9 +10,9 @@ use crate::{
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Staged canonical input transaction.
-pub struct Transaction<'graph, C = (), O = ()> {
-    pub(crate) graph: &'graph mut Graph<C, O>,
-    pub(crate) working: Graph<C, O>,
+pub struct Transaction<'graph, C = ()> {
+    pub(crate) graph: &'graph mut Graph<C>,
+    pub(crate) working: Graph<C>,
     id: TransactionId,
     options: TransactionOptions,
     staged_inputs: BTreeMap<NodeId, Box<dyn StoredInput>>,
@@ -24,12 +24,9 @@ pub struct Transaction<'graph, C = (), O = ()> {
     closed: bool,
 }
 
-impl<'graph, C, O> Transaction<'graph, C, O>
-where
-    O: Clone + PartialEq,
-{
+impl<'graph, C> Transaction<'graph, C> {
     pub(crate) fn new(
-        graph: &'graph mut Graph<C, O>,
+        graph: &'graph mut Graph<C>,
         id: TransactionId,
         options: TransactionOptions,
     ) -> Self {
@@ -78,7 +75,7 @@ where
     }
 
     /// Commits staged input changes atomically.
-    pub fn commit(&mut self) -> GraphResult<TransactionResult<C, O>> {
+    pub fn commit(&mut self) -> GraphResult<TransactionResult<C>> {
         self.ensure_open()?;
         let mut phase_trace = vec![TransactionPhase::StageOperations];
         phase_trace.push(TransactionPhase::ValidateTransaction);
@@ -286,7 +283,7 @@ where
     }
 }
 
-impl<C, O> Drop for Transaction<'_, C, O> {
+impl<C> Drop for Transaction<'_, C> {
     fn drop(&mut self) {
         if !self.closed {
             self.graph.transaction_open = false;

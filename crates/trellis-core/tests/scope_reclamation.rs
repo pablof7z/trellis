@@ -17,7 +17,7 @@ fn set(entries: &[&str]) -> BTreeSet<String> {
 
 #[test]
 fn closing_scope_reclaims_owned_node_values_specs_and_planners() {
-    let mut graph = Graph::<Command, usize>::new_with_command_type();
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<String>>("source").unwrap();

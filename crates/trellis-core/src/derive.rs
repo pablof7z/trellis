@@ -3,15 +3,15 @@ use crate::{DerivedNode, Graph, GraphError, GraphResult, InputNode, NodeId, Node
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-type ComputeFn<C, O> = dyn for<'ctx> Fn(&DeriveContext<'ctx, C, O>) -> Result<Box<dyn StoredInput>, DeriveError>
+type ComputeFn<C> = dyn for<'ctx> Fn(&DeriveContext<'ctx, C>) -> Result<Box<dyn StoredInput>, DeriveError>
     + Send
     + Sync;
 
-pub(crate) struct DerivedSpec<C, O> {
-    compute: Arc<ComputeFn<C, O>>,
+pub(crate) struct DerivedSpec<C> {
+    compute: Arc<ComputeFn<C>>,
 }
 
-impl<C, O> Clone for DerivedSpec<C, O> {
+impl<C> Clone for DerivedSpec<C> {
     fn clone(&self) -> Self {
         Self {
             compute: Arc::clone(&self.compute),
@@ -19,14 +19,11 @@ impl<C, O> Clone for DerivedSpec<C, O> {
     }
 }
 
-impl<C, O> DerivedSpec<C, O> {
+impl<C> DerivedSpec<C> {
     pub(crate) fn new<T, F>(derive: F) -> Self
     where
         T: Clone + PartialEq + Send + Sync + 'static,
-        F: for<'ctx> Fn(&DeriveContext<'ctx, C, O>) -> Result<T, DeriveError>
-            + Send
-            + Sync
-            + 'static,
+        F: for<'ctx> Fn(&DeriveContext<'ctx, C>) -> Result<T, DeriveError> + Send + Sync + 'static,
     {
         Self {
             compute: Arc::new(move |ctx| derive(ctx).map(boxed_input)),
@@ -35,20 +32,20 @@ impl<C, O> DerivedSpec<C, O> {
 
     pub(crate) fn compute(
         &self,
-        ctx: &DeriveContext<'_, C, O>,
+        ctx: &DeriveContext<'_, C>,
     ) -> Result<Box<dyn StoredInput>, DeriveError> {
         (self.compute)(ctx)
     }
 }
 
 /// Read-only context passed to pure derived node computations.
-pub struct DeriveContext<'graph, C = (), O = ()> {
-    graph: &'graph Graph<C, O>,
+pub struct DeriveContext<'graph, C = ()> {
+    graph: &'graph Graph<C>,
     declared_dependencies: &'graph [NodeId],
 }
 
-impl<'graph, C, O> DeriveContext<'graph, C, O> {
-    pub(crate) fn new(graph: &'graph Graph<C, O>, declared_dependencies: &'graph [NodeId]) -> Self {
+impl<'graph, C> DeriveContext<'graph, C> {
+    pub(crate) fn new(graph: &'graph Graph<C>, declared_dependencies: &'graph [NodeId]) -> Self {
         Self {
             graph,
             declared_dependencies,
@@ -112,7 +109,7 @@ impl DeriveError {
     }
 }
 
-impl<C, O> Graph<C, O> {
+impl<C> Graph<C> {
     pub(crate) fn recompute_dirty_derived(
         &mut self,
         initial_changed: &[NodeId],

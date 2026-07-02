@@ -275,8 +275,10 @@ and collection member payloads are not required to appear in the core trace.
 redaction, and snapshot-friendly dumps on top of the core trace without making
 core depend on a snapshot or serialization framework.
 
-Serialization support for trace/result data is optional and gated by the
+Serialization support for structural trace data is optional and gated by the
 `serde` feature. The default core build does not require `serde`.
+`TransactionResult` can carry application output payloads and is not the stable
+serialized replay boundary.
 
 ## Equality and propagation
 
@@ -495,6 +497,12 @@ A materialized output is a revisioned surface emitted by the graph as data.
 
 The host may send output frames to a UI, bridge, log, network, test harness, or any other consumer. The graph does not call those consumers directly.
 
+Output payload type is per materialized output, not per graph. `Graph<C>` keeps
+one graph-wide command payload stream, while each `MaterializedOutput<T>` names
+its own payload type. Output frames carry erased `OutputPayload` values; typed
+consumers recover `T` through the matching output handle or by explicitly asking
+for that payload type.
+
 An output frame SHOULD include:
 
 - output key;
@@ -515,9 +523,9 @@ Rebaseline
 Status
 ```
 
-The M7 implementation uses state-replacement deltas: a `Delta` payload is a
-coherent replacement for the output's consumer state. This keeps the first
-output API typed and deterministic while leaving structural output deltas for a
+The implementation uses state-replacement deltas: a `Delta` payload is a
+coherent replacement for the output's consumer state. This keeps output frames
+typed per output and deterministic while leaving structural output deltas for a
 later design if the examples prove they are needed.
 
 Output revisions MUST be monotonic per output key.

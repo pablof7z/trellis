@@ -45,7 +45,7 @@ pub struct TransactionTrace {
 
 impl TransactionTrace {
     /// Builds a deterministic trace from a transaction result.
-    pub fn from_result<C, O>(result: &TransactionResult<C, O>) -> Self {
+    pub fn from_result<C>(result: &TransactionResult<C>) -> Self {
         Self {
             transaction_id: result.transaction_id,
             revision: result.revision,
@@ -160,7 +160,7 @@ pub enum OutputFrameKindTrace {
 }
 
 impl OutputFrameKindTrace {
-    pub(crate) fn from_kind<O>(kind: &OutputFrameKind<O>) -> Self {
+    pub(crate) fn from_kind(kind: &OutputFrameKind) -> Self {
         match kind {
             OutputFrameKind::Baseline(_) => Self::Baseline,
             OutputFrameKind::Delta(_) => Self::Delta,
@@ -170,7 +170,7 @@ impl OutputFrameKindTrace {
     }
 }
 
-impl<C, O> TransactionResult<C, O> {
+impl<C> TransactionResult<C> {
     /// Returns a deterministic payload-free projection of this result.
     pub fn trace(&self) -> TransactionTrace {
         TransactionTrace::from_result(self)

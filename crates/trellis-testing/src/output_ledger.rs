@@ -1,13 +1,13 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use trellis_core::{
-    OutputFrame, OutputFrameKind, OutputFrameKindTrace, OutputFrameTrace, OutputKey, Revision,
-    ScopeId, TransactionId, TransactionResult,
+    OutputFrame, OutputFrameKind, OutputFrameKindTrace, OutputFrameTrace, OutputKey, OutputPayload,
+    Revision, ScopeId, TransactionId, TransactionResult,
 };
 
 /// Current ledger view for one materialized output.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct OutputSnapshot<O> {
+#[derive(Clone, Debug, PartialEq)]
+pub struct OutputSnapshot {
     /// Scope that owns the output.
     pub scope: ScopeId,
     /// Last transaction that emitted a frame.
@@ -15,11 +15,21 @@ pub struct OutputSnapshot<O> {
     /// Last revision observed for this output.
     pub revision: Revision,
     /// Current consumer state after applying frames.
-    pub state: Option<O>,
+    pub state: Option<OutputPayload>,
     /// Whether a clear frame has been observed.
     pub cleared: bool,
     /// Last frame trace observed for this output.
     pub frame: OutputFrameTrace,
+}
+
+impl OutputSnapshot {
+    /// Returns the current state downcast to the requested output payload type.
+    pub fn state_as<T>(&self) -> Option<&T>
+    where
+        T: Clone + PartialEq + Send + Sync + 'static,
+    {
+        self.state.as_ref().and_then(OutputPayload::get::<T>)
+    }
 }
 
 /// Output ledger assertion failure.
@@ -63,16 +73,16 @@ pub enum OutputLedgerError {
 }
 
 /// Fake output consumer ledger for materialized output frames.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct OutputLedger<O> {
-    pub(crate) outputs: BTreeMap<OutputKey, OutputSnapshot<O>>,
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct OutputLedger {
+    pub(crate) outputs: BTreeMap<OutputKey, OutputSnapshot>,
     pub(crate) closed_scopes: BTreeSet<ScopeId>,
     pub(crate) frames: Vec<OutputFrameTrace>,
-    pub(crate) frame_records: Vec<OutputFrame<O>>,
+    pub(crate) frame_records: Vec<OutputFrame>,
     pub(crate) errors: Vec<OutputLedgerError>,
 }
 
-impl<O: Clone + PartialEq> OutputLedger<O> {
+impl OutputLedger {
     /// Creates an empty output ledger.
     pub fn new() -> Self {
         Self {
@@ -90,14 +100,14 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
     }
 
     /// Applies all output frames from a transaction result.
-    pub fn apply_result<C>(&mut self, result: &TransactionResult<C, O>) {
+    pub fn apply_result<C>(&mut self, result: &TransactionResult<C>) {
         for frame in &result.output_frames {
             self.apply_frame(frame);
         }
     }
 
     /// Applies a single output frame.
-    pub fn apply_frame(&mut self, frame: &OutputFrame<O>) {
+    pub fn apply_frame(&mut self, frame: &OutputFrame) {
         let trace = output_frame_trace(frame);
         self.frames.push(trace.clone());
         self.frame_records.push(frame.clone());
@@ -138,7 +148,7 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
     }
 
     /// Returns current output state.
-    pub fn snapshot(&self, key: OutputKey) -> Option<&OutputSnapshot<O>> {
+    pub fn snapshot(&self, key: OutputKey) -> Option<&OutputSnapshot> {
         self.outputs.get(&key)
     }
 
@@ -153,7 +163,7 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
     }
 
     /// Returns applied output frames including typed payloads in delivery order.
-    pub fn frame_records(&self) -> &[OutputFrame<O>] {
+    pub fn frame_records(&self) -> &[OutputFrame] {
         &self.frame_records
     }
 
@@ -223,14 +233,9 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
     pub fn assert_current_equals(
         &self,
         key: OutputKey,
-        expected: &O,
+        expected: &(impl Clone + PartialEq + Send + Sync + 'static),
     ) -> Result<(), OutputLedgerError> {
-        if self
-            .outputs
-            .get(&key)
-            .and_then(|snapshot| snapshot.state.as_ref())
-            == Some(expected)
-        {
+        if self.outputs.get(&key).and_then(OutputSnapshot::state_as) == Some(expected) {
             Ok(())
         } else {
             Err(OutputLedgerError::StateMismatch {
@@ -249,7 +254,7 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
     }
 }
 
-fn output_frame_trace<O>(frame: &OutputFrame<O>) -> OutputFrameTrace {
+fn output_frame_trace(frame: &OutputFrame) -> OutputFrameTrace {
     OutputFrameTrace {
         output_key: frame.output_key,
         scope: frame.scope,
@@ -259,7 +264,7 @@ fn output_frame_trace<O>(frame: &OutputFrame<O>) -> OutputFrameTrace {
     }
 }
 
-fn output_frame_kind<O>(kind: &OutputFrameKind<O>) -> OutputFrameKindTrace {
+fn output_frame_kind(kind: &OutputFrameKind) -> OutputFrameKindTrace {
     match kind {
         OutputFrameKind::Baseline(_) => OutputFrameKindTrace::Baseline,
         OutputFrameKind::Delta(_) => OutputFrameKindTrace::Delta,

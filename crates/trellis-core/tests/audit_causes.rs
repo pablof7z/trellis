@@ -2,7 +2,7 @@ use trellis_core::{AuditEvent, DependencyList, Graph};
 
 #[test]
 fn node_explanations_use_only_inputs_that_reach_the_node() {
-    let mut graph = Graph::<(), usize>::new_with_output_type();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let first = tx.input::<usize>("first").unwrap();
     let second = tx.input::<usize>("second").unwrap();

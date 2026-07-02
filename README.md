@@ -72,7 +72,7 @@ fn key(project: &str) -> ResourceKey {
     ResourceKey::new(format!("sync:{project}"))
 }
 
-let mut graph = Graph::<SyncCommand, Vec<String>>::new_with_command_type();
+let mut graph = Graph::<SyncCommand>::new_with_command_type();
 let mut tx = graph.begin_transaction()?;
 let scope = tx.create_scope("workspace")?;
 
@@ -153,6 +153,10 @@ which actually changed, the structural diffs, the resource plan, the output
 frames, scope lifecycle events, an audit log, and the phase trace. Audit
 queries answer "why was this command emitted?" and "which input caused this
 frame?" after the fact.
+
+Output payload types belong to each materialized output, not to the graph. One
+graph can emit different frame payload types for different output surfaces
+without wrapping them in a shared enum.
 
 That record is the product. It is what makes Trellis systems reviewable in a
 PR, diffable across runs, replayable in tests — and legible to tooling and AI

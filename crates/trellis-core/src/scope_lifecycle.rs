@@ -1,7 +1,7 @@
 use crate::{Graph, GraphResult, ResourceKey, ScopeId};
 use std::collections::BTreeSet;
 
-impl<C, O> Graph<C, O> {
+impl<C> Graph<C> {
     pub(crate) fn close_scope_direct(&mut self, scope: ScopeId) -> GraphResult<Vec<ScopeId>> {
         self.require_scope(scope)?;
         let scopes = self.scope_close_order(scope);

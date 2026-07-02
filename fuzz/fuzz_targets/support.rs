@@ -20,7 +20,7 @@ enum Command {
 }
 
 struct Target {
-    graph: Graph<Command, BTreeSet<u8>>,
+    graph: Graph<Command>,
     source: InputNode<BTreeSet<u8>>,
     output: MaterializedOutput<BTreeSet<u8>>,
     scope: ScopeId,
@@ -102,7 +102,7 @@ fn run_set_resource_script(script: &ModelScript) -> Vec<TransactionTrace> {
 fn apply_resource_result(
     target: &Target,
     ledger: &mut ResourceLedger<Command>,
-    result: &trellis_core::TransactionResult<Command, BTreeSet<u8>>,
+    result: &trellis_core::TransactionResult<Command>,
 ) {
     ledger.apply_result(result);
     ledger.assert_no_duplicate_close().unwrap();
@@ -114,11 +114,8 @@ fn apply_resource_result(
 
 fn build_graph(
     initial: BTreeSet<u8>,
-) -> (
-    Target,
-    trellis_core::TransactionResult<Command, BTreeSet<u8>>,
-) {
-    let mut graph = Graph::<Command, BTreeSet<u8>>::new_with_command_type();
+) -> (Target, trellis_core::TransactionResult<Command>) {
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
@@ -166,7 +163,7 @@ fn build_graph(
 fn set_source(
     target: &mut Target,
     values: BTreeSet<u8>,
-) -> trellis_core::TransactionResult<Command, BTreeSet<u8>> {
+) -> trellis_core::TransactionResult<Command> {
     let mut tx = target.graph.begin_transaction().unwrap();
     tx.set_input(target.source, values).unwrap();
     let result = tx.commit().unwrap();
@@ -175,7 +172,7 @@ fn set_source(
     result
 }
 
-fn rebaseline_output(target: &mut Target) -> trellis_core::TransactionResult<Command, BTreeSet<u8>> {
+fn rebaseline_output(target: &mut Target) -> trellis_core::TransactionResult<Command> {
     let mut tx = target.graph.begin_transaction().unwrap();
     tx.rebaseline_output(target.output.clone()).unwrap();
     let result = tx.commit().unwrap();
@@ -184,7 +181,7 @@ fn rebaseline_output(target: &mut Target) -> trellis_core::TransactionResult<Com
     result
 }
 
-fn close_scope(target: &mut Target) -> trellis_core::TransactionResult<Command, BTreeSet<u8>> {
+fn close_scope(target: &mut Target) -> trellis_core::TransactionResult<Command> {
     let mut tx = target.graph.begin_transaction().unwrap();
     tx.close_scope(target.scope).unwrap();
     let result = tx.commit().unwrap();
@@ -192,7 +189,7 @@ fn close_scope(target: &mut Target) -> trellis_core::TransactionResult<Command, 
     result
 }
 
-fn commit_noop(target: &mut Target) -> trellis_core::TransactionResult<Command, BTreeSet<u8>> {
+fn commit_noop(target: &mut Target) -> trellis_core::TransactionResult<Command> {
     let mut tx = target.graph.begin_transaction().unwrap();
     let result = tx.commit().unwrap();
     drop(tx);

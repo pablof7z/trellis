@@ -113,7 +113,7 @@ fn full_recompute_output_mismatch_names_output_key() {
     let runs = Arc::new(AtomicUsize::new(0));
     let runs_for_output = Arc::clone(&runs);
 
-    let mut graph = Graph::<(), u64>::new_with_output_type();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let output = tx

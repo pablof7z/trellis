@@ -24,6 +24,7 @@ mod collection;
 mod collection_build;
 mod collection_diff;
 mod collection_recompute;
+mod collection_storage;
 mod debug;
 mod dependency;
 mod dependency_validate;
@@ -39,6 +40,8 @@ mod node;
 mod oracle;
 mod output;
 mod output_build;
+mod output_frame;
+mod output_payload;
 mod output_reconcile;
 mod read;
 mod resource;
@@ -74,10 +77,9 @@ pub use host_status::{
 pub use ids::{NodeId, OutputKey, Revision, ScopeId, TransactionId};
 pub use node::{CollectionNode, DerivedNode, InputNode, NodeHandle, NodeKind, NodeMeta};
 pub use oracle::FullRecomputeCheck;
-pub use output::{
-    ClearReason, MaterializedOutput, OutputContext, OutputFrame, OutputFrameKind, OutputMeta,
-    OutputOptions, RebaselineReason,
-};
+pub use output::{MaterializedOutput, OutputContext, OutputMeta, OutputOptions};
+pub use output_frame::{ClearReason, OutputFrame, OutputFrameKind, RebaselineReason};
+pub use output_payload::OutputPayload;
 pub use resource::{PlanContext, ResourceCommand, ResourceKey, ResourcePlan};
 pub use scope::ScopeMeta;
 pub use trace::{

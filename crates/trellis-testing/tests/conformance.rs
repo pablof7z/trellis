@@ -4,7 +4,7 @@ use trellis_testing::{
 };
 
 fn deterministic_graph_dump() -> String {
-    let mut graph = Graph::<(), usize>::new_with_output_type();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("screen").unwrap();
     let input = tx.input::<usize>("count").unwrap();
@@ -53,7 +53,7 @@ fn required_levels_without_hooks_are_reported_unsupported() {
             ConformanceLevel::DeterministicTrace,
             "phase order is stable",
             || {
-                let mut graph = Graph::<(), ()>::new();
+                let mut graph = Graph::<()>::new();
                 let mut tx = graph.begin_transaction().unwrap();
                 let result = tx.commit().unwrap();
                 drop(tx);
@@ -89,7 +89,7 @@ fn required_levels_without_hooks_are_reported_unsupported() {
 #[test]
 fn failures_include_invariant_and_trace_context() {
     let mut scenario = Scenario::new();
-    let mut graph = Graph::<(), ()>::new();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let result = tx.commit().unwrap();
     drop(tx);

@@ -14,7 +14,7 @@ struct Output {
 }
 
 struct HostComponent {
-    graph: Mutex<Graph<Command, Output>>,
+    graph: Mutex<Graph<Command>>,
 }
 
 fn assert_send_sync<T: Send + Sync>() {}
@@ -25,11 +25,11 @@ fn set(entries: &[&str]) -> BTreeSet<String> {
 
 #[test]
 fn graph_can_live_inside_send_sync_host_component() {
-    assert_send_sync::<Graph<Command, Output>>();
+    assert_send_sync::<Graph<Command>>();
     assert_send_sync::<HostComponent>();
 
     let output_runs = Arc::new(Mutex::new(0_usize));
-    let mut graph = Graph::<Command, Output>::new_with_command_type();
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("host-owned-session").unwrap();
     let source = tx.input::<BTreeSet<String>>("source-members").unwrap();

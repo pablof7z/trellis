@@ -1,5 +1,4 @@
 use std::fmt::Debug;
-use std::marker::PhantomData;
 
 use trellis_core::{
     Graph, GraphResult, InvariantResultTrace, OutputFrameTrace, ResourceCommandTrace, Transaction,
@@ -12,38 +11,36 @@ use crate::{
 };
 
 /// Application target that exposes the Trellis graph under test.
-pub trait ScenarioTarget<C = (), O = ()> {
+pub trait ScenarioTarget<C = ()> {
     /// Returns the underlying graph.
-    fn graph(&self) -> &Graph<C, O>;
+    fn graph(&self) -> &Graph<C>;
 
     /// Returns the underlying graph mutably.
-    fn graph_mut(&mut self) -> &mut Graph<C, O>;
+    fn graph_mut(&mut self) -> &mut Graph<C>;
 }
 
-impl<C, O> ScenarioTarget<C, O> for Graph<C, O> {
-    fn graph(&self) -> &Graph<C, O> {
+impl<C> ScenarioTarget<C> for Graph<C> {
+    fn graph(&self) -> &Graph<C> {
         self
     }
 
-    fn graph_mut(&mut self) -> &mut Graph<C, O> {
+    fn graph_mut(&mut self) -> &mut Graph<C> {
         self
     }
 }
 
 /// Scenario runner for deterministic transaction scripts.
-pub struct TrellisHarness<G, C = (), O = ()> {
+pub struct TrellisHarness<G, C = ()> {
     target: G,
     scenario: Scenario,
     resource_ledger: ResourceLedger<C>,
-    output_ledger: OutputLedger<O>,
-    _marker: PhantomData<fn() -> C>,
+    output_ledger: OutputLedger,
 }
 
-impl<G, C, O> TrellisHarness<G, C, O>
+impl<G, C> TrellisHarness<G, C>
 where
-    G: ScenarioTarget<C, O>,
+    G: ScenarioTarget<C>,
     C: Clone + Debug + PartialEq,
-    O: Clone + Debug + PartialEq,
 {
     /// Builds a harness from an application-supplied constructor.
     pub fn new(build: impl FnOnce() -> G) -> Self {
@@ -57,7 +54,6 @@ where
             scenario: Scenario::new(),
             resource_ledger: ResourceLedger::new(),
             output_ledger: OutputLedger::new(),
-            _marker: PhantomData,
         }
     }
 
@@ -77,17 +73,17 @@ where
     }
 
     /// Returns the output ledger updated after each committed step.
-    pub fn output_ledger(&self) -> &OutputLedger<O> {
+    pub fn output_ledger(&self) -> &OutputLedger {
         &self.output_ledger
     }
 
     /// Starts a named single-transaction step.
-    pub fn step(&mut self, name: impl Into<String>) -> HarnessStep<'_, G, C, O> {
+    pub fn step(&mut self, name: impl Into<String>) -> HarnessStep<'_, G, C> {
         HarnessStep::new(self, name.into())
     }
 
     /// Runs every step in a replayable transaction script.
-    pub fn run_script(&mut self, script: &TransactionScript<C, O>) -> Result<(), ScenarioError> {
+    pub fn run_script(&mut self, script: &TransactionScript<C>) -> Result<(), ScenarioError> {
         for step in script.steps() {
             self.commit_operations(step.name(), &step.operations, &[], None, None)?;
         }
@@ -98,7 +94,7 @@ where
     pub fn run_data_script<Operation>(
         &mut self,
         script: &DataTransactionScript<Operation>,
-        mut apply: impl for<'tx> FnMut(&Operation, &mut Transaction<'tx, C, O>) -> GraphResult<()>,
+        mut apply: impl for<'tx> FnMut(&Operation, &mut Transaction<'tx, C>) -> GraphResult<()>,
     ) -> Result<(), ScenarioError> {
         script.validate_format_version()?;
         for step in script.steps() {
@@ -110,7 +106,7 @@ where
     /// Replays a transaction script against a fresh application graph.
     pub fn replay(
         build: impl FnOnce() -> G,
-        script: &TransactionScript<C, O>,
+        script: &TransactionScript<C>,
     ) -> Result<Self, ScenarioError> {
         let mut harness = Self::new(build);
         harness.run_script(script)?;
@@ -121,7 +117,7 @@ where
     pub fn replay_data<Operation>(
         build: impl FnOnce() -> G,
         script: &DataTransactionScript<Operation>,
-        apply: impl for<'tx> FnMut(&Operation, &mut Transaction<'tx, C, O>) -> GraphResult<()>,
+        apply: impl for<'tx> FnMut(&Operation, &mut Transaction<'tx, C>) -> GraphResult<()>,
     ) -> Result<Self, ScenarioError> {
         let mut harness = Self::new(build);
         harness.run_data_script(script, apply)?;
@@ -178,8 +174,8 @@ where
     pub(crate) fn commit_operations(
         &mut self,
         name: &str,
-        operations: &[Box<StageOperation<C, O>>],
-        invariant_checks: &[NamedInvariantCheck<G, C, O>],
+        operations: &[Box<StageOperation<C>>],
+        invariant_checks: &[NamedInvariantCheck<G, C>],
         expected_resource_commands: Option<&[ResourceCommandTrace]>,
         expected_output_frames: Option<&[OutputFrameTrace]>,
     ) -> Result<(), ScenarioError> {
@@ -237,7 +233,7 @@ where
         &mut self,
         name: &str,
         operations: &[Operation],
-        apply: &mut impl for<'tx> FnMut(&Operation, &mut Transaction<'tx, C, O>) -> GraphResult<()>,
+        apply: &mut impl for<'tx> FnMut(&Operation, &mut Transaction<'tx, C>) -> GraphResult<()>,
     ) -> Result<(), ScenarioError> {
         self.scenario.ensure_step_name_available(name)?;
         let result = {

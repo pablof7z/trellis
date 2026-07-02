@@ -1,21 +1,21 @@
 use trellis_core::{GraphResult, InputNode, Transaction};
 
-pub(crate) type StageOperation<C, O> =
-    dyn for<'tx> Fn(&mut Transaction<'tx, C, O>) -> GraphResult<()> + 'static;
+pub(crate) type StageOperation<C> =
+    dyn for<'tx> Fn(&mut Transaction<'tx, C>) -> GraphResult<()> + 'static;
 
 /// Deterministic transaction script that can be replayed against a fresh graph.
-pub struct TransactionScript<C = (), O = ()> {
-    pub(crate) steps: Vec<TransactionScriptStep<C, O>>,
+pub struct TransactionScript<C = ()> {
+    pub(crate) steps: Vec<TransactionScriptStep<C>>,
 }
 
-impl<C, O> TransactionScript<C, O> {
+impl<C> TransactionScript<C> {
     /// Creates an empty transaction script.
     pub fn new() -> Self {
         Self { steps: Vec::new() }
     }
 
     /// Starts a named script step.
-    pub fn step(&mut self, name: impl Into<String>) -> TransactionScriptStepBuilder<'_, C, O> {
+    pub fn step(&mut self, name: impl Into<String>) -> TransactionScriptStepBuilder<'_, C> {
         TransactionScriptStepBuilder {
             script: self,
             name: name.into(),
@@ -24,28 +24,25 @@ impl<C, O> TransactionScript<C, O> {
     }
 
     /// Returns script steps in replay order.
-    pub fn steps(&self) -> &[TransactionScriptStep<C, O>] {
+    pub fn steps(&self) -> &[TransactionScriptStep<C>] {
         &self.steps
     }
 }
 
-impl<C, O> Default for TransactionScript<C, O> {
+impl<C> Default for TransactionScript<C> {
     fn default() -> Self {
         Self::new()
     }
 }
 
 /// Builder for one transaction script step.
-pub struct TransactionScriptStepBuilder<'script, C, O> {
-    script: &'script mut TransactionScript<C, O>,
+pub struct TransactionScriptStepBuilder<'script, C> {
+    script: &'script mut TransactionScript<C>,
     name: String,
-    operations: Vec<Box<StageOperation<C, O>>>,
+    operations: Vec<Box<StageOperation<C>>>,
 }
 
-impl<C, O> TransactionScriptStepBuilder<'_, C, O>
-where
-    O: Clone + PartialEq,
-{
+impl<C> TransactionScriptStepBuilder<'_, C> {
     /// Stages a typed canonical input write for this step.
     pub fn input<T>(mut self, input: InputNode<T>, value: T) -> Self
     where
@@ -59,7 +56,7 @@ where
     /// Stages a custom operation against the transaction.
     pub fn operation(
         mut self,
-        operation: impl for<'tx> Fn(&mut Transaction<'tx, C, O>) -> GraphResult<()> + 'static,
+        operation: impl for<'tx> Fn(&mut Transaction<'tx, C>) -> GraphResult<()> + 'static,
     ) -> Self {
         self.operations.push(Box::new(operation));
         self
@@ -75,12 +72,12 @@ where
 }
 
 /// One named transaction in a replayable script.
-pub struct TransactionScriptStep<C = (), O = ()> {
+pub struct TransactionScriptStep<C = ()> {
     pub(crate) name: String,
-    pub(crate) operations: Vec<Box<StageOperation<C, O>>>,
+    pub(crate) operations: Vec<Box<StageOperation<C>>>,
 }
 
-impl<C, O> TransactionScriptStep<C, O> {
+impl<C> TransactionScriptStep<C> {
     /// Returns the step name.
     pub fn name(&self) -> &str {
         &self.name

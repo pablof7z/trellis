@@ -1,3 +1,4 @@
+use crate::output_payload::StoredOutput;
 use crate::{
     FullRecomputeOutputMismatch, FullRecomputeResourceMismatch, Graph, GraphError, GraphResult,
     NodeId, OutputKey, ResourceKey, ScopeId,
@@ -17,28 +18,19 @@ pub struct FullRecomputeCheck {
     pub checked_outputs: Vec<OutputKey>,
 }
 
-impl<C, O: Clone> Graph<C, O> {
+impl<C> Graph<C> {
     /// Recomputes supported graph state from canonical inputs and compares it.
-    pub fn full_recompute(&self) -> GraphResult<FullRecomputeCheck>
-    where
-        O: PartialEq,
-    {
+    pub fn full_recompute(&self) -> GraphResult<FullRecomputeCheck> {
         self.full_recompute_check()
     }
 
     /// Asserts that incremental state equals a supported full recompute.
-    pub fn assert_incremental_equals_full(&self) -> GraphResult<FullRecomputeCheck>
-    where
-        O: PartialEq,
-    {
+    pub fn assert_incremental_equals_full(&self) -> GraphResult<FullRecomputeCheck> {
         self.full_recompute_check()
     }
 
     /// Compares committed incremental state against full recompute.
-    pub fn full_recompute_check(&self) -> GraphResult<FullRecomputeCheck>
-    where
-        O: PartialEq,
-    {
+    pub fn full_recompute_check(&self) -> GraphResult<FullRecomputeCheck> {
         let mut full = self.clone();
         full.derived_values.clear();
         full.collection_values.clear();
@@ -89,7 +81,7 @@ impl<C, O: Clone> Graph<C, O> {
 
     fn compare_full_recomputed_resources(
         &self,
-        full: &mut Graph<C, O>,
+        full: &mut Graph<C>,
     ) -> GraphResult<Vec<ResourceKey>> {
         let planner_collections: Vec<NodeId> = full
             .resource_planners
@@ -108,12 +100,9 @@ impl<C, O: Clone> Graph<C, O> {
 
     fn compare_full_recomputed_outputs(
         &self,
-        full: &mut Graph<C, O>,
+        full: &mut Graph<C>,
         all_nodes: &[NodeId],
-    ) -> GraphResult<Vec<OutputKey>>
-    where
-        O: PartialEq,
-    {
+    ) -> GraphResult<Vec<OutputKey>> {
         full.produce_output_frames(
             all_nodes,
             &[],
@@ -160,9 +149,9 @@ fn owner_vec(owners: Option<&BTreeSet<ScopeId>>) -> Vec<ScopeId> {
         .collect()
 }
 
-fn first_output_value_mismatch<O: PartialEq>(
-    incremental: &BTreeMap<OutputKey, O>,
-    recomputed: &BTreeMap<OutputKey, O>,
+fn first_output_value_mismatch(
+    incremental: &BTreeMap<OutputKey, Box<dyn StoredOutput>>,
+    recomputed: &BTreeMap<OutputKey, Box<dyn StoredOutput>>,
 ) -> Option<FullRecomputeOutputMismatch> {
     let keys: BTreeSet<OutputKey> = incremental
         .keys()
@@ -172,7 +161,12 @@ fn first_output_value_mismatch<O: PartialEq>(
     for key in keys {
         let incremental_value = incremental.get(&key);
         let recomputed_value = recomputed.get(&key);
-        if incremental_value != recomputed_value {
+        let matches = match (incremental_value, recomputed_value) {
+            (Some(incremental), Some(recomputed)) => incremental.equals(recomputed.as_ref()),
+            (None, None) => true,
+            _ => false,
+        };
+        if !matches {
             return Some(FullRecomputeOutputMismatch {
                 key,
                 incremental_present: incremental_value.is_some(),

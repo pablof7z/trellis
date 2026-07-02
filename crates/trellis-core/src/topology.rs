@@ -30,7 +30,7 @@ impl TopologyCache {
     }
 }
 
-impl<C, O> Graph<C, O> {
+impl<C> Graph<C> {
     pub(crate) fn topological_order_for_kind(
         &mut self,
         kind: NodeKind,

@@ -6,25 +6,25 @@ use trellis_core::{
 
 use crate::{ScenarioError, ScenarioTarget, StageOperation, TrellisHarness};
 
-pub(crate) type InvariantCheck<G, C, O> = dyn Fn(&G, &TransactionResult<C, O>) -> bool + 'static;
+pub(crate) type InvariantCheck<G, C> = dyn Fn(&G, &TransactionResult<C>) -> bool + 'static;
 
-pub(crate) struct NamedInvariantCheck<G, C, O> {
+pub(crate) struct NamedInvariantCheck<G, C> {
     pub(crate) name: String,
-    pub(crate) check: Box<InvariantCheck<G, C, O>>,
+    pub(crate) check: Box<InvariantCheck<G, C>>,
 }
 
 /// Builder for one harness transaction step.
-pub struct HarnessStep<'harness, G, C, O> {
-    harness: &'harness mut TrellisHarness<G, C, O>,
+pub struct HarnessStep<'harness, G, C> {
+    harness: &'harness mut TrellisHarness<G, C>,
     name: String,
-    operations: Vec<Box<StageOperation<C, O>>>,
+    operations: Vec<Box<StageOperation<C>>>,
     expected_resource_commands: Option<Vec<ResourceCommandTrace>>,
     expected_output_frames: Option<Vec<OutputFrameTrace>>,
-    invariant_checks: Vec<NamedInvariantCheck<G, C, O>>,
+    invariant_checks: Vec<NamedInvariantCheck<G, C>>,
 }
 
-impl<'harness, G, C, O> HarnessStep<'harness, G, C, O> {
-    pub(crate) fn new(harness: &'harness mut TrellisHarness<G, C, O>, name: String) -> Self {
+impl<'harness, G, C> HarnessStep<'harness, G, C> {
+    pub(crate) fn new(harness: &'harness mut TrellisHarness<G, C>, name: String) -> Self {
         Self {
             harness,
             name,
@@ -36,11 +36,10 @@ impl<'harness, G, C, O> HarnessStep<'harness, G, C, O> {
     }
 }
 
-impl<'harness, G, C, O> HarnessStep<'harness, G, C, O>
+impl<'harness, G, C> HarnessStep<'harness, G, C>
 where
-    G: ScenarioTarget<C, O>,
+    G: ScenarioTarget<C>,
     C: Clone + Debug + PartialEq,
-    O: Clone + Debug + PartialEq,
 {
     /// Stages a typed canonical input write for this step.
     pub fn input<T>(mut self, input: InputNode<T>, value: T) -> Self
@@ -55,7 +54,7 @@ where
     /// Stages a custom operation against the transaction.
     pub fn operation(
         mut self,
-        operation: impl for<'tx> Fn(&mut Transaction<'tx, C, O>) -> GraphResult<()> + 'static,
+        operation: impl for<'tx> Fn(&mut Transaction<'tx, C>) -> GraphResult<()> + 'static,
     ) -> Self {
         self.operations.push(Box::new(operation));
         self
@@ -96,7 +95,7 @@ where
     pub fn check(
         mut self,
         name: impl Into<String>,
-        check: impl Fn(&G, &TransactionResult<C, O>) -> bool + 'static,
+        check: impl Fn(&G, &TransactionResult<C>) -> bool + 'static,
     ) -> Self {
         self.invariant_checks.push(NamedInvariantCheck {
             name: name.into(),
@@ -106,7 +105,7 @@ where
     }
 
     /// Commits exactly one transaction for this step.
-    pub fn commit(self) -> Result<&'harness mut TrellisHarness<G, C, O>, ScenarioError> {
+    pub fn commit(self) -> Result<&'harness mut TrellisHarness<G, C>, ScenarioError> {
         self.harness.commit_operations(
             &self.name,
             &self.operations,

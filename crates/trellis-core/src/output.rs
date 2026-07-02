@@ -1,15 +1,17 @@
 use crate::collection::{downcast_map, downcast_set};
 use crate::input::downcast_input;
+use crate::output_payload::{StoredOutput, boxed_output};
 use crate::{
     CollectionNode, DependencyList, DeriveError, DerivedNode, Graph, InputNode, NodeId,
-    OutputError, OutputKey, Revision, ScopeId, TransactionId,
+    OutputError, OutputKey, Revision, ScopeId,
 };
 use core::marker::PhantomData;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-type OutputFn<C, O> =
-    dyn for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, OutputError> + Send + Sync;
+type OutputFn<C> = dyn for<'ctx> Fn(&OutputContext<'ctx, C>) -> Result<Box<dyn StoredOutput>, OutputError>
+    + Send
+    + Sync;
 
 /// Typed handle for a materialized output surface.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -100,11 +102,11 @@ impl OutputMeta {
     }
 }
 
-pub(crate) struct OutputSpec<C, O> {
-    materialize: Arc<OutputFn<C, O>>,
+pub(crate) struct OutputSpec<C> {
+    materialize: Arc<OutputFn<C>>,
 }
 
-impl<C, O> Clone for OutputSpec<C, O> {
+impl<C> Clone for OutputSpec<C> {
     fn clone(&self) -> Self {
         Self {
             materialize: Arc::clone(&self.materialize),
@@ -112,31 +114,37 @@ impl<C, O> Clone for OutputSpec<C, O> {
     }
 }
 
-impl<C, O> OutputSpec<C, O> {
-    pub(crate) fn new(
-        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, OutputError>
+impl<C> OutputSpec<C> {
+    pub(crate) fn new<T>(
+        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C>) -> Result<T, OutputError>
         + Send
         + Sync
         + 'static,
-    ) -> Self {
+    ) -> Self
+    where
+        T: Clone + PartialEq + Send + Sync + 'static,
+    {
         Self {
-            materialize: Arc::new(materialize),
+            materialize: Arc::new(move |ctx| materialize(ctx).map(boxed_output)),
         }
     }
 
-    pub(crate) fn materialize(&self, ctx: &OutputContext<'_, C, O>) -> Result<O, OutputError> {
+    pub(crate) fn materialize(
+        &self,
+        ctx: &OutputContext<'_, C>,
+    ) -> Result<Box<dyn StoredOutput>, OutputError> {
         (self.materialize)(ctx)
     }
 }
 
 /// Read-only context passed to materialized output computations.
-pub struct OutputContext<'graph, C = (), O = ()> {
-    graph: &'graph Graph<C, O>,
+pub struct OutputContext<'graph, C = ()> {
+    graph: &'graph Graph<C>,
     declared_dependencies: &'graph [NodeId],
 }
 
-impl<'graph, C, O> OutputContext<'graph, C, O> {
-    pub(crate) fn new(graph: &'graph Graph<C, O>, declared_dependencies: &'graph [NodeId]) -> Self {
+impl<'graph, C> OutputContext<'graph, C> {
+    pub(crate) fn new(graph: &'graph Graph<C>, declared_dependencies: &'graph [NodeId]) -> Self {
         Self {
             graph,
             declared_dependencies,
@@ -219,50 +227,4 @@ impl<'graph, C, O> OutputContext<'graph, C, O> {
             Err(DeriveError::UndeclaredDependency(node))
         }
     }
-}
-
-/// Reason a materialized output was cleared.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum ClearReason {
-    /// The owning scope was closed.
-    ScopeClosed,
-}
-
-/// Reason a materialized output was rebaselined.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum RebaselineReason {
-    /// The host explicitly requested a rebaseline.
-    Requested,
-}
-
-/// Data-only output frame kind.
-#[derive(Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum OutputFrameKind<O> {
-    /// Complete current state for a newly attached output.
-    Baseline(O),
-    /// State-replacement delta for an existing output.
-    Delta(O),
-    /// Clear the consumer state for this output.
-    Clear(ClearReason),
-    /// Complete current state after an explicit discontinuity.
-    Rebaseline(O, RebaselineReason),
-}
-
-/// Data-only materialized output frame returned from a transaction.
-#[derive(Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct OutputFrame<O> {
-    /// Output key this frame targets.
-    pub output_key: OutputKey,
-    /// Scope that owns this output.
-    pub scope: ScopeId,
-    /// Transaction that emitted this frame.
-    pub transaction_id: TransactionId,
-    /// Graph revision this frame belongs to.
-    pub revision: Revision,
-    /// Frame payload.
-    pub kind: OutputFrameKind<O>,
 }

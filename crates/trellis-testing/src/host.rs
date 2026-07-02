@@ -35,10 +35,10 @@ impl FakeHost {
     }
 
     /// Applies a transaction result to the ledger and returns explicit statuses.
-    pub fn apply_result<C: Clone, O>(
+    pub fn apply_result<C: Clone>(
         &mut self,
         ledger: &mut ResourceLedger<C>,
-        result: &TransactionResult<C, O>,
+        result: &TransactionResult<C>,
     ) -> Vec<FakeHostEvent> {
         ledger.apply_result(result);
         result

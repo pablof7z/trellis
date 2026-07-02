@@ -13,7 +13,7 @@ enum Command {
     Open(u32),
 }
 
-type SetGraph = Graph<Command, BTreeSet<u32>>;
+type SetGraph = Graph<Command>;
 
 fn key(value: u32) -> ResourceKey {
     ResourceKey::new(format!("n:{value}"))
@@ -32,7 +32,7 @@ fn build_set_graph(
     owner_count: usize,
     output: bool,
 ) -> (SetGraph, InputNode<BTreeSet<u32>>, Vec<ScopeId>) {
-    let mut graph = Graph::<Command, BTreeSet<u32>>::new_with_command_type();
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope_count = owner_count.max(1);
     let scopes = (0..scope_count)
@@ -89,7 +89,7 @@ pub(crate) fn large_set_shrink() -> usize {
 }
 
 pub(crate) fn large_map_update() -> usize {
-    let mut graph = Graph::<(), ()>::new();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let source = tx.input::<BTreeMap<u32, u32>>("source").unwrap();
     tx.set_input(source, map(LARGE, 0)).unwrap();

@@ -1,35 +1,36 @@
-use crate::collection_diff::{MapDiff, SetDiff};
-use crate::input::downcast_input;
-use crate::{
-    CollectionDiffTrace, CollectionNode, DeriveError, DerivedNode, Graph, InputNode, NodeId,
+pub(crate) use crate::collection_storage::{
+    StoredCollection, StoredDiff, boxed_map, boxed_set, downcast_map, downcast_map_diff,
+    downcast_set, downcast_set_diff,
 };
-use core::{any::Any, marker::PhantomData};
+use crate::input::downcast_input;
+use crate::{CollectionNode, DeriveError, DerivedNode, Graph, InputNode, NodeId};
+use core::marker::PhantomData;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 type CollectionComputeResult = Result<Box<dyn StoredCollection>, DeriveError>;
-type ComputeFn<C, O> =
-    dyn for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> CollectionComputeResult + Send + Sync;
+type ComputeFn<C> =
+    dyn for<'ctx> Fn(&CollectionContext<'ctx, C>) -> CollectionComputeResult + Send + Sync;
 
 pub(crate) struct MapCollectionShape<K, V>(PhantomData<fn() -> (K, V)>);
 pub(crate) struct SetCollectionShape<K>(PhantomData<fn() -> K>);
-pub(crate) struct CollectionSpec<C, O> {
-    compute: Arc<ComputeFn<C, O>>,
+pub(crate) struct CollectionSpec<C> {
+    compute: Arc<ComputeFn<C>>,
 }
 
-impl<C, O> Clone for CollectionSpec<C, O> {
+impl<C> Clone for CollectionSpec<C> {
     fn clone(&self) -> Self {
         Self {
             compute: Arc::clone(&self.compute),
         }
     }
 }
-impl<C, O> CollectionSpec<C, O> {
+impl<C> CollectionSpec<C> {
     pub(crate) fn map<K, V, F>(derive: F) -> Self
     where
         K: Clone + Ord + Send + Sync + 'static,
         V: Clone + PartialEq + Send + Sync + 'static,
-        F: for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeMap<K, V>, DeriveError>
+        F: for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeMap<K, V>, DeriveError>
             + Send
             + Sync
             + 'static,
@@ -42,7 +43,7 @@ impl<C, O> CollectionSpec<C, O> {
     pub(crate) fn set<K, F>(derive: F) -> Self
     where
         K: Clone + Ord + Send + Sync + 'static,
-        F: for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeSet<K>, DeriveError>
+        F: for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeSet<K>, DeriveError>
             + Send
             + Sync
             + 'static,
@@ -54,19 +55,19 @@ impl<C, O> CollectionSpec<C, O> {
 
     pub(crate) fn compute(
         &self,
-        ctx: &CollectionContext<'_, C, O>,
+        ctx: &CollectionContext<'_, C>,
     ) -> Result<Box<dyn StoredCollection>, DeriveError> {
         (self.compute)(ctx)
     }
 }
 /// Read-only context passed to pure collection node computations.
-pub struct CollectionContext<'graph, C = (), O = ()> {
-    graph: &'graph Graph<C, O>,
+pub struct CollectionContext<'graph, C = ()> {
+    graph: &'graph Graph<C>,
     declared_dependencies: &'graph [NodeId],
 }
 
-impl<'graph, C, O> CollectionContext<'graph, C, O> {
-    pub(crate) fn new(graph: &'graph Graph<C, O>, declared_dependencies: &'graph [NodeId]) -> Self {
+impl<'graph, C> CollectionContext<'graph, C> {
+    pub(crate) fn new(graph: &'graph Graph<C>, declared_dependencies: &'graph [NodeId]) -> Self {
         Self {
             graph,
             declared_dependencies,
@@ -149,156 +150,4 @@ impl<'graph, C, O> CollectionContext<'graph, C, O> {
             Err(DeriveError::UndeclaredDependency(node))
         }
     }
-}
-
-pub(crate) trait StoredCollection: Any + Send + Sync {
-    fn clone_box(&self) -> Box<dyn StoredCollection>;
-    fn empty_box(&self) -> Box<dyn StoredCollection>;
-    fn equals(&self, other: &dyn StoredCollection) -> bool;
-    fn diff(&self, next: &dyn StoredCollection) -> Box<dyn StoredDiff>;
-    fn as_any(&self) -> &dyn Any;
-}
-
-impl Clone for Box<dyn StoredCollection> {
-    fn clone(&self) -> Self {
-        self.clone_box()
-    }
-}
-
-pub(crate) trait StoredDiff: Any + Send + Sync {
-    fn clone_box(&self) -> Box<dyn StoredDiff>;
-    fn trace(&self, node: NodeId) -> CollectionDiffTrace;
-    fn as_any(&self) -> &dyn Any;
-}
-
-impl Clone for Box<dyn StoredDiff> {
-    fn clone(&self) -> Self {
-        self.clone_box()
-    }
-}
-
-#[derive(Clone)]
-struct MapCollection<K, V> {
-    value: BTreeMap<K, V>,
-}
-
-#[derive(Clone)]
-struct SetCollection<K> {
-    value: BTreeSet<K>,
-}
-
-impl<K, V> StoredCollection for MapCollection<K, V>
-where
-    K: Clone + Ord + Send + Sync + 'static,
-    V: Clone + PartialEq + Send + Sync + 'static,
-{
-    fn clone_box(&self) -> Box<dyn StoredCollection> {
-        Box::new(self.clone())
-    }
-
-    fn empty_box(&self) -> Box<dyn StoredCollection> {
-        boxed_map(BTreeMap::<K, V>::new())
-    }
-
-    fn equals(&self, other: &dyn StoredCollection) -> bool {
-        other
-            .as_any()
-            .downcast_ref::<Self>()
-            .is_some_and(|other| self.value == other.value)
-    }
-
-    fn diff(&self, next: &dyn StoredCollection) -> Box<dyn StoredDiff> {
-        let next = next
-            .as_any()
-            .downcast_ref::<Self>()
-            .expect("collection type stays stable");
-        Box::new(MapDiff::between(&self.value, &next.value))
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl<K> StoredCollection for SetCollection<K>
-where
-    K: Clone + Ord + Send + Sync + 'static,
-{
-    fn clone_box(&self) -> Box<dyn StoredCollection> {
-        Box::new(self.clone())
-    }
-
-    fn empty_box(&self) -> Box<dyn StoredCollection> {
-        boxed_set(BTreeSet::<K>::new())
-    }
-
-    fn equals(&self, other: &dyn StoredCollection) -> bool {
-        other
-            .as_any()
-            .downcast_ref::<Self>()
-            .is_some_and(|other| self.value == other.value)
-    }
-
-    fn diff(&self, next: &dyn StoredCollection) -> Box<dyn StoredDiff> {
-        let next = next
-            .as_any()
-            .downcast_ref::<Self>()
-            .expect("collection type stays stable");
-        Box::new(SetDiff::between(&self.value, &next.value))
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-pub(crate) fn boxed_map<K, V>(value: BTreeMap<K, V>) -> Box<dyn StoredCollection>
-where
-    K: Clone + Ord + Send + Sync + 'static,
-    V: Clone + PartialEq + Send + Sync + 'static,
-{
-    Box::new(MapCollection { value })
-}
-
-pub(crate) fn boxed_set<K>(value: BTreeSet<K>) -> Box<dyn StoredCollection>
-where
-    K: Clone + Ord + Send + Sync + 'static,
-{
-    Box::new(SetCollection { value })
-}
-
-pub(crate) fn downcast_map<K, V>(value: &dyn StoredCollection) -> Option<&BTreeMap<K, V>>
-where
-    K: Clone + Ord + Send + Sync + 'static,
-    V: Clone + PartialEq + Send + Sync + 'static,
-{
-    value
-        .as_any()
-        .downcast_ref::<MapCollection<K, V>>()
-        .map(|collection| &collection.value)
-}
-
-pub(crate) fn downcast_set<K>(value: &dyn StoredCollection) -> Option<&BTreeSet<K>>
-where
-    K: Clone + Ord + Send + Sync + 'static,
-{
-    value
-        .as_any()
-        .downcast_ref::<SetCollection<K>>()
-        .map(|collection| &collection.value)
-}
-
-pub(crate) fn downcast_map_diff<K, V>(value: &dyn StoredDiff) -> Option<&MapDiff<K, V>>
-where
-    K: Clone + Ord + Send + Sync + 'static,
-    V: Clone + PartialEq + Send + Sync + 'static,
-{
-    value.as_any().downcast_ref::<MapDiff<K, V>>()
-}
-
-pub(crate) fn downcast_set_diff<K>(value: &dyn StoredDiff) -> Option<&SetDiff<K>>
-where
-    K: Clone + Ord + Send + Sync + 'static,
-{
-    value.as_any().downcast_ref::<SetDiff<K>>()
 }

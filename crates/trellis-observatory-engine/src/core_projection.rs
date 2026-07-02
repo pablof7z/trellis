@@ -13,7 +13,7 @@ use crate::types::{
 
 pub(crate) fn project(
     harness: &CoreHarness,
-    result: &TransactionResult<CoreCommand, CoreOutput>,
+    result: &TransactionResult<CoreCommand>,
     app_revision: Revision,
     label: &str,
 ) -> CoreProjection {
@@ -28,7 +28,7 @@ pub(crate) fn project(
 
 fn resource_commands(
     harness: &CoreHarness,
-    result: &TransactionResult<CoreCommand, CoreOutput>,
+    result: &TransactionResult<CoreCommand>,
     app_revision: Revision,
     label: &str,
 ) -> Vec<ResourceCommand> {
@@ -66,7 +66,7 @@ fn resource_commands(
 
 fn output_frames(
     harness: &CoreHarness,
-    result: &TransactionResult<CoreCommand, CoreOutput>,
+    result: &TransactionResult<CoreCommand>,
     app_revision: Revision,
     label: &str,
 ) -> Vec<OutputFrame> {
@@ -76,9 +76,11 @@ fn output_frames(
         .filter_map(|frame| match &frame.kind {
             OutputFrameKind::Baseline(output)
             | OutputFrameKind::Delta(output)
-            | OutputFrameKind::Rebaseline(output, _) => {
-                Some(payload_frame(output, app_revision, label))
-            }
+            | OutputFrameKind::Rebaseline(output, _) => Some(payload_frame(
+                output.get::<CoreOutput>()?,
+                app_revision,
+                label,
+            )),
             OutputFrameKind::Clear(ClearReason::ScopeClosed) => harness
                 .output_labels
                 .get(&frame.output_key.get())
@@ -158,7 +160,7 @@ fn frame(
     }
 }
 
-fn audit_edges<C, O>(result: &TransactionResult<C, O>) -> Vec<String> {
+fn audit_edges<C>(result: &TransactionResult<C>) -> Vec<String> {
     result
         .phase_trace
         .iter()

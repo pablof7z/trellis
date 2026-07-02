@@ -6,7 +6,7 @@ use trellis_core::{
 };
 
 struct ScalarTarget {
-    graph: Graph<(), usize>,
+    graph: Graph<()>,
     source: InputNode<BTreeSet<u8>>,
     output: MaterializedOutput<usize>,
     scope: ScopeId,
@@ -38,8 +38,8 @@ pub(crate) fn run_scalar_chain_script(script: &ModelScript) -> Vec<TransactionTr
     traces
 }
 
-fn build_scalar_graph() -> (ScalarTarget, trellis_core::TransactionResult<(), usize>) {
-    let mut graph = Graph::<(), usize>::new_with_output_type();
+fn build_scalar_graph() -> (ScalarTarget, trellis_core::TransactionResult<()>) {
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
@@ -76,7 +76,7 @@ fn build_scalar_graph() -> (ScalarTarget, trellis_core::TransactionResult<(), us
 fn set_scalar_source(
     target: &mut ScalarTarget,
     values: BTreeSet<u8>,
-) -> trellis_core::TransactionResult<(), usize> {
+) -> trellis_core::TransactionResult<()> {
     let mut tx = target.graph.begin_transaction().unwrap();
     tx.set_input(target.source, values).unwrap();
     let result = tx.commit().unwrap();
@@ -87,7 +87,7 @@ fn set_scalar_source(
 
 fn rebaseline_scalar_output(
     target: &mut ScalarTarget,
-) -> trellis_core::TransactionResult<(), usize> {
+) -> trellis_core::TransactionResult<()> {
     let mut tx = target.graph.begin_transaction().unwrap();
     tx.rebaseline_output(target.output.clone()).unwrap();
     let result = tx.commit().unwrap();
@@ -96,7 +96,7 @@ fn rebaseline_scalar_output(
     result
 }
 
-fn close_scalar_scope(target: &mut ScalarTarget) -> trellis_core::TransactionResult<(), usize> {
+fn close_scalar_scope(target: &mut ScalarTarget) -> trellis_core::TransactionResult<()> {
     let mut tx = target.graph.begin_transaction().unwrap();
     tx.close_scope(target.scope).unwrap();
     let result = tx.commit().unwrap();
@@ -105,7 +105,7 @@ fn close_scalar_scope(target: &mut ScalarTarget) -> trellis_core::TransactionRes
     result
 }
 
-fn commit_scalar_noop(target: &mut ScalarTarget) -> trellis_core::TransactionResult<(), usize> {
+fn commit_scalar_noop(target: &mut ScalarTarget) -> trellis_core::TransactionResult<()> {
     let mut tx = target.graph.begin_transaction().unwrap();
     let result = tx.commit().unwrap();
     drop(tx);

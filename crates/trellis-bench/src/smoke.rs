@@ -81,13 +81,13 @@ pub const BENCHES: &[Bench] = &[
 ];
 
 fn no_op_transaction() -> usize {
-    let mut graph = Graph::<(), ()>::new();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     tx.commit().unwrap().phase_trace.len()
 }
 
 fn deep_graph_propagation() -> usize {
-    let mut graph = Graph::<(), ()>::new();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let input = tx.input::<u32>("input").unwrap();
     tx.set_input(input, 1).unwrap();
@@ -117,7 +117,7 @@ fn deep_graph_propagation() -> usize {
 }
 
 fn wide_graph_propagation() -> usize {
-    let mut graph = Graph::<(), ()>::new();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let input = tx.input::<u32>("input").unwrap();
     tx.set_input(input, 1).unwrap();
@@ -138,7 +138,7 @@ fn wide_graph_propagation() -> usize {
 }
 
 fn no_downstream_change() -> usize {
-    let mut graph = Graph::<(), ()>::new();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let input = tx.input::<u32>("input").unwrap();
     tx.set_input(input, 1).unwrap();
@@ -172,7 +172,7 @@ fn no_downstream_change() -> usize {
 }
 
 fn downstream_recompute() -> usize {
-    let mut graph = Graph::<(), ()>::new();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let input = tx.input::<u32>("input").unwrap();
     tx.set_input(input, 1).unwrap();

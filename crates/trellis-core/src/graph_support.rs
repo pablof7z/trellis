@@ -1,5 +1,5 @@
 use crate::Graph;
-impl<C, O: Clone> Clone for Graph<C, O> {
+impl<C> Clone for Graph<C> {
     fn clone(&self) -> Self {
         Self {
             next_node_id: self.next_node_id,
@@ -29,21 +29,14 @@ impl<C, O: Clone> Clone for Graph<C, O> {
     }
 }
 
-impl Graph<(), ()> {
+impl Graph<()> {
     /// Creates an empty graph with no resource command payload type.
     pub fn new() -> Self {
         Self::new_with_command_type()
     }
 }
 
-impl<O> Graph<(), O> {
-    /// Creates an empty graph with a materialized output payload type.
-    pub fn new_with_output_type() -> Self {
-        Self::new_with_command_type()
-    }
-}
-
-impl<C, O> Default for Graph<C, O> {
+impl<C> Default for Graph<C> {
     fn default() -> Self {
         Self::new_with_command_type()
     }

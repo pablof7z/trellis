@@ -42,9 +42,9 @@ impl<C> ResourceLedger<C> {
     }
 
     /// Asserts the wrapped graph reports no graph-level orphan resources.
-    pub fn assert_graph_has_no_orphan_resources<O>(
+    pub fn assert_graph_has_no_orphan_resources(
         &self,
-        graph: &Graph<C, O>,
+        graph: &Graph<C>,
     ) -> Result<(), ResourceLedgerError> {
         if let Some(key) = graph.orphan_resources().into_iter().next() {
             Err(ResourceLedgerError::Orphan {

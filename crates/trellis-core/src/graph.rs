@@ -6,13 +6,14 @@ use crate::{
     derive::DerivedSpec,
     input::{StoredInput, value_type},
     output::OutputSpec,
+    output_payload::StoredOutput,
     resource::{ResourceKey, ResourcePlanner},
     topology::TopologyCache,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Trellis graph skeleton with transactional input mutation.
-pub struct Graph<C = (), O = ()> {
+pub struct Graph<C = ()> {
     pub(crate) next_node_id: u64,
     pub(crate) next_scope_id: u64,
     pub(crate) next_output_key: u64,
@@ -22,23 +23,23 @@ pub struct Graph<C = (), O = ()> {
     pub(crate) scopes: BTreeMap<ScopeId, ScopeMeta>,
     pub(crate) scope_children: BTreeMap<ScopeId, BTreeSet<ScopeId>>,
     pub(crate) input_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
-    pub(crate) derived_specs: BTreeMap<NodeId, DerivedSpec<C, O>>,
+    pub(crate) derived_specs: BTreeMap<NodeId, DerivedSpec<C>>,
     pub(crate) derived_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
-    pub(crate) collection_specs: BTreeMap<NodeId, CollectionSpec<C, O>>,
+    pub(crate) collection_specs: BTreeMap<NodeId, CollectionSpec<C>>,
     pub(crate) collection_values: BTreeMap<NodeId, Box<dyn StoredCollection>>,
     pub(crate) previous_collection_values: BTreeMap<NodeId, Box<dyn StoredCollection>>,
     pub(crate) collection_diffs: BTreeMap<NodeId, Box<dyn StoredDiff>>,
-    pub(crate) resource_planners: Vec<ResourcePlanner<C, O>>,
+    pub(crate) resource_planners: Vec<ResourcePlanner<C>>,
     pub(crate) resource_owners: BTreeMap<ResourceKey, BTreeSet<ScopeId>>,
-    pub(crate) output_specs: BTreeMap<OutputKey, OutputSpec<C, O>>,
-    pub(crate) output_values: BTreeMap<OutputKey, O>,
+    pub(crate) output_specs: BTreeMap<OutputKey, OutputSpec<C>>,
+    pub(crate) output_values: BTreeMap<OutputKey, Box<dyn StoredOutput>>,
     pub(crate) outputs: BTreeMap<OutputKey, OutputMeta>,
     pub(crate) topology_cache: TopologyCache,
     pub(crate) audit: AuditState,
     pub(crate) transaction_open: bool,
 }
 
-impl<C, O> Graph<C, O> {
+impl<C> Graph<C> {
     /// Creates an empty graph.
     pub fn new_with_command_type() -> Self {
         Self {
@@ -74,10 +75,7 @@ impl<C, O> Graph<C, O> {
     }
 
     /// Begins an input transaction with default options.
-    pub fn begin_transaction(&mut self) -> GraphResult<Transaction<'_, C, O>>
-    where
-        O: Clone + PartialEq,
-    {
+    pub fn begin_transaction(&mut self) -> GraphResult<Transaction<'_, C>> {
         self.begin_transaction_with_options(TransactionOptions::default())
     }
 
@@ -85,10 +83,7 @@ impl<C, O> Graph<C, O> {
     pub fn begin_transaction_with_options(
         &mut self,
         options: TransactionOptions,
-    ) -> GraphResult<Transaction<'_, C, O>>
-    where
-        O: Clone + PartialEq,
-    {
+    ) -> GraphResult<Transaction<'_, C>> {
         if self.transaction_open {
             return Err(GraphError::NestedTransaction);
         }
@@ -145,7 +140,7 @@ impl<C, O> Graph<C, O> {
         id: NodeId,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&crate::DeriveContext<'ctx, C, O>) -> Result<T, crate::DeriveError>
+        derive: impl for<'ctx> Fn(&crate::DeriveContext<'ctx, C>) -> Result<T, crate::DeriveError>
         + Send
         + Sync
         + 'static,
@@ -165,8 +160,7 @@ impl<C, O> Graph<C, O> {
         );
         self.invalidate_topology_cache();
         self.nodes.insert(id, meta);
-        self.derived_specs
-            .insert(id, DerivedSpec::<C, O>::new(derive));
+        self.derived_specs.insert(id, DerivedSpec::<C>::new(derive));
         Ok(DerivedNode::new(id))
     }
 
