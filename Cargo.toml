@@ -4,6 +4,7 @@ members = [
     "crates/trellis-bench",
     "crates/trellis-core",
     "crates/trellis-examples",
+    "crates/trellis-observatory-engine",
     "crates/trellis-testing",
 ]
 resolver = "3"
