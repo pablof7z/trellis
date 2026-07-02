@@ -6,6 +6,7 @@
   "scripts": {
     "check": "node scripts/check-site.mjs",
     "build:observatory:wasm": "wasm-pack build crates/trellis-observatory-engine --target web --out-dir ../../examples/codebase-observatory/src/wasm",
+    "build:leak-duel:wasm": "wasm-pack build crates/trellis-observatory-engine --target web --out-dir ../../demos/leak-duel/engine",
     "dev:observatory": "npm run build:observatory:wasm && vite --config examples/codebase-observatory/vite.config.ts",
     "build:observatory": "npm run build:observatory:wasm && vite build --config examples/codebase-observatory/vite.config.ts",
     "test:observatory": "vitest run --config examples/codebase-observatory/vite.config.ts"

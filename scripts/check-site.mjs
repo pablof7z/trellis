@@ -10,6 +10,8 @@ const requiredRoutes = [
   "/guide/transactions",
   "/guide/scopes",
   "/guide/testing",
+  "/demos",
+  "/demos/leak-duel",
   "/examples",
   "/examples/local-first-sync",
   "/examples/language-server",

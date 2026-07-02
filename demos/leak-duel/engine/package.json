@@ -1,0 +1,21 @@
+{
+  "name": "trellis-observatory-engine",
+  "type": "module",
+  "description": "Rust/WASM deterministic engine for the Codebase Observatory showcase.",
+  "version": "0.1.0",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pablof7z/trellis"
+  },
+  "files": [
+    "trellis_observatory_engine_bg.wasm",
+    "trellis_observatory_engine.js",
+    "trellis_observatory_engine.d.ts"
+  ],
+  "main": "trellis_observatory_engine.js",
+  "types": "trellis_observatory_engine.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

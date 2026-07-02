@@ -8,6 +8,9 @@ mod core_runtime;
 mod engine;
 mod invariants;
 mod language;
+mod leak_duel;
+mod leak_duel_present;
+mod leak_duel_sim;
 mod ledger;
 mod replay;
 mod seed;
@@ -34,6 +37,12 @@ pub fn dispatch(state_json: &str, action_json: &str) -> Result<String, JsValue> 
 pub fn replay(state_json: &str) -> Result<String, JsValue> {
     let state = serde_json::from_str(state_json).map_err(to_js_error)?;
     serde_json::to_string(&replay_current_trace(&state)).map_err(to_js_error)
+}
+
+#[wasm_bindgen]
+pub fn leak_duel(request_json: &str) -> Result<String, JsValue> {
+    let request = serde_json::from_str(request_json).map_err(to_js_error)?;
+    serde_json::to_string(&leak_duel::run(request)).map_err(to_js_error)
 }
 
 fn to_js_error(error: impl std::fmt::Display) -> JsValue {
