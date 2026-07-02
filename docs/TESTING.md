@@ -52,6 +52,8 @@ companion package uses `trellis-testing`.
 - `Scenario` for named transaction trace recording and deterministic replay;
 - `TransactionScript` and `TrellisHarness` for deterministic typed transaction
   scripts against app-supplied graph builders;
+- `DataTransactionScript` and `SerializedScenario` behind the `serde` feature
+  for versioned JSON scripts and structural trace files;
 - `ResourceLedger` for scoped lifecycle assertions, forbidden broad demand,
   structural command-order assertions, and host-status classification;
 - `OutputLedger` for output revision and clear/rebaseline coherence;
@@ -72,6 +74,13 @@ across revisions.
   asserts expected resource command or output frame traces by step.
 - `TransactionScript` records typed canonical input writes and custom
   transaction operations, then replays them against a fresh builder.
+- `DataTransactionScript` records app-defined data operations instead of
+  closures. The app supplies the decoder that stages those operations into
+  typed Trellis input writes, so persistent scripts stay serializable without
+  making core guess how to decode application payloads.
+- `SerializedScenario` writes named `TransactionTrace` values with
+  `TRACE_FORMAT_VERSION`. Loading rejects version mismatches explicitly instead
+  of silently treating old trace files as current.
 - `TrellisHarness` commits exactly one transaction per step, applies resource
   and output ledgers, records invariant-hook results into the step trace, and
   compares final deterministic graph dumps after replay.

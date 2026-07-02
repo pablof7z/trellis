@@ -27,6 +27,7 @@ mod resource_ledger_dump;
 mod resource_state;
 mod scenario;
 mod script;
+mod serialized;
 
 pub use audit::{
     AuditAssertionError, OutputAuditContext, ResourceAuditContext, assert_dependency_path_exists,
@@ -49,6 +50,10 @@ pub use resource_ledger::ResourceLedger;
 pub use resource_state::{ResourceCommandRecord, ResourceSnapshot};
 pub use scenario::{NoRedaction, Scenario, ScenarioError, ScenarioStep, TraceRedactor};
 pub use script::{TransactionScript, TransactionScriptStep, TransactionScriptStepBuilder};
+pub use serialized::{
+    DataScriptStep, DataScriptStepBuilder, DataTransactionScript, SerializedScenario,
+    SerializedScenarioStep, TRACE_FORMAT_VERSION,
+};
 
 pub(crate) use script::StageOperation;
 

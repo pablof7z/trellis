@@ -28,6 +28,13 @@ pub struct Scenario {
 pub enum ScenarioError {
     /// The replay trace sequence differed.
     ReplayMismatch(TraceMismatch),
+    /// A serialized script or trace used an unsupported format version.
+    TraceFormatVersionMismatch {
+        /// Format version supported by this crate.
+        expected: u32,
+        /// Format version found in the serialized artifact.
+        actual: u32,
+    },
     /// The final deterministic graph dump differed after replay.
     ReplayFinalStateMismatch {
         /// Expected final graph dump.

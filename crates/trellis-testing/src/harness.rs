@@ -1,12 +1,14 @@
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
-use trellis_core::{Graph, InvariantResultTrace, OutputFrameTrace, ResourceCommandTrace};
+use trellis_core::{
+    Graph, GraphResult, InvariantResultTrace, OutputFrameTrace, ResourceCommandTrace, Transaction,
+};
 
 use crate::harness_step::{HarnessStep, NamedInvariantCheck};
 use crate::{
-    FullRecomputeOracle, OracleCheck, OracleMismatch, OutputLedger, ResourceLedger, Scenario,
-    ScenarioError, StageOperation, TransactionScript,
+    DataTransactionScript, FullRecomputeOracle, OracleCheck, OracleMismatch, OutputLedger,
+    ResourceLedger, Scenario, ScenarioError, StageOperation, TransactionScript,
 };
 
 /// Application target that exposes the Trellis graph under test.
@@ -92,6 +94,19 @@ where
         Ok(())
     }
 
+    /// Runs every step in a serializable data transaction script.
+    pub fn run_data_script<Operation>(
+        &mut self,
+        script: &DataTransactionScript<Operation>,
+        mut apply: impl for<'tx> FnMut(&Operation, &mut Transaction<'tx, C, O>) -> GraphResult<()>,
+    ) -> Result<(), ScenarioError> {
+        script.validate_format_version()?;
+        for step in script.steps() {
+            self.commit_data_operations(step.name(), step.operations(), &mut apply)?;
+        }
+        Ok(())
+    }
+
     /// Replays a transaction script against a fresh application graph.
     pub fn replay(
         build: impl FnOnce() -> G,
@@ -99,6 +114,17 @@ where
     ) -> Result<Self, ScenarioError> {
         let mut harness = Self::new(build);
         harness.run_script(script)?;
+        Ok(harness)
+    }
+
+    /// Replays a serializable data transaction script against a fresh graph.
+    pub fn replay_data<Operation>(
+        build: impl FnOnce() -> G,
+        script: &DataTransactionScript<Operation>,
+        apply: impl for<'tx> FnMut(&Operation, &mut Transaction<'tx, C, O>) -> GraphResult<()>,
+    ) -> Result<Self, ScenarioError> {
+        let mut harness = Self::new(build);
+        harness.run_data_script(script, apply)?;
         Ok(harness)
     }
 
@@ -205,6 +231,36 @@ where
             self.scenario.assert_step_output_frames(name, expected)?;
         }
         Ok(())
+    }
+
+    fn commit_data_operations<Operation>(
+        &mut self,
+        name: &str,
+        operations: &[Operation],
+        apply: &mut impl for<'tx> FnMut(&Operation, &mut Transaction<'tx, C, O>) -> GraphResult<()>,
+    ) -> Result<(), ScenarioError> {
+        self.scenario.ensure_step_name_available(name)?;
+        let result = {
+            let graph = self.target.graph_mut();
+            let mut tx = graph
+                .begin_transaction()
+                .map_err(|error| step_commit_failed(name, error))?;
+            for operation in operations {
+                apply(operation, &mut tx).map_err(|error| step_commit_failed(name, error))?;
+            }
+            tx.commit()
+                .map_err(|error| step_commit_failed(name, error))?
+        };
+
+        self.resource_ledger.apply_result(&result);
+        self.output_ledger.apply_result(&result);
+        self.resource_ledger
+            .assert_graph_has_no_orphan_resources(self.target.graph())
+            .map_err(|error| ScenarioError::ResourceLedgerInvariantFailed {
+                step: name.to_owned(),
+                error: Box::new(error),
+            })?;
+        self.scenario.record(name, &result)
     }
 }
 
