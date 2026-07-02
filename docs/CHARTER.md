@@ -8,7 +8,13 @@ Any implementation PR must be reviewable against this charter.
 
 ## North-star contract
 
-Trellis is a deterministic reactive resource-graph runtime for Rust application kernels.
+Trellis is a deterministic reconciler for Rust application kernels.
+
+Its relatives are Terraform's plan phase, the Kubernetes reconcile loop, and
+React's commit phase — not signal libraries or query caches. Naming the
+category correctly matters: a reconciler is expected to produce effect plans
+from state changes and to be judged on lifecycle correctness, which is
+exactly how Trellis should be judged.
 
 It accepts canonical input changes. It recomputes explicit derived nodes. It produces structural diffs. It turns diffs into resource plans. It emits revisioned materialized output frames. It scopes teardown. It never performs external side effects during graph propagation. It makes incremental behavior checkable against full recompute.
 
@@ -27,7 +33,9 @@ The graph computes what should happen. The host applies it.
 
 ## One-sentence positioning
 
-Trellis is a small Rust runtime for actor-owned dependency graphs whose derived values drive scoped external resources and revisioned materialized outputs, with deterministic propagation and full-recompute testing hooks.
+State changes go in; scoped resource commands, revisioned output frames, and
+an auditable receipt come out — deterministically, and checkable against full
+recompute at any time.
 
 ## Product thesis
 
@@ -81,18 +89,26 @@ The graph must remain smaller than the applications that use it.
 
 Trellis is for Rust systems where application state determines live resource ownership and materialized output.
 
-Representative users include:
+The proven shape — where the current implementation is a strong fit today —
+is a client that derives a churning set of expensive stateful attachments
+from changing application state:
 
-- local-first sync engines;
-- offline-first application cores;
-- language servers;
-- telemetry dashboards;
-- collaborative document kernels;
-- market-data terminals;
-- desktop/mobile app cores;
-- plugin hosts;
-- build or analysis tools with live views;
-- applications that maintain scoped live queries, subscriptions, file watchers, background jobs, or materialized result surfaces.
+- protocol clients maintaining live subscriptions (the first production
+  consumer is a multi-platform Nostr client framework);
+- local-first and offline-first sync engines;
+- telemetry dashboards with scoped topic subscriptions;
+- desktop/mobile app cores maintaining scoped live queries, watchers, or
+  background jobs;
+- plugin hosts.
+
+Aspirational shapes — normative design pressure, not yet well served by the
+current implementation:
+
+- language servers and analysis tools with per-entity outputs (constrained
+  today by the single output payload type per graph, tracked in
+  [#121](https://github.com/pablof7z/trellis/issues/121));
+- collaborative document kernels and market-data terminals (constrained by
+  the per-transaction cost model; see docs/PERFORMANCE.md).
 
 Trellis is not intended for simple local UI state, ordinary form state, one-shot HTTP requests, or pure calculations with no resource lifecycle.
 
@@ -135,6 +151,12 @@ Every live resource and materialized output surface must be owned by one or more
 Closing a scope must deterministically remove that scope's ownership and produce the required resource close commands and output clear or rebaseline frames.
 
 A resource with no owning scope is a bug.
+
+Honesty note: the contract above is fully implemented for resources and
+outputs. For nodes, the current implementation detaches them on scope close
+but does not reclaim them — detached nodes retain values and keep
+recomputing. The charter intent is full reclamation; the gap is tracked in
+[#126](https://github.com/pablof7z/trellis/issues/126).
 
 ### Effects are data
 
@@ -286,6 +308,11 @@ Required invariants:
 - incremental board state equals full recompute from canonical inputs.
 
 ### Example 2: mini language server
+
+Status: normative pressure, proven only in miniature. The example crate
+demonstrates this shape with all diagnostics collapsed into a single output;
+true per-file output lifecycle awaits
+[#121](https://github.com/pablof7z/trellis/issues/121).
 
 A language server maintains diagnostics and editor-facing output as files and project configuration change.
 

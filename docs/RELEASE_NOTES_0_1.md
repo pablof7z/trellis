@@ -1,5 +1,8 @@
 # Trellis 0.1 Release Notes
 
+Status: historical record of the 0.1 release. Kept for reference; not a
+living document.
+
 Trellis 0.1 is an early, experimental, semantics-first release for design
 feedback.
 

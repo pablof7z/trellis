@@ -4,7 +4,7 @@ version = "0.1.2"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Deterministic reactive resource graph core types."
+description = "Deterministic reconciler: state changes in; resource commands, output frames, and auditable receipts out."
 readme = "README.md"
 
 [features]

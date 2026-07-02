@@ -1,6 +1,7 @@
 # Guide
 
-Trellis is a deterministic reactive resource-graph runtime. The core loop is:
+Trellis is a deterministic reconciler: state changes go in; resource commands,
+output frames, and an auditable receipt come out. The core loop is:
 
 ```text
 host receives event

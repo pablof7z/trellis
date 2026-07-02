@@ -1,5 +1,8 @@
 # Internal Alpha
 
+Status: historical record of the pre-0.1 alpha gate. Kept for reference; not
+a living document.
+
 M17 uses Trellis in a serious prototype before public release: a small
 application kernel that turns canonical source and permission inputs into
 visible demand, scoped resource plans, materialized output, audit facts, and

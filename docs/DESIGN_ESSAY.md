@@ -1,6 +1,7 @@
 # Trellis Design Essay
 
-Trellis is not "signals for Rust."
+Trellis is a reconciler. Its relatives are Terraform's plan phase, the
+Kubernetes reconcile loop, and React's commit phase — not signal libraries.
 
 The intended use case is an application kernel that must reconcile changing
 canonical facts with derived state, scoped external resources, and materialized
@@ -62,19 +63,32 @@ Closing a scope must close owned resources, clear owned outputs, detach scoped
 nodes, and leave no orphan resource ownership. Shared resources stay alive while
 another scope still owns them and close when the last owner leaves.
 
+Note "detach", not "remove": today, detached nodes retain their values and
+keep recomputing. The intent is full reclamation
+([#126](https://github.com/pablof7z/trellis/issues/126)). Scope ownership is
+currently stronger for resources and outputs than for nodes.
+
 ## Why Outputs Are Frames
 
 Hosts should not need to read graph internals to render or publish state.
 Materialized outputs are returned as frames with output key, scope, transaction
 id, revision, frame kind, and payload.
 
-That makes consumers testable:
+An honest note on the vocabulary: every frame kind except `Clear` carries the
+complete payload. A `Delta` frame is a state replacement that signals "this
+changed since your last frame", not a patch to be composed. The frame kinds
+distinguish consumer bookkeeping states — first value, changed value,
+explicit re-baseline, removal — so a consumer can be a simple state machine:
 
 ```text
-baseline at revision 1
-apply deltas through revision N
-compare with rebaseline at revision N
+Baseline  -> adopt the value
+Delta     -> replace the value
+Rebaseline -> replace the value, reset any downstream history
+Clear      -> drop the output
 ```
+
+Payload-level patches would require collection diffs to reach the output
+layer; they do not today.
 
 ## Why Full Recompute Matters
 
@@ -102,6 +116,15 @@ It should be judged on these questions:
 
 It should not be judged as production-stable infrastructure. The public API is
 unstable, names may change, and adapters are intentionally minimal.
+
+## Why Adoption Starts In Shadow Mode
+
+Because propagation returns data instead of performing effects, a Trellis
+graph can run beside an application's existing reconciliation logic on real
+traffic, with the existing path staying authoritative, until the comparison
+has earned trust. This is the same epistemic move the core makes internally
+with the full-recompute oracle, applied at the adoption boundary. See
+[SHADOW_MODE.md](SHADOW_MODE.md).
 
 ## What Trellis Should Keep Resisting
 

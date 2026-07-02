@@ -327,6 +327,8 @@ Start here:
 - [Shadow-mode adoption](docs/SHADOW_MODE.md): adopting Trellis beside an
   existing reconciliation path, with exit criteria.
 - [Examples](docs/EXAMPLES.md): proof example descriptions.
+- [Performance model](docs/PERFORMANCE.md): the honest cost model and its
+  rationale.
 - [Non-goals](docs/NON_GOALS.md): what Trellis deliberately excludes.
 - [Design essay](docs/DESIGN_ESSAY.md): longer rationale.
 

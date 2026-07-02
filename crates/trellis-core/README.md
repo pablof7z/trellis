@@ -1,11 +1,14 @@
 # trellis-core
 
-Deterministic resource graph primitives for Rust application kernels.
+A deterministic reconciler for Rust application kernels: state changes in;
+resource commands, output frames, and auditable receipts out.
 
 `trellis-core` is the runtime crate for Trellis. It models the part of an
 application where canonical state changes imply resource lifecycle changes:
 subscriptions, watchers, sync windows, materialized views, diagnostics, or
-other live demand that must be opened, closed, revised, and audited.
+other live demand that must be opened, closed, revised, and audited. Its
+relatives are Terraform's plan phase, the Kubernetes reconcile loop, and
+React's commit phase — not signal libraries.
 
 The graph does not perform I/O. It computes deterministic transaction results:
 derived values, structural diffs, resource plans, revisioned output frames,
@@ -105,6 +108,8 @@ The full project documentation is in the repository:
 - Semantics: <https://github.com/pablof7z/trellis/blob/master/docs/SEMANTICS.md>
 - Invariants: <https://github.com/pablof7z/trellis/blob/master/docs/INVARIANTS.md>
 - Testing: <https://github.com/pablof7z/trellis/blob/master/docs/TESTING.md>
+- Performance model: <https://github.com/pablof7z/trellis/blob/master/docs/PERFORMANCE.md>
+- Shadow-mode adoption: <https://github.com/pablof7z/trellis/blob/master/docs/SHADOW_MODE.md>
 
 ## License
 

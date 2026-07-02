@@ -1,5 +1,9 @@
 # Public 0.1 Release Candidate Gate
 
+Status: historical record of the 0.1 release gate, which has shipped. Kept
+for reference (it is linked from published crate documentation); not a living
+document. The living triage policy is [POST_RELEASE.md](POST_RELEASE.md).
+
 M18 prepares Trellis for a deliberately narrow public 0.1 release candidate.
 This document records what is demonstrated now and what remains explicitly out
 of scope.
