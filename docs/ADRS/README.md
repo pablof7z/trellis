@@ -79,3 +79,5 @@ What must be added so the decision is enforceable?
 
 - [ADR 0001: Effects are data, not closures](0001-effects-are-data-not-closures.md)
 - [ADR 0002: Resource identity is separate from command payload](0002-resource-identity-separate-from-payload.md)
+- [ADR 0003: Shared-key open coalescing is explicit, and payload conflicts fail the commit](0003-shared-key-open-coalescing-and-payload-conflicts.md)
+- [ADR 0004: Scope teardown emits close commands in reverse acquisition order](0004-scope-teardown-closes-in-reverse-acquisition-order.md)
