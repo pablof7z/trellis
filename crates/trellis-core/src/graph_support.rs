@@ -21,6 +21,7 @@ impl<C, O: Clone> Clone for Graph<C, O> {
             output_specs: self.output_specs.clone(),
             output_values: self.output_values.clone(),
             outputs: self.outputs.clone(),
+            topology_cache: self.topology_cache.clone(),
             audit: self.audit.clone(),
             transaction_open: self.transaction_open,
         }

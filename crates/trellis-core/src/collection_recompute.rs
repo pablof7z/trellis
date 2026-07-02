@@ -8,7 +8,7 @@ impl<C, O> Graph<C, O> {
         initial_changed: &[NodeId],
     ) -> GraphResult<CollectionRecomputeTrace> {
         self.collection_diffs.clear();
-        self.previous_collection_values = self.collection_values.clone();
+        self.previous_collection_values.clear();
         let order = self.collection_topological_order()?;
         let mut changed: BTreeSet<NodeId> = initial_changed.iter().copied().collect();
         let mut changed_collections = Vec::new();
@@ -19,8 +19,7 @@ impl<C, O> Graph<C, O> {
                 .nodes
                 .get(&node)
                 .expect("collection node metadata exists")
-                .dependencies()
-                .clone();
+                .dependencies();
             let is_dirty = changed.contains(&node)
                 || dependencies
                     .as_slice()
@@ -34,13 +33,14 @@ impl<C, O> Graph<C, O> {
             recomputed.push(node);
             let next = self.compute_collection(node, dependencies.as_slice())?;
             let previous = self
-                .previous_collection_values
+                .collection_values
                 .get(&node)
                 .cloned()
                 .unwrap_or_else(|| next.empty_box());
             let diff = previous.diff(next.as_ref());
             let changed_value = !previous.equals(next.as_ref());
 
+            self.previous_collection_values.insert(node, previous);
             self.collection_diffs.insert(node, diff.clone());
             self.collection_values.insert(node, next);
 
@@ -92,7 +92,7 @@ impl<C, O> Graph<C, O> {
         }
     }
 
-    pub(crate) fn collection_topological_order(&self) -> GraphResult<Vec<NodeId>> {
+    pub(crate) fn collection_topological_order(&mut self) -> GraphResult<Vec<NodeId>> {
         self.topological_order_for_kind(NodeKind::Collection)
     }
 

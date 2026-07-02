@@ -53,8 +53,7 @@ impl<C, O: Clone> Graph<C, O> {
                 .nodes
                 .get(node)
                 .expect("derived node metadata exists")
-                .dependencies()
-                .clone();
+                .dependencies();
             let value = full.compute_derived(*node, dependencies.as_slice())?;
             full.derived_values.insert(*node, value);
         }

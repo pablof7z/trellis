@@ -7,6 +7,7 @@ use crate::{
     input::{StoredInput, value_type},
     output::OutputSpec,
     resource::{ResourceKey, ResourcePlanner},
+    topology::TopologyCache,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -31,6 +32,7 @@ pub struct Graph<C = (), O = ()> {
     pub(crate) output_specs: BTreeMap<OutputKey, OutputSpec<C, O>>,
     pub(crate) output_values: BTreeMap<OutputKey, O>,
     pub(crate) outputs: BTreeMap<OutputKey, OutputMeta>,
+    pub(crate) topology_cache: TopologyCache,
     pub(crate) audit: AuditState,
     pub(crate) transaction_open: bool,
 }
@@ -58,6 +60,7 @@ impl<C, O> Graph<C, O> {
             output_specs: BTreeMap::new(),
             output_values: BTreeMap::new(),
             outputs: BTreeMap::new(),
+            topology_cache: TopologyCache::default(),
             audit: AuditState::default(),
             transaction_open: false,
         }
@@ -127,6 +130,7 @@ impl<C, O> Graph<C, O> {
             self.revision,
             Some(value_type::<T>()),
         );
+        self.invalidate_topology_cache();
         self.nodes.insert(id, meta);
         Ok(InputNode::new(id))
     }
@@ -154,6 +158,7 @@ impl<C, O> Graph<C, O> {
             self.revision,
             Some(value_type::<T>()),
         );
+        self.invalidate_topology_cache();
         self.nodes.insert(id, meta);
         self.derived_specs
             .insert(id, DerivedSpec::<C, O>::new(derive));
