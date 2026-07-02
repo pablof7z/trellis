@@ -174,56 +174,7 @@ impl<C, O> Graph<C, O> {
     }
 
     pub(crate) fn derived_topological_order(&self) -> GraphResult<Vec<NodeId>> {
-        let mut order = Vec::new();
-        let mut temporary = BTreeSet::new();
-        let mut permanent = BTreeSet::new();
-
-        for node in self.nodes.keys().copied() {
-            if self
-                .nodes
-                .get(&node)
-                .is_some_and(|meta| meta.kind() == NodeKind::Derived)
-            {
-                self.visit_derived(node, &mut temporary, &mut permanent, &mut order)?;
-            }
-        }
-
-        Ok(order)
-    }
-
-    fn visit_derived(
-        &self,
-        node: NodeId,
-        temporary: &mut BTreeSet<NodeId>,
-        permanent: &mut BTreeSet<NodeId>,
-        order: &mut Vec<NodeId>,
-    ) -> GraphResult<()> {
-        if permanent.contains(&node) {
-            return Ok(());
-        }
-        if !temporary.insert(node) {
-            return Err(GraphError::CycleDetected(node));
-        }
-
-        let dependencies = self
-            .nodes
-            .get(&node)
-            .expect("derived node metadata exists")
-            .dependencies();
-        for dependency in dependencies.as_slice() {
-            if self
-                .nodes
-                .get(dependency)
-                .is_some_and(|meta| meta.kind() == NodeKind::Derived)
-            {
-                self.visit_derived(*dependency, temporary, permanent, order)?;
-            }
-        }
-
-        temporary.remove(&node);
-        permanent.insert(node);
-        order.push(node);
-        Ok(())
+        self.topological_order_for_kind(NodeKind::Derived)
     }
 }
 

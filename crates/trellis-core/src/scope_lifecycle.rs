@@ -38,21 +38,31 @@ impl<C, O> Graph<C, O> {
 
     fn scope_close_order(&self, scope: ScopeId) -> Vec<ScopeId> {
         let mut scopes = Vec::new();
-        self.collect_scope_close_order(scope, &mut scopes);
-        scopes
-    }
+        let mut stack = vec![ScopeVisitFrame::Enter(scope)];
 
-    fn collect_scope_close_order(&self, scope: ScopeId, scopes: &mut Vec<ScopeId>) {
-        for child in self.child_scopes_unchecked(scope) {
-            self.collect_scope_close_order(child, scopes);
+        while let Some(frame) = stack.pop() {
+            match frame {
+                ScopeVisitFrame::Exit(scope) => {
+                    if self
+                        .scopes
+                        .get(&scope)
+                        .is_some_and(|scope_meta| !scope_meta.is_closed())
+                    {
+                        scopes.push(scope);
+                    }
+                }
+                ScopeVisitFrame::Enter(scope) => {
+                    stack.push(ScopeVisitFrame::Exit(scope));
+                    let mut children = self.child_scopes_unchecked(scope);
+                    children.reverse();
+                    for child in children {
+                        stack.push(ScopeVisitFrame::Enter(child));
+                    }
+                }
+            }
         }
-        if self
-            .scopes
-            .get(&scope)
-            .is_some_and(|scope_meta| !scope_meta.is_closed())
-        {
-            scopes.push(scope);
-        }
+
+        scopes
     }
 
     fn child_scopes_unchecked(&self, scope: ScopeId) -> Vec<ScopeId> {
@@ -63,4 +73,9 @@ impl<C, O> Graph<C, O> {
             })
             .collect()
     }
+}
+
+enum ScopeVisitFrame {
+    Enter(ScopeId),
+    Exit(ScopeId),
 }

@@ -93,21 +93,7 @@ impl<C, O> Graph<C, O> {
     }
 
     pub(crate) fn collection_topological_order(&self) -> GraphResult<Vec<NodeId>> {
-        let mut order = Vec::new();
-        let mut temporary = BTreeSet::new();
-        let mut permanent = BTreeSet::new();
-
-        for node in self.nodes.keys().copied() {
-            if self
-                .nodes
-                .get(&node)
-                .is_some_and(|meta| meta.kind() == NodeKind::Collection)
-            {
-                self.visit_collection(node, &mut temporary, &mut permanent, &mut order)?;
-            }
-        }
-
-        Ok(order)
+        self.topological_order_for_kind(NodeKind::Collection)
     }
 
     fn compute_collection(
@@ -122,41 +108,6 @@ impl<C, O> Graph<C, O> {
         let ctx = CollectionContext::new(self, dependencies);
         spec.compute(&ctx)
             .map_err(|error| GraphError::CollectionFailed(node, error))
-    }
-
-    fn visit_collection(
-        &self,
-        node: NodeId,
-        temporary: &mut BTreeSet<NodeId>,
-        permanent: &mut BTreeSet<NodeId>,
-        order: &mut Vec<NodeId>,
-    ) -> GraphResult<()> {
-        if permanent.contains(&node) {
-            return Ok(());
-        }
-        if !temporary.insert(node) {
-            return Err(GraphError::CycleDetected(node));
-        }
-
-        let dependencies = self
-            .nodes
-            .get(&node)
-            .expect("collection node metadata exists")
-            .dependencies();
-        for dependency in dependencies.as_slice() {
-            if self
-                .nodes
-                .get(dependency)
-                .is_some_and(|meta| meta.kind() == NodeKind::Collection)
-            {
-                self.visit_collection(*dependency, temporary, permanent, order)?;
-            }
-        }
-
-        temporary.remove(&node);
-        permanent.insert(node);
-        order.push(node);
-        Ok(())
     }
 }
 
