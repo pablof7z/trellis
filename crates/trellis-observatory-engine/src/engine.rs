@@ -2,9 +2,9 @@ use std::collections::BTreeMap;
 
 use crate::actions::{mutate_inputs, set_bug};
 use crate::bugs::{apply_naive_bugs, host_status_events};
-use crate::compute::{diff_vec, full_recompute, input_change, output_frames};
+use crate::compute::{diff_vec, full_recompute, input_change};
+use crate::core_runtime;
 use crate::invariants::invariants;
-use crate::ledger::resource_commands;
 use crate::ledger::{apply_output_frames, apply_resource_commands, empty_output_ledger};
 use crate::seed::initial_inputs;
 use crate::types::{
@@ -19,6 +19,7 @@ pub fn initial_app_state() -> AppState {
         .map(|path| (path.clone(), inputs.scenario_revision))
         .collect::<BTreeMap<_, _>>();
     let full = full_recompute(&inputs, &analysis_revisions);
+    let core = core_runtime::bootstrap(&inputs, &analysis_revisions, &full);
     let mut state = AppState {
         mode: "trellis".to_owned(),
         bug_policy: NaiveBugPolicy {
@@ -42,12 +43,15 @@ pub fn initial_app_state() -> AppState {
     let mut bootstrap = TransactionTrace {
         tx_id: 1,
         revision: 1,
+        core_backed: true,
+        core_transaction_id: Some(core.transaction_id),
+        core_revision: Some(core.revision),
         label: "Open main branch".to_owned(),
         input_changes: vec![input_change("activeBranch", "none", "main")],
         changed_nodes: changed_nodes(),
         collection_diffs: vec![diff_vec("sourceFiles", &[], &full.source_files)],
-        resource_commands: resource_commands(&[], &full.desired_resources, 1, "Open main branch"),
-        output_frames: output_frames(&empty_full(), &full, 1, "Open main branch"),
+        resource_commands: core.resource_commands,
+        output_frames: core.output_frames,
         scope_events: full
             .source_files
             .iter()
@@ -59,7 +63,7 @@ pub fn initial_app_state() -> AppState {
             .collect(),
         host_status_events: Vec::new(),
         invariant_checks: Vec::new(),
-        audit_edges: audit_edges(),
+        audit_edges: core.audit_edges,
     };
     state.full = full;
     apply_resource_commands(&mut state.resource_ledger, &bootstrap.resource_commands, 1);
@@ -98,18 +102,24 @@ pub fn dispatch_action(mut state: AppState, action: Action) -> AppState {
 fn apply_transaction(mut state: AppState, action: Action) -> AppState {
     let before_inputs = state.inputs.clone();
     let before_full = state.full.clone();
+    let before_analysis_revisions = state.analysis_revisions.clone();
     let label = mutate_inputs(&mut state, &action);
     state.inputs.scenario_revision += 1;
     let revision = state.inputs.scenario_revision;
     let tx_id = state.traces.len() as u32 + 1;
     let after_full = full_recompute(&state.inputs, &state.analysis_revisions);
-    let mut commands = resource_commands(
-        &before_full.desired_resources,
-        &after_full.desired_resources,
-        revision,
-        &label,
-    );
-    let mut frames = output_frames(&before_full, &after_full, revision, &label);
+    let core = core_runtime::transition(core_runtime::CoreTransition {
+        before_inputs: &before_inputs,
+        before_analysis: &before_analysis_revisions,
+        before_full: &before_full,
+        after_inputs: &state.inputs,
+        after_analysis: &state.analysis_revisions,
+        after_full: &after_full,
+        app_revision: revision,
+        label: &label,
+    });
+    let mut commands = core.resource_commands;
+    let mut frames = core.output_frames;
     let mut host_events = host_status_events(&state, &action, revision);
     let stale_mutated = apply_naive_bugs(
         &mut commands,
@@ -135,6 +145,9 @@ fn apply_transaction(mut state: AppState, action: Action) -> AppState {
     let mut trace = TransactionTrace {
         tx_id,
         revision,
+        core_backed: true,
+        core_transaction_id: Some(core.transaction_id),
+        core_revision: Some(core.revision),
         label: label.clone(),
         input_changes: input_changes(&before_inputs, &state.inputs, &action),
         changed_nodes: changed_nodes(),
@@ -144,7 +157,7 @@ fn apply_transaction(mut state: AppState, action: Action) -> AppState {
         scope_events: scope_events(&source_diff),
         host_status_events: host_events,
         invariant_checks: Vec::new(),
-        audit_edges: audit_edges(),
+        audit_edges: core.audit_edges,
     };
     trace.invariant_checks = invariants(
         &state.full,
@@ -262,15 +275,4 @@ fn changed_nodes() -> Vec<ChangedNode> {
         summary: "recomputed deterministically".to_owned(),
     })
     .collect()
-}
-
-fn audit_edges() -> Vec<String> {
-    vec![
-        "files -> sourceFiles".to_owned(),
-        "sourceFiles -> moduleGraph".to_owned(),
-        "moduleGraph -> resourcePlan".to_owned(),
-        "moduleGraph -> outputFrames".to_owned(),
-        "outputFrames -> outputLedger".to_owned(),
-        "resourcePlan -> resourceLedger".to_owned(),
-    ]
 }

@@ -76,6 +76,9 @@ export type ResourceEntry = {
 export type TransactionTrace = {
   txId: number;
   revision: number;
+  coreBacked: boolean;
+  coreTransactionId: number | null;
+  coreRevision: number | null;
   label: string;
   inputChanges: { key: string; before: string; after: string }[];
   changedNodes: { id: string; summary: string }[];

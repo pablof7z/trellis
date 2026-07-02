@@ -94,56 +94,12 @@ pub fn diff_vec(collection: &str, before: &[String], after: &[String]) -> Collec
     }
 }
 
-pub fn output_frames(
-    before: &FullState,
-    after: &FullState,
-    revision: Revision,
-    label: &str,
-) -> Vec<OutputFrame> {
-    let mut frames = Vec::new();
-    let removed = diff_vec("sourceFiles", &before.source_files, &after.source_files).removed;
-    for path in removed {
-        frames.push(frame("ClearDiagnostics", &path, revision, label));
-        frames.push(frame("ClearDocumentLinks", &path, revision, label));
-        frames.push(frame("ClearSemanticTokens", &path, revision, label));
-    }
-    for path in &after.source_files {
-        frames.push(diagnostics_frame(path, after, revision, label));
-        frames.push(links_frame(path, after, revision, label));
-        frames.push(tokens_frame(path, after, revision, label));
-    }
-    frames.sort_by(|a, b| a.output_key.cmp(&b.output_key).then(a.kind.cmp(&b.kind)));
-    frames
-}
-
 pub fn input_change(key: &str, before: impl ToString, after: impl ToString) -> InputChange {
     InputChange {
         key: key.to_owned(),
         before: before.to_string(),
         after: after.to_string(),
     }
-}
-
-fn diagnostics_frame(path: &str, full: &FullState, revision: Revision, label: &str) -> OutputFrame {
-    let mut frame = frame("BaselineDiagnostics", path, revision, label);
-    frame.diagnostics = full
-        .diagnostics_by_file
-        .get(path)
-        .cloned()
-        .unwrap_or_default();
-    frame
-}
-
-fn links_frame(path: &str, full: &FullState, revision: Revision, label: &str) -> OutputFrame {
-    let mut frame = frame("BaselineDocumentLinks", path, revision, label);
-    frame.links = full.links_by_file.get(path).cloned().unwrap_or_default();
-    frame
-}
-
-fn tokens_frame(path: &str, full: &FullState, revision: Revision, label: &str) -> OutputFrame {
-    let mut frame = frame("BaselineSemanticTokens", path, revision, label);
-    frame.tokens = full.tokens_by_file.get(path).cloned().unwrap_or_default();
-    frame
 }
 
 pub fn frame(kind: &str, path: &str, revision: Revision, label: &str) -> OutputFrame {

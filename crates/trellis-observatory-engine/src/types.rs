@@ -213,6 +213,9 @@ pub struct ChangedNode {
 pub struct TransactionTrace {
     pub tx_id: u32,
     pub revision: Revision,
+    pub core_backed: bool,
+    pub core_transaction_id: Option<u64>,
+    pub core_revision: Option<u64>,
     pub label: String,
     pub input_changes: Vec<InputChange>,
     pub changed_nodes: Vec<ChangedNode>,
