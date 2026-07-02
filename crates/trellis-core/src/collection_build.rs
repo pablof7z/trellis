@@ -31,6 +31,7 @@ impl<C: 'static, O> Graph<C, O> {
             self.revision,
             Some(value_type::<MapCollectionShape<K, V>>()),
         );
+        self.invalidate_topology_cache();
         self.nodes.insert(id, meta);
         self.collection_specs
             .insert(id, CollectionSpec::<C, O>::map(derive));
@@ -61,6 +62,7 @@ impl<C: 'static, O> Graph<C, O> {
             self.revision,
             Some(value_type::<SetCollectionShape<K>>()),
         );
+        self.invalidate_topology_cache();
         self.nodes.insert(id, meta);
         self.collection_specs
             .insert(id, CollectionSpec::<C, O>::set(derive));

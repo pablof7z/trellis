@@ -1,8 +1,54 @@
 use crate::{Graph, GraphError, GraphResult, NodeId, NodeKind};
 use std::collections::BTreeSet;
 
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub(crate) struct TopologyCache {
+    derived: Option<Vec<NodeId>>,
+    collection: Option<Vec<NodeId>>,
+}
+
+impl TopologyCache {
+    fn get(&self, kind: NodeKind) -> Option<&Vec<NodeId>> {
+        match kind {
+            NodeKind::Derived => self.derived.as_ref(),
+            NodeKind::Collection => self.collection.as_ref(),
+            NodeKind::Input => None,
+        }
+    }
+
+    fn set(&mut self, kind: NodeKind, order: Vec<NodeId>) {
+        match kind {
+            NodeKind::Derived => self.derived = Some(order),
+            NodeKind::Collection => self.collection = Some(order),
+            NodeKind::Input => {}
+        }
+    }
+
+    fn clear(&mut self) {
+        self.derived = None;
+        self.collection = None;
+    }
+}
+
 impl<C, O> Graph<C, O> {
-    pub(crate) fn topological_order_for_kind(&self, kind: NodeKind) -> GraphResult<Vec<NodeId>> {
+    pub(crate) fn topological_order_for_kind(
+        &mut self,
+        kind: NodeKind,
+    ) -> GraphResult<Vec<NodeId>> {
+        if let Some(order) = self.topology_cache.get(kind) {
+            return Ok(order.clone());
+        }
+
+        let order = self.compute_topological_order_for_kind(kind)?;
+        self.topology_cache.set(kind, order.clone());
+        Ok(order)
+    }
+
+    pub(crate) fn invalidate_topology_cache(&mut self) {
+        self.topology_cache.clear();
+    }
+
+    fn compute_topological_order_for_kind(&self, kind: NodeKind) -> GraphResult<Vec<NodeId>> {
         let mut order = Vec::new();
         let mut temporary = BTreeSet::new();
         let mut permanent = BTreeSet::new();

@@ -120,7 +120,7 @@ where
 
         let mut audit_events = self.staged_events.clone();
         for node in self.staged_inputs.keys() {
-            let event = if changed_inputs.contains(node) {
+            let event = if changed_input_set.contains(node) {
                 AuditEvent::InputChanged(*node)
             } else {
                 AuditEvent::InputUnchanged(*node)
@@ -266,8 +266,7 @@ where
             invariant_results: Vec::new(),
         };
         self.working.record_transaction_audit(&result);
-        *self.graph = self.working.clone();
-        self.graph.transaction_open = true;
+        std::mem::swap(self.graph, &mut self.working);
         self.close();
         Ok(result)
     }

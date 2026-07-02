@@ -127,8 +127,7 @@ impl<C, O> Graph<C, O> {
                 .nodes
                 .get(&node)
                 .expect("derived node metadata exists")
-                .dependencies()
-                .clone();
+                .dependencies();
             let is_dirty = changed.contains(&node)
                 || dependencies
                     .as_slice()
@@ -173,7 +172,7 @@ impl<C, O> Graph<C, O> {
             .map_err(|error| GraphError::DeriveFailed(node, error))
     }
 
-    pub(crate) fn derived_topological_order(&self) -> GraphResult<Vec<NodeId>> {
+    pub(crate) fn derived_topological_order(&mut self) -> GraphResult<Vec<NodeId>> {
         self.topological_order_for_kind(NodeKind::Derived)
     }
 }
