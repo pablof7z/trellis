@@ -82,7 +82,7 @@ pub use resource::{PlanContext, ResourceCommand, ResourceKey, ResourcePlan};
 pub use scope::ScopeMeta;
 pub use trace::{
     OutputFrameKindTrace, OutputFrameTrace, ResourceCommandKind, ResourceCommandTrace,
-    ResourceTransitionPolicy, TraceMismatch, TransactionTrace, assert_transaction_traces_match,
+    TraceMismatch, TransactionTrace, assert_transaction_traces_match,
 };
 pub use transaction::Transaction;
 pub use transaction_types::{

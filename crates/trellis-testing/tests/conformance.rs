@@ -93,7 +93,7 @@ fn failures_include_invariant_and_trace_context() {
     let mut tx = graph.begin_transaction().unwrap();
     let result = tx.commit().unwrap();
     drop(tx);
-    scenario.record("empty", &result);
+    scenario.record("empty", &result).unwrap();
 
     let failure = conformance()
         .check(

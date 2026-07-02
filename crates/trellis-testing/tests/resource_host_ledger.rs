@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use trellis_core::{
     DependencyList, Graph, HostResourceOutcome, InputNode, ResourceCommandKind,
-    ResourceCommandTrace, ResourceKey, ResourcePlan, ResourceTransitionPolicy, Revision, ScopeId,
+    ResourceCommandTrace, ResourceKey, ResourcePlan, Revision, ScopeId,
 };
 use trellis_testing::{
     FakeHost, HostStatusClass, HostStatusEvent, ResourceLedger, ResourceLedgerError,
@@ -139,19 +139,16 @@ fn resource_ledger_detects_lifecycle_and_status_classes() {
                 key: key(1),
                 scope: target.scope,
                 kind: ResourceCommandKind::Open,
-                transition: ResourceTransitionPolicy::Open,
             },
             ResourceCommandTrace {
                 key: key(2),
                 scope: target.scope,
                 kind: ResourceCommandKind::Open,
-                transition: ResourceTransitionPolicy::Open,
             },
             ResourceCommandTrace {
                 key: key(2),
                 scope: target.scope,
                 kind: ResourceCommandKind::Close,
-                transition: ResourceTransitionPolicy::Close,
             },
         ])
         .unwrap();
@@ -226,8 +223,7 @@ fn resource_ledger_detects_lifecycle_and_status_classes() {
         .class,
         HostStatusClass::Current
     );
-    let recovered =
-        host.open_succeeds_later(&mut ledger, key(3), target.scope, host_result.revision);
+    let recovered = host.open_succeeded(&mut ledger, key(3), target.scope, host_result.revision);
     assert_eq!(recovered.class, HostStatusClass::Current);
     assert_eq!(
         host.duplicate_status(&mut ledger, &recovered).class,
@@ -240,7 +236,7 @@ fn resource_ledger_detects_lifecycle_and_status_classes() {
     drop(tx);
     ledger.apply_result(&closed);
     assert_eq!(
-        host.open_succeeds_later(&mut ledger, key(1), target.scope, initial.revision)
+        host.open_succeeded(&mut ledger, key(1), target.scope, initial.revision)
             .class,
         HostStatusClass::Late
     );

@@ -2,8 +2,7 @@ use std::collections::BTreeSet;
 
 use trellis_core::{
     DependencyList, Graph, OutputFrameKindTrace, OutputFrameTrace, ResourceCommandKind,
-    ResourceCommandTrace, ResourceKey, ResourcePlan, ResourceTransitionPolicy, Revision, ScopeId,
-    TransactionId,
+    ResourceCommandTrace, ResourceKey, ResourcePlan, Revision, ScopeId, TransactionId,
 };
 use trellis_testing::{ScenarioTarget, TraceRedactor, TransactionScript, TrellisHarness};
 
@@ -38,17 +37,10 @@ fn key(value: u8) -> ResourceKey {
 }
 
 fn command_trace(value: u8, scope: ScopeId, kind: ResourceCommandKind) -> ResourceCommandTrace {
-    let transition = match kind {
-        ResourceCommandKind::Open => ResourceTransitionPolicy::Open,
-        ResourceCommandKind::Close => ResourceTransitionPolicy::Close,
-        ResourceCommandKind::Replace => ResourceTransitionPolicy::ReplaceAtomically,
-        ResourceCommandKind::Refresh => ResourceTransitionPolicy::Refresh,
-    };
     ResourceCommandTrace {
         key: key(value),
         scope,
         kind,
-        transition,
     }
 }
 
@@ -251,4 +243,27 @@ fn replay_detects_output_payload_drift() {
             ..
         }
     ));
+}
+
+#[test]
+fn harness_rejects_duplicate_step_names_before_commit() {
+    let target = build_target();
+    let source = target.source;
+    let mut harness = TrellisHarness::from_target(target);
+
+    harness
+        .step("open")
+        .input(source, members(&[1]))
+        .commit()
+        .unwrap();
+    let error = match harness.step("open").input(source, members(&[2])).commit() {
+        Ok(_) => panic!("duplicate step unexpectedly committed"),
+        Err(error) => error,
+    };
+
+    assert!(matches!(
+        error,
+        trellis_testing::ScenarioError::DuplicateStep { step } if step == "open"
+    ));
+    assert_eq!(harness.scenario().steps().len(), 1);
 }

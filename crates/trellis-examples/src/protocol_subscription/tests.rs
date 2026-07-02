@@ -45,13 +45,13 @@ fn run_script() -> Scenario {
     let mut app = seeded_app(&["a", "b"]);
     let handle = app.open_article_feed(params());
     let mut scenario = Scenario::new();
-    scenario.record("open", app.last_result());
+    scenario.record("open", app.last_result()).unwrap();
     app.set_route_sources(ACCOUNT, ROUTE, ["a"]);
-    scenario.record("shrink", app.last_result());
+    scenario.record("shrink", app.last_result()).unwrap();
     app.request_replay(handle);
-    scenario.record("replay", app.last_result());
+    scenario.record("replay", app.last_result()).unwrap();
     app.close(handle);
-    scenario.record("close", app.last_result());
+    scenario.record("close", app.last_result()).unwrap();
     scenario
 }
 

@@ -243,15 +243,6 @@ impl<O: Clone + PartialEq> OutputLedger<O> {
         }
     }
 
-    /// Asserts the current delta-applied state matches a rebaseline value.
-    pub fn assert_delta_sequence_matches_rebaseline(
-        &self,
-        key: OutputKey,
-        rebaseline: &O,
-    ) -> Result<(), OutputLedgerError> {
-        self.assert_current_equals(key, rebaseline)
-    }
-
     /// Asserts the ledger observed no structural frame errors.
     pub fn assert_consumer_needs_no_hidden_graph_state(&self) -> Result<(), OutputLedgerError> {
         self.errors.first().cloned().map_or(Ok(()), Err)
