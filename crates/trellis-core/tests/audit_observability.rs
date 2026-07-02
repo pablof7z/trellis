@@ -1,8 +1,9 @@
 use std::collections::BTreeSet;
 
 use trellis_core::{
-    AuditEvent, DependencyList, Graph, GraphError, OutputFrameKindTrace, ResourceCommandCause,
-    ResourceCommandKind, ResourceKey, ResourcePlan, SetDiff,
+    AuditEvent, AuditExplanationLevel, DependencyList, Graph, GraphError, OutputFrameKindTrace,
+    ResourceCommandCause, ResourceCommandKind, ResourceKey, ResourcePlan, SetDiff,
+    TransactionOptions,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -16,6 +17,10 @@ fn key(value: &str) -> ResourceKey {
 
 fn set(entries: &[&str]) -> BTreeSet<String> {
     entries.iter().map(|value| (*value).to_owned()).collect()
+}
+
+fn audit_paths_options() -> TransactionOptions {
+    TransactionOptions::default().with_audit_explanations(AuditExplanationLevel::DependencyPaths)
 }
 
 fn plan_added(
@@ -45,7 +50,9 @@ fn plan_added_removed(
 #[test]
 fn audit_explains_node_resource_and_output_changes() {
     let mut graph = Graph::<Command>::new_with_command_type();
-    let mut tx = graph.begin_transaction().unwrap();
+    let mut tx = graph
+        .begin_transaction_with_options(audit_paths_options())
+        .unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<String>>("source").unwrap();
     tx.set_input(source, set(&["a", "b"])).unwrap();
@@ -102,13 +109,15 @@ fn audit_explains_node_resource_and_output_changes() {
     assert_eq!(frame.changed_dependencies, vec![collection.id()]);
 
     assert!(
-        graph
-            .audit_log()
+        result
+            .audit_log
             .iter()
             .any(|entry| { entry.event == AuditEvent::CollectionChanged(collection.id()) })
     );
 
-    let mut tx = graph.begin_transaction().unwrap();
+    let mut tx = graph
+        .begin_transaction_with_options(audit_paths_options())
+        .unwrap();
     tx.set_input(source, set(&["a"])).unwrap();
     tx.commit().unwrap();
     drop(tx);
@@ -131,7 +140,9 @@ fn audit_explains_node_resource_and_output_changes() {
 #[test]
 fn scope_resource_inventory_is_deterministic_then_unknown_after_close() {
     let mut graph = Graph::<Command>::new_with_command_type();
-    let mut tx = graph.begin_transaction().unwrap();
+    let mut tx = graph
+        .begin_transaction_with_options(audit_paths_options())
+        .unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<String>>("source").unwrap();
     tx.set_input(source, set(&["b", "a"])).unwrap();
@@ -150,7 +161,9 @@ fn scope_resource_inventory_is_deterministic_then_unknown_after_close() {
     let inventory = graph.scope_resource_inventory(scope).unwrap();
     assert_eq!(inventory.resources, vec![key("a"), key("b")]);
 
-    let mut tx = graph.begin_transaction().unwrap();
+    let mut tx = graph
+        .begin_transaction_with_options(audit_paths_options())
+        .unwrap();
     tx.close_scope(scope).unwrap();
     let result = tx.commit().unwrap();
     drop(tx);
@@ -170,7 +183,9 @@ fn scope_resource_inventory_is_deterministic_then_unknown_after_close() {
 #[test]
 fn audit_uses_exact_planner_collection_for_resource_commands() {
     let mut graph = Graph::<Command>::new_with_command_type();
-    let mut tx = graph.begin_transaction().unwrap();
+    let mut tx = graph
+        .begin_transaction_with_options(audit_paths_options())
+        .unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let first_input = tx.input::<BTreeSet<String>>("first").unwrap();
     let second_input = tx.input::<BTreeSet<String>>("second").unwrap();
@@ -212,7 +227,9 @@ fn audit_uses_exact_planner_collection_for_resource_commands() {
 #[test]
 fn late_planner_registration_explains_existing_collection_members() {
     let mut graph = Graph::<Command>::new_with_command_type();
-    let mut tx = graph.begin_transaction().unwrap();
+    let mut tx = graph
+        .begin_transaction_with_options(audit_paths_options())
+        .unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<String>>("source").unwrap();
     tx.set_input(source, set(&["late"])).unwrap();
@@ -226,7 +243,9 @@ fn late_planner_registration_explains_existing_collection_members() {
     tx.commit().unwrap();
     drop(tx);
 
-    let mut tx = graph.begin_transaction().unwrap();
+    let mut tx = graph
+        .begin_transaction_with_options(audit_paths_options())
+        .unwrap();
     tx.set_resource_planner(collection, scope, plan_added)
         .unwrap();
     tx.commit().unwrap();
@@ -246,7 +265,9 @@ fn late_planner_registration_explains_existing_collection_members() {
 fn audit_debug_dump_is_deterministic() {
     fn build_dump() -> String {
         let mut graph = Graph::<Command>::new_with_command_type();
-        let mut tx = graph.begin_transaction().unwrap();
+        let mut tx = graph
+            .begin_transaction_with_options(audit_paths_options())
+            .unwrap();
         let scope = tx.create_scope("scope").unwrap();
         let source = tx.input::<BTreeSet<String>>("source").unwrap();
         tx.set_input(source, set(&["x"])).unwrap();

@@ -52,11 +52,11 @@ Aspirations are listed as issues, not stated here as rules:
 - The creation-time cycle check is unmemoized and exponential on
   diamond-heavy dependency graphs
   ([#116](https://github.com/pablof7z/trellis/issues/116)).
-- The audit log grows unboundedly and explanation queries scan all nodes
-  ([#125](https://github.com/pablof7z/trellis/issues/125)).
-- Trace/audit disabled-vs-enabled cost is not separately measurable until an
-  audit-retention toggle exists ([#125](https://github.com/pablof7z/trellis/issues/125)).
 - Allocation counts are not instrumented.
+
+Resolved audit-retention shape: audit history is transaction-local, graph
+explanation indexes are bounded latest-state caches, and dependency paths are
+opt-in per transaction ([ADR 0008](ADRS/0008-audit-history-is-transaction-local.md)).
 
 ## Benchmarks
 

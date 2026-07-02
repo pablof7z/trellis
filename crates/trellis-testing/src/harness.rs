@@ -1,7 +1,8 @@
 use std::fmt::Debug;
 
 use trellis_core::{
-    Graph, GraphResult, InvariantResultTrace, OutputFrameTrace, ResourceCommandTrace, Transaction,
+    AuditExplanationLevel, Graph, GraphResult, InvariantResultTrace, OutputFrameTrace,
+    ResourceCommandTrace, Transaction, TransactionOptions,
 };
 
 use crate::harness_step::{HarnessStep, NamedInvariantCheck};
@@ -183,7 +184,7 @@ where
         let result = {
             let graph = self.target.graph_mut();
             let mut tx = graph
-                .begin_transaction()
+                .begin_transaction_with_options(harness_transaction_options())
                 .map_err(|error| step_commit_failed(name, error))?;
             for operation in operations {
                 operation(&mut tx).map_err(|error| step_commit_failed(name, error))?;
@@ -239,7 +240,7 @@ where
         let result = {
             let graph = self.target.graph_mut();
             let mut tx = graph
-                .begin_transaction()
+                .begin_transaction_with_options(harness_transaction_options())
                 .map_err(|error| step_commit_failed(name, error))?;
             for operation in operations {
                 apply(operation, &mut tx).map_err(|error| step_commit_failed(name, error))?;
@@ -258,6 +259,10 @@ where
             })?;
         self.scenario.record(name, &result)
     }
+}
+
+fn harness_transaction_options() -> TransactionOptions {
+    TransactionOptions::default().with_audit_explanations(AuditExplanationLevel::DependencyPaths)
 }
 
 fn step_commit_failed(step: &str, error: trellis_core::GraphError) -> ScenarioError {

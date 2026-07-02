@@ -90,9 +90,9 @@ pub use trace::{
 };
 pub use transaction::Transaction;
 pub use transaction_types::{
-    AuditEntry, AuditEvent, CollectionDiffKind, CollectionDiffTrace, InvariantResultTrace,
-    ScopeLifecycleKind, ScopeLifecycleTrace, StagedInputChange, StagedInputOutcome,
-    TransactionOptions, TransactionPhase, TransactionResult,
+    AuditEntry, AuditEvent, AuditExplanationLevel, CollectionDiffKind, CollectionDiffTrace,
+    InvariantResultTrace, ScopeLifecycleKind, ScopeLifecycleTrace, StagedInputChange,
+    StagedInputOutcome, TransactionOptions, TransactionPhase, TransactionResult,
 };
 
 /// Deterministic model-test helpers for oracle and replay checks.

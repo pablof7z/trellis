@@ -63,11 +63,37 @@ impl<C> Graph<C> {
         }
 
         writeln!(&mut out, "Audit:").expect("writing to String cannot fail");
-        for entry in &self.audit.log {
+        for explanation in self.audit.node_changes.values() {
             writeln!(
                 &mut out,
-                "  tx={:?} revision={:?} event={:?}",
-                entry.transaction_id, entry.revision, entry.event
+                "  node={:?} tx={:?} revision={:?} event={:?}",
+                explanation.node,
+                explanation.transaction_id,
+                explanation.revision,
+                explanation.event
+            )
+            .expect("writing to String cannot fail");
+        }
+        for explanation in self.audit.resource_commands.values() {
+            writeln!(
+                &mut out,
+                "  resource={:?} tx={:?} revision={:?} kind={:?} cause={:?}",
+                explanation.key,
+                explanation.transaction_id,
+                explanation.revision,
+                explanation.kind,
+                explanation.cause
+            )
+            .expect("writing to String cannot fail");
+        }
+        for explanation in self.audit.output_frames.values() {
+            writeln!(
+                &mut out,
+                "  output={:?} tx={:?} revision={:?} kind={:?}",
+                explanation.output_key,
+                explanation.transaction_id,
+                explanation.revision,
+                explanation.kind
             )
             .expect("writing to String cannot fail");
         }

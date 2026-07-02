@@ -85,9 +85,7 @@ fn equal_output_emits_no_delta_unless_configured() {
     drop(tx);
 
     let mut tx = graph
-        .begin_transaction_with_options(TransactionOptions {
-            skip_equal_inputs: false,
-        })
+        .begin_transaction_with_options(TransactionOptions::default().with_skip_equal_inputs(false))
         .unwrap();
     tx.set_input(source, "same".to_owned()).unwrap();
     let result = tx.commit().unwrap();

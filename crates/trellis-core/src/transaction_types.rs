@@ -5,14 +5,42 @@ use crate::{NodeId, OutputFrame, ResourcePlan, Revision, ScopeId, TransactionId}
 pub struct TransactionOptions {
     /// When true, setting an input to an equal value does not advance revision.
     pub skip_equal_inputs: bool,
+    /// Amount of graph-retained audit explanation state to update on commit.
+    pub audit_explanations: AuditExplanationLevel,
 }
 
 impl Default for TransactionOptions {
     fn default() -> Self {
         Self {
             skip_equal_inputs: true,
+            audit_explanations: AuditExplanationLevel::Summary,
         }
     }
+}
+
+impl TransactionOptions {
+    /// Returns these options with equal input writes either skipped or emitted.
+    pub fn with_skip_equal_inputs(mut self, skip_equal_inputs: bool) -> Self {
+        self.skip_equal_inputs = skip_equal_inputs;
+        self
+    }
+
+    /// Returns these options with a different audit explanation level.
+    pub fn with_audit_explanations(mut self, level: AuditExplanationLevel) -> Self {
+        self.audit_explanations = level;
+        self
+    }
+}
+
+/// Amount of latest audit explanation state retained on the graph.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum AuditExplanationLevel {
+    /// Clear graph-retained explanations and skip explanation indexing.
+    Disabled,
+    /// Retain bounded latest node/resource/output summaries without dependency paths.
+    Summary,
+    /// Retain summaries plus shortest dependency paths from changed inputs.
+    DependencyPaths,
 }
 
 /// Deterministic audit record for an input transaction.
@@ -191,7 +219,7 @@ pub struct TransactionResult<C = ()> {
     pub output_frames: Vec<OutputFrame>,
     /// Scope lifecycle events emitted by this transaction.
     pub scope_events: Vec<ScopeLifecycleTrace>,
-    /// Deterministic audit entries for staged input writes.
+    /// Deterministic audit entries for this transaction.
     pub audit_log: Vec<AuditEntry>,
     /// Deterministic transaction phase trace.
     pub phase_trace: Vec<TransactionPhase>,

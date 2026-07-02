@@ -98,9 +98,7 @@ fn equal_input_write_can_be_configured_as_change() {
     tx.commit().unwrap();
     drop(tx);
 
-    let options = TransactionOptions {
-        skip_equal_inputs: false,
-    };
+    let options = TransactionOptions::default().with_skip_equal_inputs(false);
     let mut tx = graph.begin_transaction_with_options(options).unwrap();
     tx.set_input(input, "same".to_owned()).unwrap();
     let result = tx.commit().unwrap();

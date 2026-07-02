@@ -1,9 +1,15 @@
-use trellis_core::{AuditEvent, DependencyList, Graph};
+use trellis_core::{AuditEvent, AuditExplanationLevel, DependencyList, Graph, TransactionOptions};
+
+fn audit_paths_options() -> TransactionOptions {
+    TransactionOptions::default().with_audit_explanations(AuditExplanationLevel::DependencyPaths)
+}
 
 #[test]
 fn node_explanations_use_only_inputs_that_reach_the_node() {
     let mut graph = Graph::<()>::new();
-    let mut tx = graph.begin_transaction().unwrap();
+    let mut tx = graph
+        .begin_transaction_with_options(audit_paths_options())
+        .unwrap();
     let first = tx.input::<usize>("first").unwrap();
     let second = tx.input::<usize>("second").unwrap();
     tx.set_input(first, 1).unwrap();
@@ -38,13 +44,17 @@ fn node_explanations_use_only_inputs_that_reach_the_node() {
 #[test]
 fn equal_input_write_does_not_replace_last_change_explanation() {
     let mut graph = Graph::new();
-    let mut tx = graph.begin_transaction().unwrap();
+    let mut tx = graph
+        .begin_transaction_with_options(audit_paths_options())
+        .unwrap();
     let input = tx.input::<String>("input").unwrap();
     tx.set_input(input, "same".to_owned()).unwrap();
     tx.commit().unwrap();
     drop(tx);
 
-    let mut tx = graph.begin_transaction().unwrap();
+    let mut tx = graph
+        .begin_transaction_with_options(audit_paths_options())
+        .unwrap();
     tx.set_input(input, "same".to_owned()).unwrap();
     tx.commit().unwrap();
     drop(tx);
