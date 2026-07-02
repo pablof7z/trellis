@@ -38,3 +38,29 @@ jobs:
 
       - name: Benchmark smoke
         run: cargo bench -p trellis-bench --bench performance_smoke
+
+  generative:
+    name: proptest and fuzz smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Proptest
+        run: cargo test -p trellis-testing --features proptest
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+
+      - name: Fuzz smoke
+        working-directory: fuzz
+        run: |
+          cargo fuzz run resource_lifecycle -- -runs=256
+          cargo fuzz run trace_replay -- -runs=256

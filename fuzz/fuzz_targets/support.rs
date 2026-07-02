@@ -1,11 +1,18 @@
 #![allow(dead_code)]
 
+#[path = "scalar_support.rs"]
+mod scalar_support;
+
 use std::collections::BTreeSet;
 
 use trellis_core::{
     DependencyList, Graph, InputNode, MaterializedOutput, ResourceKey, ResourcePlan, ScopeId,
+    TransactionTrace, assert_transaction_traces_match,
+    testing::{ModelScript, ModelStep, ModelTopology},
 };
-use trellis_testing::{ResourceLedger, Scenario};
+use trellis_testing::ResourceLedger;
+
+use scalar_support::run_scalar_chain_script;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Command {
@@ -20,41 +27,89 @@ struct Target {
 }
 
 pub(crate) fn run_resource_lifecycle(data: &[u8]) {
-    let (mut target, initial) = build_graph(members(data.first().copied().unwrap_or_default()));
-    let mut ledger = ResourceLedger::new();
-    ledger.apply_result(&initial);
-    ledger.assert_no_orphan_resources().unwrap();
-
-    for value in data.iter().copied().skip(1).take(32) {
-        let result = set_source(&mut target, members(value));
-        ledger.apply_result(&result);
-        ledger.assert_no_duplicate_close().unwrap();
-        ledger.assert_no_orphan_resources().unwrap();
-    }
-
-    let closed = close_scope(&mut target);
-    ledger.apply_result(&closed);
-    let _ = target.output.key();
-    ledger
-        .assert_closed_scope_owns_no_resources(target.scope)
-        .unwrap();
+    let script = ModelScript {
+        topology: ModelTopology::SetResourceOutput,
+        steps: steps_from_bytes(data),
+    };
+    run_set_resource_script(&script);
 }
 
 pub(crate) fn run_trace_replay(data: &[u8]) {
-    let first = run_scenario(data);
-    let second = run_scenario(data);
-    first.assert_replay_matches(&second).unwrap();
+    let script = script_from_bytes(data);
+    let first = run_script(&script);
+    let second = run_script(&script);
+    assert_transaction_traces_match(&first, &second).unwrap();
 }
 
-fn run_scenario(data: &[u8]) -> Scenario {
-    let (mut target, initial) = build_graph(members(data.first().copied().unwrap_or_default()));
-    let mut scenario = Scenario::new();
-    scenario.record("initial", &initial);
-    for (index, value) in data.iter().copied().skip(1).take(32).enumerate() {
-        let result = set_source(&mut target, members(value));
-        scenario.record(format!("step-{index}"), &result);
+fn script_from_bytes(data: &[u8]) -> ModelScript {
+    let topology = if data.first().copied().unwrap_or_default().is_multiple_of(2) {
+        ModelTopology::ScalarChain
+    } else {
+        ModelTopology::SetResourceOutput
+    };
+    ModelScript {
+        topology,
+        steps: steps_from_bytes(data.get(1..).unwrap_or_default()),
     }
-    scenario
+}
+
+fn steps_from_bytes(data: &[u8]) -> Vec<ModelStep> {
+    data.iter().copied().take(64).map(step_from_byte).collect()
+}
+
+fn step_from_byte(value: u8) -> ModelStep {
+    if value.is_multiple_of(13) {
+        ModelStep::ClosePrimaryScope
+    } else if value.is_multiple_of(7) {
+        ModelStep::RebaselineOutput
+    } else {
+        ModelStep::SetMembers(members(value))
+    }
+}
+
+fn run_script(script: &ModelScript) -> Vec<TransactionTrace> {
+    match script.topology {
+        ModelTopology::ScalarChain => run_scalar_chain_script(script),
+        ModelTopology::SetResourceOutput => run_set_resource_script(script),
+    }
+}
+
+fn run_set_resource_script(script: &ModelScript) -> Vec<TransactionTrace> {
+    let (mut target, initial) = build_graph(BTreeSet::new());
+    let mut ledger = ResourceLedger::new();
+    let mut traces = vec![TransactionTrace::from_result(&initial)];
+    let mut scope_live = true;
+    let mut output_live = true;
+    apply_resource_result(&target, &mut ledger, &initial);
+
+    for step in &script.steps {
+        let result = match step {
+            ModelStep::SetMembers(next) => set_source(&mut target, next.clone()),
+            ModelStep::RebaselineOutput if output_live => rebaseline_output(&mut target),
+            ModelStep::ClosePrimaryScope if scope_live => {
+                scope_live = false;
+                output_live = false;
+                close_scope(&mut target)
+            }
+            ModelStep::RebaselineOutput | ModelStep::ClosePrimaryScope => commit_noop(&mut target),
+        };
+        apply_resource_result(&target, &mut ledger, &result);
+        traces.push(TransactionTrace::from_result(&result));
+    }
+    traces
+}
+
+fn apply_resource_result(
+    target: &Target,
+    ledger: &mut ResourceLedger<Command>,
+    result: &trellis_core::TransactionResult<Command, BTreeSet<u8>>,
+) {
+    ledger.apply_result(result);
+    ledger.assert_no_duplicate_close().unwrap();
+    ledger.assert_no_orphan_resources().unwrap();
+    ledger
+        .assert_graph_has_no_orphan_resources(&target.graph)
+        .unwrap();
 }
 
 fn build_graph(
@@ -120,11 +175,28 @@ fn set_source(
     result
 }
 
+fn rebaseline_output(target: &mut Target) -> trellis_core::TransactionResult<Command, BTreeSet<u8>> {
+    let mut tx = target.graph.begin_transaction().unwrap();
+    tx.rebaseline_output(target.output.clone()).unwrap();
+    let result = tx.commit().unwrap();
+    drop(tx);
+    target.graph.assert_incremental_equals_full().unwrap();
+    result
+}
+
 fn close_scope(target: &mut Target) -> trellis_core::TransactionResult<Command, BTreeSet<u8>> {
     let mut tx = target.graph.begin_transaction().unwrap();
     tx.close_scope(target.scope).unwrap();
     let result = tx.commit().unwrap();
     drop(tx);
+    result
+}
+
+fn commit_noop(target: &mut Target) -> trellis_core::TransactionResult<Command, BTreeSet<u8>> {
+    let mut tx = target.graph.begin_transaction().unwrap();
+    let result = tx.commit().unwrap();
+    drop(tx);
+    target.graph.assert_incremental_equals_full().unwrap();
     result
 }
 
