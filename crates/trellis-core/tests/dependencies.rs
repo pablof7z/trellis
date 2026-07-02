@@ -89,3 +89,43 @@ fn graph_rejects_unknown_dependency() {
 
     assert_eq!(error, GraphError::UnknownNode(unknown.id()));
 }
+
+#[test]
+fn dependency_validation_handles_dense_shared_diamond_paths() {
+    let mut graph = Graph::new();
+    let mut tx = graph.begin_transaction().unwrap();
+    let input = tx.input::<usize>("input").unwrap();
+    tx.set_input(input, 1).unwrap();
+
+    let mut previous = input.id();
+    for layer in 0..22 {
+        let left = tx
+            .derived::<usize>(
+                format!("left-{layer}"),
+                DependencyList::new([previous]).unwrap(),
+                |_| Ok(1),
+            )
+            .unwrap();
+        let right = tx
+            .derived::<usize>(
+                format!("right-{layer}"),
+                DependencyList::new([previous]).unwrap(),
+                |_| Ok(1),
+            )
+            .unwrap();
+        let join = tx
+            .derived::<usize>(
+                format!("join-{layer}"),
+                DependencyList::new([left.id(), right.id()]).unwrap(),
+                |_| Ok(1),
+            )
+            .unwrap();
+        previous = join.id();
+    }
+
+    tx.derived::<usize>("consumer", DependencyList::new([previous]).unwrap(), |_| {
+        Ok(1)
+    })
+    .unwrap();
+    tx.commit().unwrap();
+}

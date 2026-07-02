@@ -55,6 +55,38 @@ fn closing_parent_closes_children_first_and_detaches_nodes() {
 }
 
 #[test]
+fn closing_deep_scope_chain_preserves_child_first_order() {
+    let mut graph = Graph::new();
+    let mut tx = graph.begin_transaction().unwrap();
+    let root = tx.create_scope("root").unwrap();
+    let mut deepest = root;
+    for index in 0..512 {
+        deepest = tx
+            .create_scope_with_parent(format!("scope-{index}"), Some(deepest))
+            .unwrap();
+    }
+    tx.commit().unwrap();
+    drop(tx);
+
+    let mut tx = graph.begin_transaction().unwrap();
+    tx.close_scope(root).unwrap();
+    let result = tx.commit().unwrap();
+    drop(tx);
+
+    let closed_scopes: Vec<_> = result
+        .audit_log
+        .iter()
+        .filter_map(|entry| match entry.event {
+            AuditEvent::ScopeClosed(scope) => Some(scope),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(closed_scopes.len(), 513);
+    assert_eq!(closed_scopes.first(), Some(&deepest));
+    assert_eq!(closed_scopes.last(), Some(&root));
+}
+
+#[test]
 fn closed_scope_rejects_new_children_nodes_and_resources() {
     let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
