@@ -36,7 +36,7 @@ fn board(projects: &BTreeSet<String>) -> Vec<String> {
 /// Built workspace-sync example graph and its public inputs.
 pub struct WorkspaceSyncExample {
     /// Example graph.
-    pub graph: Graph<SyncCommand, Vec<String>>,
+    pub graph: Graph<SyncCommand>,
     /// Active workspace canonical input.
     pub active_workspace: trellis_core::InputNode<Option<String>>,
     /// Permitted projects canonical input.
@@ -48,7 +48,7 @@ pub fn build_graph(
     active: Option<&str>,
     initial_grants: BTreeMap<String, BTreeSet<String>>,
 ) -> WorkspaceSyncExample {
-    let mut graph = Graph::<SyncCommand, Vec<String>>::new_with_command_type();
+    let mut graph = Graph::<SyncCommand>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("workspace").unwrap();
     let active_workspace = tx.input::<Option<String>>("active-workspace").unwrap();
@@ -151,7 +151,10 @@ mod tests {
         }));
         assert!(matches!(
             &result.output_frames[0].kind,
-            OutputFrameKind::Delta(rows) if rows == &vec!["a:ready".to_owned()]
+            OutputFrameKind::Delta(rows)
+                if rows
+                    .get::<Vec<String>>()
+                    .is_some_and(|rows| rows == &vec!["a:ready".to_owned()])
         ));
         example.graph.assert_incremental_equals_full().unwrap();
     }

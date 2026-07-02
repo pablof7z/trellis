@@ -84,7 +84,7 @@ impl<C> ResourceLedger<C> {
 
 impl<C: Clone> ResourceLedger<C> {
     /// Applies all resource commands from a transaction result.
-    pub fn apply_result<O>(&mut self, result: &TransactionResult<C, O>) {
+    pub fn apply_result(&mut self, result: &TransactionResult<C>) {
         self.command_trace.extend(result.trace().resource_commands);
         for command in result.resource_plan.commands() {
             self.apply_command(command, result.transaction_id, result.revision);

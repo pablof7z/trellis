@@ -82,3 +82,4 @@ What must be added so the decision is enforceable?
 - [ADR 0003: Shared-key open coalescing is explicit, and payload conflicts fail the commit](0003-shared-key-open-coalescing-and-payload-conflicts.md)
 - [ADR 0004: Scope teardown emits close commands in reverse acquisition order](0004-scope-teardown-closes-in-reverse-acquisition-order.md)
 - [ADR 0005: Scope close reclaims owned nodes](0005-scope-close-reclaims-owned-nodes.md)
+- [ADR 0006: Output payload types are per output](0006-output-payload-types-are-per-output.md)

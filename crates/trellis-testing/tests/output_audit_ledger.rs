@@ -15,7 +15,7 @@ enum Command {
 }
 
 struct TestGraph {
-    graph: Graph<Command, BTreeSet<u8>>,
+    graph: Graph<Command>,
     source: InputNode<BTreeSet<u8>>,
     collection: CollectionNode<u8, ()>,
     output: MaterializedOutput<BTreeSet<u8>>,
@@ -30,13 +30,8 @@ fn key(value: u8) -> ResourceKey {
     ResourceKey::new(format!("test:{value}"))
 }
 
-fn build_graph(
-    initial: BTreeSet<u8>,
-) -> (
-    TestGraph,
-    trellis_core::TransactionResult<Command, BTreeSet<u8>>,
-) {
-    let mut graph = Graph::<Command, BTreeSet<u8>>::new_with_command_type();
+fn build_graph(initial: BTreeSet<u8>) -> (TestGraph, trellis_core::TransactionResult<Command>) {
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
@@ -85,7 +80,7 @@ fn build_graph(
 fn set_source(
     target: &mut TestGraph,
     values: BTreeSet<u8>,
-) -> trellis_core::TransactionResult<Command, BTreeSet<u8>> {
+) -> trellis_core::TransactionResult<Command> {
     let mut tx = target.graph.begin_transaction().unwrap();
     tx.set_input(target.source, values).unwrap();
     let result = tx.commit().unwrap();
@@ -96,7 +91,7 @@ fn set_source(
 
 struct LedgerOracle;
 
-impl FullRecomputeOracle<OutputLedger<BTreeSet<u8>>> for LedgerOracle {
+impl FullRecomputeOracle<OutputLedger> for LedgerOracle {
     type CanonicalInputs = (OutputKey, BTreeSet<u8>);
     type ExpectedState = BTreeSet<u8>;
 
@@ -105,12 +100,12 @@ impl FullRecomputeOracle<OutputLedger<BTreeSet<u8>>> for LedgerOracle {
     }
 
     fn observe_incremental(
-        ledger: &OutputLedger<BTreeSet<u8>>,
+        ledger: &OutputLedger,
         inputs: &Self::CanonicalInputs,
     ) -> Self::ExpectedState {
         ledger
             .snapshot(inputs.0)
-            .and_then(|snapshot| snapshot.state.clone())
+            .and_then(|snapshot| snapshot.state_as::<BTreeSet<u8>>().cloned())
             .unwrap_or_default()
     }
 }
@@ -147,7 +142,10 @@ fn output_ledger_checks_revision_and_rebaseline_coherence() {
         .unwrap();
     assert!(matches!(
         &rebaseline.output_frames[0].kind,
-        OutputFrameKind::Rebaseline(value, _) if value == &members(&[1, 2])
+        OutputFrameKind::Rebaseline(value, _)
+            if value
+                .get::<BTreeSet<u8>>()
+                .is_some_and(|value| value == &members(&[1, 2]))
     ));
 
     let mut tx = target.graph.begin_transaction().unwrap();
@@ -167,7 +165,7 @@ fn output_ledger_checks_revision_and_rebaseline_coherence() {
         scope: target.scope,
         transaction_id: closed.transaction_id,
         revision: closed.revision,
-        kind: OutputFrameKind::Delta(members(&[9])),
+        kind: OutputFrameKind::delta(members(&[9])),
     };
     ledger.apply_frame(&bad_frame);
     let error = ledger

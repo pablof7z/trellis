@@ -15,12 +15,12 @@ enum AlphaCommand {
 }
 
 struct AlphaApp {
-    graph: Graph<AlphaCommand, BTreeSet<u8>>,
+    graph: Graph<AlphaCommand>,
     source: InputNode<BTreeSet<u8>>,
     allowed: InputNode<BTreeSet<u8>>,
     scope: ScopeId,
     output: MaterializedOutput<BTreeSet<u8>>,
-    initial: TransactionResult<AlphaCommand, BTreeSet<u8>>,
+    initial: TransactionResult<AlphaCommand>,
 }
 
 fn members(values: &[u8]) -> BTreeSet<u8> {
@@ -31,30 +31,26 @@ fn key(value: u8) -> ResourceKey {
     ResourceKey::new(format!("alpha:{value}"))
 }
 
-fn command_closes(result: &TransactionResult<AlphaCommand, BTreeSet<u8>>, value: u8) -> bool {
+fn command_closes(result: &TransactionResult<AlphaCommand>, value: u8) -> bool {
     result.resource_plan.commands().iter().any(|command| {
         matches!(command, ResourceCommand::Close { key: closed, .. } if closed == &key(value))
     })
 }
 
-fn apply_frames(
-    consumer: &mut Option<BTreeSet<u8>>,
-    result: &TransactionResult<AlphaCommand, BTreeSet<u8>>,
-) {
+fn apply_frames(consumer: &mut Option<BTreeSet<u8>>, result: &TransactionResult<AlphaCommand>) {
     for frame in &result.output_frames {
         match &frame.kind {
             OutputFrameKind::Baseline(value)
             | OutputFrameKind::Delta(value)
-            | OutputFrameKind::Rebaseline(value, _) => *consumer = Some(value.clone()),
+            | OutputFrameKind::Rebaseline(value, _) => {
+                *consumer = Some(value.get::<BTreeSet<u8>>().unwrap().clone())
+            }
             OutputFrameKind::Clear(_) => *consumer = None,
         }
     }
 }
 
-fn commit_source(
-    app: &mut AlphaApp,
-    next: BTreeSet<u8>,
-) -> TransactionResult<AlphaCommand, BTreeSet<u8>> {
+fn commit_source(app: &mut AlphaApp, next: BTreeSet<u8>) -> TransactionResult<AlphaCommand> {
     let mut tx = app.graph.begin_transaction().unwrap();
     tx.set_input(app.source, next).unwrap();
     let result = tx.commit().unwrap();
@@ -63,10 +59,7 @@ fn commit_source(
     result
 }
 
-fn commit_allowed(
-    app: &mut AlphaApp,
-    next: BTreeSet<u8>,
-) -> TransactionResult<AlphaCommand, BTreeSet<u8>> {
+fn commit_allowed(app: &mut AlphaApp, next: BTreeSet<u8>) -> TransactionResult<AlphaCommand> {
     let mut tx = app.graph.begin_transaction().unwrap();
     tx.set_input(app.allowed, next).unwrap();
     let result = tx.commit().unwrap();
@@ -110,7 +103,7 @@ fn alpha_trace_script() -> Vec<TransactionTrace> {
 }
 
 fn build_alpha(source_members: BTreeSet<u8>, allowed_members: BTreeSet<u8>) -> AlphaApp {
-    let mut graph = Graph::<AlphaCommand, BTreeSet<u8>>::new_with_command_type();
+    let mut graph = Graph::<AlphaCommand>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("alpha-session").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
@@ -211,7 +204,10 @@ fn alpha_catches_stale_derived_visibility_after_permission_shrink() {
     assert!(command_closes(&result, 2));
     assert!(matches!(
         &result.output_frames[0].kind,
-        OutputFrameKind::Delta(rows) if rows == &members(&[1])
+        OutputFrameKind::Delta(rows)
+            if rows
+                .get::<BTreeSet<u8>>()
+                .is_some_and(|rows| rows == &members(&[1]))
     ));
     let explanation = app.graph.why_resource_command(&key(2)).unwrap();
     assert_eq!(explanation.key, key(2));
@@ -280,5 +276,5 @@ fn alpha_catches_output_delta_sequence_that_disagrees_with_rebaseline() {
     let OutputFrameKind::Rebaseline(baseline, _) = &result.output_frames[0].kind else {
         panic!("expected rebaseline frame");
     };
-    assert_eq!(consumer.as_ref(), Some(baseline));
+    assert_eq!(consumer.as_ref(), baseline.get::<BTreeSet<u8>>());
 }

@@ -4,7 +4,7 @@ use crate::{
 };
 use std::collections::BTreeSet;
 
-impl<C, O> Graph<C, O> {
+impl<C> Graph<C> {
     pub(crate) fn produce_resource_plan(
         &mut self,
         closed_scopes: &[ScopeId],

@@ -5,14 +5,14 @@ use crate::input::value_type;
 use crate::{CollectionNode, DependencyList, Graph, GraphResult, NodeId, NodeKind, NodeMeta};
 use std::collections::{BTreeMap, BTreeSet};
 
-impl<C: 'static, O> Graph<C, O> {
+impl<C: 'static> Graph<C> {
     pub(crate) fn collection_map_direct<K, V>(
         &mut self,
         id: NodeId,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
         derive: impl for<'ctx> Fn(
-            &CollectionContext<'ctx, C, O>,
+            &CollectionContext<'ctx, C>,
         ) -> Result<BTreeMap<K, V>, crate::DeriveError>
         + Send
         + Sync
@@ -34,7 +34,7 @@ impl<C: 'static, O> Graph<C, O> {
         self.invalidate_topology_cache();
         self.nodes.insert(id, meta);
         self.collection_specs
-            .insert(id, CollectionSpec::<C, O>::map(derive));
+            .insert(id, CollectionSpec::<C>::map(derive));
         Ok(CollectionNode::new(id))
     }
 
@@ -44,7 +44,7 @@ impl<C: 'static, O> Graph<C, O> {
         debug_name: impl Into<String>,
         dependencies: DependencyList,
         derive: impl for<'ctx> Fn(
-            &CollectionContext<'ctx, C, O>,
+            &CollectionContext<'ctx, C>,
         ) -> Result<BTreeSet<K>, crate::DeriveError>
         + Send
         + Sync
@@ -65,7 +65,7 @@ impl<C: 'static, O> Graph<C, O> {
         self.invalidate_topology_cache();
         self.nodes.insert(id, meta);
         self.collection_specs
-            .insert(id, CollectionSpec::<C, O>::set(derive));
+            .insert(id, CollectionSpec::<C>::set(derive));
         Ok(CollectionNode::new(id))
     }
 }

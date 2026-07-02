@@ -140,8 +140,11 @@ fn replay_and_baseline_frames_are_coherent() {
     );
     assert!(matches!(
         &app.last_result().output_frames[0].kind,
-        OutputFrameKind::Rebaseline(snapshot, _) if snapshot.replay_epoch == 1
-            && snapshot.rows == vec![row("a", "1")]
+        OutputFrameKind::Rebaseline(snapshot, _)
+            if snapshot
+                .get::<FeedSnapshot>()
+                .is_some_and(|snapshot| snapshot.replay_epoch == 1
+                    && snapshot.rows == vec![row("a", "1")])
     ));
     app.assert_internal_oracle();
 }

@@ -11,9 +11,8 @@ enum Command {
     Open(u8),
 }
 
-type Output = BTreeSet<u8>;
-type ResultLog = Vec<TransactionResult<Command, Output>>;
-type TestAdapter = RecordingAdapter<Command, Output>;
+type ResultLog = Vec<TransactionResult<Command>>;
+type TestAdapter = RecordingAdapter<Command>;
 
 fn members(values: &[u8]) -> BTreeSet<u8> {
     values.iter().copied().collect()
@@ -23,11 +22,8 @@ fn key(value: u8) -> ResourceKey {
     ResourceKey::new(format!("n:{value}"))
 }
 
-fn build_graph() -> (
-    Graph<Command, Output>,
-    trellis_core::InputNode<BTreeSet<u8>>,
-) {
-    let mut graph = Graph::<Command, Output>::new_with_command_type();
+fn build_graph() -> (Graph<Command>, trellis_core::InputNode<BTreeSet<u8>>) {
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
@@ -63,10 +59,10 @@ fn build_graph() -> (
 }
 
 fn commit_members(
-    graph: &mut Graph<Command, Output>,
+    graph: &mut Graph<Command>,
     source: trellis_core::InputNode<BTreeSet<u8>>,
     values: &[u8],
-) -> TransactionResult<Command, Output> {
+) -> TransactionResult<Command> {
     let mut tx = graph.begin_transaction().unwrap();
     tx.set_input(source, members(values)).unwrap();
     let result = tx.commit().unwrap();
@@ -130,7 +126,7 @@ fn recording_adapter_consumes_the_cloned_result_payloads() {
     let expected_frames = results
         .iter()
         .flat_map(|result| result.output_frames.iter().cloned())
-        .collect::<Vec<OutputFrame<Output>>>();
+        .collect::<Vec<OutputFrame>>();
 
     assert_eq!(adapter.resource_sink().commands(), expected_commands);
     assert_eq!(adapter.output_sink().frames(), expected_frames);

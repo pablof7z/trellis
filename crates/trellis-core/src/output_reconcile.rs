@@ -1,13 +1,11 @@
+use crate::output_payload::StoredOutput;
 use crate::{
     ClearReason, Graph, GraphError, GraphResult, NodeId, OutputContext, OutputFrame,
     OutputFrameKind, OutputKey, RebaselineReason, Revision, ScopeId, TransactionId,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
-impl<C, O> Graph<C, O>
-where
-    O: Clone + PartialEq,
-{
+impl<C> Graph<C> {
     pub(crate) fn produce_output_frames(
         &mut self,
         changed_nodes: &[NodeId],
@@ -15,7 +13,7 @@ where
         rebaselines: &BTreeMap<OutputKey, RebaselineReason>,
         transaction_id: TransactionId,
         revision: Revision,
-    ) -> GraphResult<Vec<OutputFrame<O>>> {
+    ) -> GraphResult<Vec<OutputFrame>> {
         let mut frames = Vec::new();
         let cleared = self.clear_closed_scope_outputs(closed_scopes, transaction_id, revision);
         frames.extend(cleared);
@@ -60,7 +58,7 @@ where
         closed_scopes: &[ScopeId],
         transaction_id: TransactionId,
         revision: Revision,
-    ) -> Vec<OutputFrame<O>> {
+    ) -> Vec<OutputFrame> {
         let mut frames = Vec::new();
         for scope in closed_scopes {
             let keys: Vec<OutputKey> = self
@@ -91,7 +89,7 @@ where
         reason: RebaselineReason,
         transaction_id: TransactionId,
         revision: Revision,
-    ) -> GraphResult<OutputFrame<O>> {
+    ) -> GraphResult<OutputFrame> {
         let payload = self.compute_output(key)?;
         self.output_values.insert(key, payload.clone());
         let scope = self
@@ -104,7 +102,7 @@ where
             scope,
             transaction_id,
             revision,
-            kind: OutputFrameKind::Rebaseline(payload, reason),
+            kind: OutputFrameKind::rebaseline_from_stored(payload, reason),
         })
     }
 
@@ -113,7 +111,7 @@ where
         key: OutputKey,
         transaction_id: TransactionId,
         revision: Revision,
-    ) -> GraphResult<Option<OutputFrame<O>>> {
+    ) -> GraphResult<Option<OutputFrame>> {
         let previous = self.output_values.get(&key).cloned();
         let payload = self.compute_output(key)?;
         let meta = self
@@ -121,9 +119,9 @@ where
             .get(&key)
             .ok_or(GraphError::UnknownOutput(key))?;
         let kind = match previous {
-            None => OutputFrameKind::Baseline(payload.clone()),
-            Some(previous) if previous != payload || meta.options().emit_equal => {
-                OutputFrameKind::Delta(payload.clone())
+            None => OutputFrameKind::baseline_from_stored(payload.clone()),
+            Some(previous) if !previous.equals(payload.as_ref()) || meta.options().emit_equal => {
+                OutputFrameKind::delta_from_stored(payload.clone())
             }
             Some(_) => return Ok(None),
         };
@@ -137,7 +135,7 @@ where
         }))
     }
 
-    fn compute_output(&self, key: OutputKey) -> GraphResult<O> {
+    fn compute_output(&self, key: OutputKey) -> GraphResult<Box<dyn StoredOutput>> {
         let meta = self
             .outputs
             .get(&key)

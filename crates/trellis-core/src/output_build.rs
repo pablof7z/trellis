@@ -3,21 +3,21 @@ use crate::{
     OutputMeta, OutputOptions, RebaselineReason, Transaction, output::OutputSpec,
 };
 
-impl<C: 'static, O> Transaction<'_, C, O>
-where
-    O: Clone + PartialEq + 'static,
-{
+impl<C: 'static> Transaction<'_, C> {
     /// Stages creation of a materialized output with default options.
-    pub fn materialized_output(
+    pub fn materialized_output<T>(
         &mut self,
         debug_name: impl Into<String>,
         scope: crate::ScopeId,
         dependencies: DependencyList,
-        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, OutputError>
+        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C>) -> Result<T, OutputError>
         + Send
         + Sync
         + 'static,
-    ) -> GraphResult<MaterializedOutput<O>> {
+    ) -> GraphResult<MaterializedOutput<T>>
+    where
+        T: Clone + PartialEq + Send + Sync + 'static,
+    {
         self.materialized_output_with_options(
             debug_name,
             scope,
@@ -28,17 +28,20 @@ where
     }
 
     /// Stages creation of a materialized output with explicit options.
-    pub fn materialized_output_with_options(
+    pub fn materialized_output_with_options<T>(
         &mut self,
         debug_name: impl Into<String>,
         scope: crate::ScopeId,
         dependencies: DependencyList,
         options: OutputOptions,
-        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C, O>) -> Result<O, OutputError>
+        materialize: impl for<'ctx> Fn(&OutputContext<'ctx, C>) -> Result<T, OutputError>
         + Send
         + Sync
         + 'static,
-    ) -> GraphResult<MaterializedOutput<O>> {
+    ) -> GraphResult<MaterializedOutput<T>>
+    where
+        T: Clone + PartialEq + Send + Sync + 'static,
+    {
         self.ensure_open()?;
         self.working.require_scope_open(scope)?;
         let key = self.graph.allocate_output_key();
@@ -62,7 +65,7 @@ where
     }
 
     /// Stages an explicit output rebaseline.
-    pub fn rebaseline_output(&mut self, output: MaterializedOutput<O>) -> GraphResult<()> {
+    pub fn rebaseline_output<T>(&mut self, output: MaterializedOutput<T>) -> GraphResult<()> {
         self.ensure_open()?;
         let meta = self
             .working

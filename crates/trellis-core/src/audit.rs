@@ -5,7 +5,7 @@ use crate::{
     TransactionResult,
 };
 
-impl<C, O> Graph<C, O> {
+impl<C> Graph<C> {
     /// Returns the committed audit log.
     pub fn audit_log(&self) -> &[AuditEntry] {
         &self.audit.log
@@ -55,7 +55,7 @@ impl<C, O> Graph<C, O> {
         Ok(ScopeResourceInventory { scope, resources })
     }
 
-    pub(crate) fn record_transaction_audit(&mut self, result: &TransactionResult<C, O>) {
+    pub(crate) fn record_transaction_audit(&mut self, result: &TransactionResult<C>) {
         self.audit.log.extend(result.audit_log.iter().cloned());
         let changed_inputs = result.changed_inputs.clone();
         let changed_nodes = changed_nodes(result);
@@ -207,7 +207,7 @@ fn input_causes_from_paths(paths: &[Vec<NodeId>]) -> Vec<NodeId> {
     causes
 }
 
-fn changed_nodes<C, O>(result: &TransactionResult<C, O>) -> Vec<NodeId> {
+fn changed_nodes<C>(result: &TransactionResult<C>) -> Vec<NodeId> {
     let mut nodes = result.changed_inputs.clone();
     nodes.extend(result.changed_derived_nodes.iter().copied());
     nodes.extend(result.changed_collection_nodes.iter().copied());

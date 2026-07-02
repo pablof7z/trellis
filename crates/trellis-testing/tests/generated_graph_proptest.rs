@@ -45,7 +45,7 @@ fn run_script(script: &ModelScript) -> Vec<TransactionTrace> {
 }
 
 fn run_set_resource_script(script: &ModelScript) -> Vec<TransactionTrace> {
-    let mut graph = Graph::<Command, BTreeSet<u8>>::new_with_command_type();
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
@@ -110,10 +110,10 @@ fn run_set_resource_script(script: &ModelScript) -> Vec<TransactionTrace> {
 }
 
 fn apply_resource_result(
-    graph: &mut Graph<Command, BTreeSet<u8>>,
+    graph: &mut Graph<Command>,
     ledger: &mut ResourceLedger<Command>,
     output_revisions: &mut BTreeMap<trellis_core::OutputKey, trellis_core::Revision>,
-    result: &trellis_core::TransactionResult<Command, BTreeSet<u8>>,
+    result: &trellis_core::TransactionResult<Command>,
 ) {
     ledger.apply_result(result);
     ledger.assert_no_duplicate_close().unwrap();
@@ -125,7 +125,7 @@ fn apply_resource_result(
 }
 
 fn run_scalar_chain_script(script: &ModelScript) -> Vec<TransactionTrace> {
-    let mut graph = Graph::<(), usize>::new_with_output_type();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
@@ -175,7 +175,7 @@ fn run_scalar_chain_script(script: &ModelScript) -> Vec<TransactionTrace> {
     traces
 }
 
-fn assert_no_duplicate_closes(result: &trellis_core::TransactionResult<Command, BTreeSet<u8>>) {
+fn assert_no_duplicate_closes(result: &trellis_core::TransactionResult<Command>) {
     let mut closed = BTreeSet::new();
     for command in result.resource_plan.commands() {
         if let ResourceCommand::Close { key, .. } = command {
@@ -184,9 +184,9 @@ fn assert_no_duplicate_closes(result: &trellis_core::TransactionResult<Command, 
     }
 }
 
-fn assert_output_revisions_monotonic<O>(
+fn assert_output_revisions_monotonic(
     output_revisions: &mut BTreeMap<trellis_core::OutputKey, trellis_core::Revision>,
-    frames: &[OutputFrame<O>],
+    frames: &[OutputFrame],
 ) {
     for frame in frames {
         let previous = output_revisions

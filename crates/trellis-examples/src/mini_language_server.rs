@@ -62,7 +62,7 @@ fn diagnostics(files: &BTreeMap<String, String>, affected: &BTreeSet<String>) ->
 /// Built language-server example graph and its public input.
 pub struct MiniLanguageServerExample {
     /// Example graph.
-    pub graph: Graph<WatchCommand, Vec<String>>,
+    pub graph: Graph<WatchCommand>,
     /// Root file whose import closure is observed.
     pub open_file: trellis_core::InputNode<String>,
     /// File contents canonical input.
@@ -71,7 +71,7 @@ pub struct MiniLanguageServerExample {
 
 /// Builds the mini language-server proof graph.
 pub fn build_graph(initial_files: BTreeMap<String, String>) -> MiniLanguageServerExample {
-    let mut graph = Graph::<WatchCommand, Vec<String>>::new_with_command_type();
+    let mut graph = Graph::<WatchCommand>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("project").unwrap();
     let file_contents = tx
@@ -159,7 +159,10 @@ mod tests {
         );
         assert!(matches!(
             &result.output_frames[0].kind,
-            OutputFrameKind::Delta(diags) if diags.is_empty()
+            OutputFrameKind::Delta(diags)
+                if diags
+                    .get::<Vec<String>>()
+                    .is_some_and(Vec::is_empty)
         ));
         example.graph.assert_incremental_equals_full().unwrap();
     }
@@ -206,7 +209,10 @@ mod tests {
         );
         assert!(matches!(
             &result.output_frames[0].kind,
-            OutputFrameKind::Delta(diags) if diags == &vec!["c.tl: contains error".to_owned()]
+            OutputFrameKind::Delta(diags)
+                if diags
+                    .get::<Vec<String>>()
+                    .is_some_and(|diags| diags == &vec!["c.tl: contains error".to_owned()])
         ));
         example.graph.assert_incremental_equals_full().unwrap();
     }

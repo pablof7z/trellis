@@ -163,9 +163,8 @@ pub struct InvariantResultTrace {
 }
 
 /// Result returned by a committed input transaction.
-#[derive(Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct TransactionResult<C = (), O = ()> {
+#[derive(Clone, Debug, PartialEq)]
+pub struct TransactionResult<C = ()> {
     /// Committed transaction id.
     pub transaction_id: TransactionId,
     /// Graph revision after commit.
@@ -189,7 +188,7 @@ pub struct TransactionResult<C = (), O = ()> {
     /// Data-only resource commands produced by graph propagation.
     pub resource_plan: ResourcePlan<C>,
     /// Data-only materialized output frames produced by graph propagation.
-    pub output_frames: Vec<OutputFrame<O>>,
+    pub output_frames: Vec<OutputFrame>,
     /// Scope lifecycle events emitted by this transaction.
     pub scope_events: Vec<ScopeLifecycleTrace>,
     /// Deterministic audit entries for staged input writes.

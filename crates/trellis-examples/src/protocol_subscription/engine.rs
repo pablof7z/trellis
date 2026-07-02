@@ -14,7 +14,7 @@ use super::types::{
 
 /// Article feed wrapper whose public API does not expose Trellis types.
 pub struct ArticleFeedApp {
-    graph: Graph<ProtocolCommand, FeedSnapshot>,
+    graph: Graph<ProtocolCommand>,
     source_catalog: InputNode<SourceCatalog>,
     local_rows: InputNode<LocalRows>,
     next_handle: u64,
@@ -23,13 +23,13 @@ pub struct ArticleFeedApp {
     output_queues: BTreeMap<ArticleFeedHandle, VecDeque<ArticleFeedFrame>>,
     subscription_effects: VecDeque<SubscriptionEffect>,
     #[cfg(test)]
-    results: Vec<TransactionResult<ProtocolCommand, FeedSnapshot>>,
+    results: Vec<TransactionResult<ProtocolCommand>>,
 }
 
 impl ArticleFeedApp {
     /// Creates an empty wrapper with global source and local-row inputs.
     pub fn new() -> Self {
-        let mut graph = Graph::<ProtocolCommand, FeedSnapshot>::new_with_command_type();
+        let mut graph = Graph::<ProtocolCommand>::new_with_command_type();
         let mut tx = graph.begin_transaction().unwrap();
         let source_catalog = tx.input::<SourceCatalog>("source-catalog").unwrap();
         let local_rows = tx.input::<LocalRows>("local-rows").unwrap();
@@ -170,7 +170,7 @@ impl ArticleFeedApp {
             .unwrap_or_default()
     }
 
-    fn apply_result(&mut self, result: TransactionResult<ProtocolCommand, FeedSnapshot>) {
+    fn apply_result(&mut self, result: TransactionResult<ProtocolCommand>) {
         for command in result.resource_plan.commands() {
             match command {
                 ResourceCommand::Open {
@@ -197,13 +197,27 @@ impl ArticleFeedApp {
                 continue;
             };
             let frame = match &frame.kind {
-                OutputFrameKind::Baseline(snapshot) => {
-                    ArticleFeedFrame::Baseline(snapshot.rows.clone())
-                }
-                OutputFrameKind::Delta(snapshot) => ArticleFeedFrame::Delta(snapshot.rows.clone()),
-                OutputFrameKind::Rebaseline(snapshot, _) => {
-                    ArticleFeedFrame::Replay(snapshot.rows.clone())
-                }
+                OutputFrameKind::Baseline(snapshot) => ArticleFeedFrame::Baseline(
+                    snapshot
+                        .get::<FeedSnapshot>()
+                        .expect("feed output payload type")
+                        .rows
+                        .clone(),
+                ),
+                OutputFrameKind::Delta(snapshot) => ArticleFeedFrame::Delta(
+                    snapshot
+                        .get::<FeedSnapshot>()
+                        .expect("feed output payload type")
+                        .rows
+                        .clone(),
+                ),
+                OutputFrameKind::Rebaseline(snapshot, _) => ArticleFeedFrame::Replay(
+                    snapshot
+                        .get::<FeedSnapshot>()
+                        .expect("feed output payload type")
+                        .rows
+                        .clone(),
+                ),
                 OutputFrameKind::Clear(_) => ArticleFeedFrame::Cleared,
             };
             self.output_queues
@@ -217,7 +231,7 @@ impl ArticleFeedApp {
     }
 
     #[cfg(test)]
-    pub(super) fn last_result(&self) -> &TransactionResult<ProtocolCommand, FeedSnapshot> {
+    pub(super) fn last_result(&self) -> &TransactionResult<ProtocolCommand> {
         self.results
             .last()
             .expect("a transaction result was recorded")

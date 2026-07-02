@@ -55,7 +55,7 @@ pub struct CoreTransition<'a> {
 }
 
 pub(crate) struct CoreHarness {
-    pub(crate) graph: Graph<CoreCommand, CoreOutput>,
+    pub(crate) graph: Graph<CoreCommand>,
     inputs: InputNode<CanonicalInputs>,
     revisions: InputNode<BTreeMap<FilePath, Revision>>,
     source_files: CollectionNode<FilePath, ()>,
@@ -116,8 +116,8 @@ fn build_harness(
     inputs: &CanonicalInputs,
     analysis_revisions: &BTreeMap<FilePath, Revision>,
     full: &FullState,
-) -> (CoreHarness, TransactionResult<CoreCommand, CoreOutput>) {
-    let mut graph = Graph::<CoreCommand, CoreOutput>::new_with_command_type();
+) -> (CoreHarness, TransactionResult<CoreCommand>) {
+    let mut graph = Graph::<CoreCommand>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let workspace = tx
         .create_scope(format!("WorkspaceScope({})", inputs.active_branch))
@@ -173,7 +173,7 @@ fn build_harness(
 }
 
 fn source_collection(
-    tx: &mut trellis_core::Transaction<'_, CoreCommand, CoreOutput>,
+    tx: &mut trellis_core::Transaction<'_, CoreCommand>,
     inputs: InputNode<CanonicalInputs>,
 ) -> CollectionNode<FilePath, ()> {
     tx.set_collection(
@@ -185,7 +185,7 @@ fn source_collection(
 }
 
 fn desired_resources_collection(
-    tx: &mut trellis_core::Transaction<'_, CoreCommand, CoreOutput>,
+    tx: &mut trellis_core::Transaction<'_, CoreCommand>,
     inputs: InputNode<CanonicalInputs>,
     revisions: InputNode<BTreeMap<FilePath, Revision>>,
 ) -> CollectionNode<String, ()> {
@@ -203,7 +203,7 @@ fn desired_resources_collection(
 }
 
 fn create_file_scope(
-    tx: &mut trellis_core::Transaction<'_, CoreCommand, CoreOutput>,
+    tx: &mut trellis_core::Transaction<'_, CoreCommand>,
     inputs: InputNode<CanonicalInputs>,
     revisions: InputNode<BTreeMap<FilePath, Revision>>,
     source_files: CollectionNode<FilePath, ()>,
@@ -238,7 +238,7 @@ fn create_file_scope(
 }
 
 fn create_output(
-    tx: &mut trellis_core::Transaction<'_, CoreCommand, CoreOutput>,
+    tx: &mut trellis_core::Transaction<'_, CoreCommand>,
     inputs: InputNode<CanonicalInputs>,
     revisions: InputNode<BTreeMap<FilePath, Revision>>,
     source_files: CollectionNode<FilePath, ()>,

@@ -131,10 +131,10 @@ impl Scenario {
     }
 
     /// Records a committed transaction result under a stable step name.
-    pub fn record<C, O>(
+    pub fn record<C>(
         &mut self,
         name: impl Into<String>,
-        result: &TransactionResult<C, O>,
+        result: &TransactionResult<C>,
     ) -> Result<(), ScenarioError> {
         self.record_trace(name, result.trace())
     }

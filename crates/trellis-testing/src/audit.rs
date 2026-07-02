@@ -70,9 +70,9 @@ pub enum AuditAssertionError {
 }
 
 /// Asserts every resource command in a result has matching audit explanation.
-pub fn assert_no_unexplained_plan<C, O>(
-    graph: &Graph<C, O>,
-    result: &TransactionResult<C, O>,
+pub fn assert_no_unexplained_plan<C>(
+    graph: &Graph<C>,
+    result: &TransactionResult<C>,
 ) -> Result<(), AuditAssertionError> {
     for command in result.resource_plan.commands() {
         let context = resource_audit_context(command, result);
@@ -117,9 +117,9 @@ pub fn assert_no_unexplained_plan<C, O>(
 }
 
 /// Asserts every output frame in a result has matching audit explanation.
-pub fn assert_no_unexplained_output_frame<C, O>(
-    graph: &Graph<C, O>,
-    result: &TransactionResult<C, O>,
+pub fn assert_no_unexplained_output_frame<C>(
+    graph: &Graph<C>,
+    result: &TransactionResult<C>,
 ) -> Result<(), AuditAssertionError> {
     for frame in &result.output_frames {
         let context = output_audit_context(frame);
@@ -163,8 +163,8 @@ pub fn assert_no_unexplained_output_frame<C, O>(
 }
 
 /// Asserts that a deterministic dependency path exists in the graph.
-pub fn assert_dependency_path_exists<C, O>(
-    graph: &Graph<C, O>,
+pub fn assert_dependency_path_exists<C>(
+    graph: &Graph<C>,
     from: NodeId,
     to: NodeId,
 ) -> Result<(), AuditAssertionError> {
@@ -183,7 +183,7 @@ fn resource_command_kind<C>(command: &trellis_core::ResourceCommand<C>) -> Resou
     }
 }
 
-fn output_frame_kind<O>(kind: &OutputFrameKind<O>) -> OutputFrameKindTrace {
+fn output_frame_kind(kind: &OutputFrameKind) -> OutputFrameKindTrace {
     match kind {
         OutputFrameKind::Baseline(_) => OutputFrameKindTrace::Baseline,
         OutputFrameKind::Delta(_) => OutputFrameKindTrace::Delta,
@@ -192,9 +192,9 @@ fn output_frame_kind<O>(kind: &OutputFrameKind<O>) -> OutputFrameKindTrace {
     }
 }
 
-fn resource_audit_context<C, O>(
+fn resource_audit_context<C>(
     command: &trellis_core::ResourceCommand<C>,
-    result: &TransactionResult<C, O>,
+    result: &TransactionResult<C>,
 ) -> ResourceAuditContext {
     ResourceAuditContext {
         key: command.key().clone(),
@@ -205,7 +205,7 @@ fn resource_audit_context<C, O>(
     }
 }
 
-fn output_audit_context<O>(frame: &trellis_core::OutputFrame<O>) -> OutputAuditContext {
+fn output_audit_context(frame: &trellis_core::OutputFrame) -> OutputAuditContext {
     OutputAuditContext {
         key: frame.output_key,
         scope: frame.scope,
@@ -215,10 +215,10 @@ fn output_audit_context<O>(frame: &trellis_core::OutputFrame<O>) -> OutputAuditC
     }
 }
 
-fn resource_cause_is_explainable<C, O>(
+fn resource_cause_is_explainable<C>(
     explanation: &trellis_core::ResourceCommandExplanation,
     command: &trellis_core::ResourceCommand<C>,
-    result: &TransactionResult<C, O>,
+    result: &TransactionResult<C>,
 ) -> bool {
     match explanation.cause {
         trellis_core::ResourceCommandCause::Planner { collection } => {
@@ -231,9 +231,9 @@ fn resource_cause_is_explainable<C, O>(
     }
 }
 
-fn output_frame_is_explainable<C, O>(
+fn output_frame_is_explainable<C>(
     explanation: &trellis_core::OutputFrameExplanation,
-    result: &TransactionResult<C, O>,
+    result: &TransactionResult<C>,
 ) -> bool {
     if result.changed_inputs.is_empty() {
         return true;

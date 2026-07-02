@@ -19,7 +19,7 @@ fn key(value: u8) -> ResourceKey {
     ResourceKey::new(format!("n:{value}"))
 }
 
-fn assert_no_duplicate_closes(result: &trellis_core::TransactionResult<Command, BTreeSet<u8>>) {
+fn assert_no_duplicate_closes(result: &trellis_core::TransactionResult<Command>) {
     let mut closed = BTreeSet::new();
     for command in result.resource_plan.commands() {
         if let ResourceCommand::Close { key, .. } = command {
@@ -28,19 +28,19 @@ fn assert_no_duplicate_closes(result: &trellis_core::TransactionResult<Command, 
     }
 }
 
-fn apply_set_frame(state: &mut Option<BTreeSet<u8>>, kind: &OutputFrameKind<BTreeSet<u8>>) {
+fn apply_set_frame(state: &mut Option<BTreeSet<u8>>, kind: &OutputFrameKind) {
     match kind {
         OutputFrameKind::Baseline(value)
         | OutputFrameKind::Delta(value)
         | OutputFrameKind::Rebaseline(value, _) => {
-            *state = Some(value.clone());
+            *state = Some(value.get::<BTreeSet<u8>>().unwrap().clone());
         }
         OutputFrameKind::Clear(_) => *state = None,
     }
 }
 
 fn run_set_resource_script(script: &ModelScript) -> Vec<TransactionTrace> {
-    let mut graph = Graph::<Command, BTreeSet<u8>>::new_with_command_type();
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
@@ -112,7 +112,7 @@ fn run_set_resource_script(script: &ModelScript) -> Vec<TransactionTrace> {
 }
 
 fn run_scalar_chain_script(script: &ModelScript) -> Vec<TransactionTrace> {
-    let mut graph = Graph::<(), usize>::new_with_output_type();
+    let mut graph = Graph::<()>::new();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
@@ -202,7 +202,7 @@ fn generated_model_replay_is_deterministic() {
 
 #[test]
 fn output_delta_sequence_matches_later_rebaseline() {
-    let mut graph = Graph::<Command, BTreeSet<u8>>::new_with_command_type();
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
@@ -250,5 +250,5 @@ fn output_delta_sequence_matches_later_rebaseline() {
     let OutputFrameKind::Rebaseline(final_state, _) = &result.output_frames[0].kind else {
         panic!("expected rebaseline");
     };
-    assert_eq!(consumer.as_ref(), Some(final_state));
+    assert_eq!(consumer.as_ref(), final_state.get::<BTreeSet<u8>>());
 }

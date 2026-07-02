@@ -44,7 +44,7 @@ fn plan_added_removed(
 
 #[test]
 fn audit_explains_node_resource_and_output_changes() {
-    let mut graph = Graph::<Command, BTreeSet<String>>::new_with_command_type();
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<String>>("source").unwrap();

@@ -20,7 +20,7 @@ Create inputs for canonical facts, then create derived nodes from explicit
 dependencies:
 
 ```rust
-let mut graph = trellis_core::Graph::<Command, Output>::new_with_command_type();
+let mut graph = trellis_core::Graph::<Command>::new_with_command_type();
 let mut tx = graph.begin_transaction()?;
 let source = tx.input::<u32>("source")?;
 tx.set_input(source, 1)?;

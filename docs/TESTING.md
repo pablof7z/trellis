@@ -181,7 +181,7 @@ proptest   strategy helpers around Trellis model scripts
 insta      snapshot-friendly trace/debug output examples
 trybuild   compile-fail gate documentation; Trellis uses trybuild as a dev gate
 fuzz       shared helpers for cargo-fuzz targets outside normal cargo test
-serde      optional serialization for structural trace/result data
+serde      optional serialization for structural trace and script data
 ```
 
 `proptest`, `insta`, `trybuild`, and cargo-fuzz are optional tools. They should

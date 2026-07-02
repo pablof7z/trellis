@@ -4,10 +4,7 @@ use crate::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 
-impl<C: 'static, O> Transaction<'_, C, O>
-where
-    O: Clone + PartialEq + 'static,
-{
+impl<C: 'static> Transaction<'_, C> {
     /// Stages creation of a root scope with no parent.
     pub fn create_scope(&mut self, debug_name: impl Into<String>) -> GraphResult<ScopeId> {
         self.ensure_open()?;
@@ -81,7 +78,7 @@ where
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&DeriveContext<'ctx, C, O>) -> Result<T, DeriveError>
+        derive: impl for<'ctx> Fn(&DeriveContext<'ctx, C>) -> Result<T, DeriveError>
         + Send
         + Sync
         + 'static,
@@ -113,7 +110,7 @@ where
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeMap<K, V>, DeriveError>
+        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeMap<K, V>, DeriveError>
         + Send
         + Sync
         + 'static,
@@ -130,7 +127,7 @@ where
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeMap<K, V>, DeriveError>
+        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeMap<K, V>, DeriveError>
         + Send
         + Sync
         + 'static,
@@ -163,7 +160,7 @@ where
         &mut self,
         debug_name: impl Into<String>,
         dependencies: DependencyList,
-        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C, O>) -> Result<BTreeSet<K>, DeriveError>
+        derive: impl for<'ctx> Fn(&CollectionContext<'ctx, C>) -> Result<BTreeSet<K>, DeriveError>
         + Send
         + Sync
         + 'static,

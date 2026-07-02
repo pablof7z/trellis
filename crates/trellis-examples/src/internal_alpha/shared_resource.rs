@@ -5,7 +5,7 @@ use trellis_core::{DependencyList, Graph};
 
 #[test]
 fn alpha_catches_shared_resource_closing_before_last_owner() {
-    let mut graph = Graph::<AlphaCommand, BTreeSet<u8>>::new_with_command_type();
+    let mut graph = Graph::<AlphaCommand>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let first = tx.create_scope("first").unwrap();
     let second = tx.create_scope("second").unwrap();

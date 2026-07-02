@@ -12,18 +12,18 @@ enum Command {
 }
 
 struct TestGraph {
-    graph: Graph<Command, BTreeSet<u8>>,
+    graph: Graph<Command>,
     source: trellis_core::InputNode<BTreeSet<u8>>,
     output: trellis_core::MaterializedOutput<BTreeSet<u8>>,
     scope: ScopeId,
 }
 
-impl ScenarioTarget<Command, BTreeSet<u8>> for TestGraph {
-    fn graph(&self) -> &Graph<Command, BTreeSet<u8>> {
+impl ScenarioTarget<Command> for TestGraph {
+    fn graph(&self) -> &Graph<Command> {
         &self.graph
     }
 
-    fn graph_mut(&mut self) -> &mut Graph<Command, BTreeSet<u8>> {
+    fn graph_mut(&mut self) -> &mut Graph<Command> {
         &mut self.graph
     }
 }
@@ -49,7 +49,7 @@ fn build_target() -> TestGraph {
 }
 
 fn build_target_with_payload_adjustments(command_offset: u8, output_offset: u8) -> TestGraph {
-    let mut graph = Graph::<Command, BTreeSet<u8>>::new_with_command_type();
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();

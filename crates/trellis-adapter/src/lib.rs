@@ -22,12 +22,12 @@ pub trait ResourceCommandSink<C> {
 }
 
 /// Emits output frames outside graph propagation.
-pub trait OutputFrameSink<O> {
+pub trait OutputFrameSink {
     /// Error returned by the host sink.
     type Error;
 
     /// Emits one graph-produced output frame.
-    fn emit(&mut self, frame: OutputFrame<O>) -> Result<(), Self::Error>;
+    fn emit(&mut self, frame: OutputFrame) -> Result<(), Self::Error>;
 }
 
 /// Error returned while applying a transaction result through adapter sinks.
@@ -71,13 +71,13 @@ impl<ResourceSink, OutputSink> AdapterBoundary<ResourceSink, OutputSink> {
     }
 
     /// Consumes a transaction result by applying plans, then emitting frames.
-    pub fn apply_transaction<C, O>(
+    pub fn apply_transaction<C>(
         &mut self,
-        result: TransactionResult<C, O>,
+        result: TransactionResult<C>,
     ) -> Result<AdapterReceipt, AdapterError<ResourceSink::Error, OutputSink::Error>>
     where
         ResourceSink: ResourceCommandSink<C>,
-        OutputSink: OutputFrameSink<O>,
+        OutputSink: OutputFrameSink,
     {
         let trace = result.trace();
         let transaction_id = result.transaction_id;
@@ -152,37 +152,31 @@ impl<C> ResourceCommandSink<C> for RecordingResourceSink<C> {
 }
 
 /// In-memory output-frame sink for adapter tests and examples.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct RecordingOutputSink<O> {
-    frames: Vec<OutputFrame<O>>,
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct RecordingOutputSink {
+    frames: Vec<OutputFrame>,
 }
 
-impl<O> RecordingOutputSink<O> {
+impl RecordingOutputSink {
     /// Returns recorded frames in adapter emission order.
-    pub fn frames(&self) -> &[OutputFrame<O>] {
+    pub fn frames(&self) -> &[OutputFrame] {
         &self.frames
     }
 }
 
-impl<O> Default for RecordingOutputSink<O> {
-    fn default() -> Self {
-        Self { frames: Vec::new() }
-    }
-}
-
-impl<O> OutputFrameSink<O> for RecordingOutputSink<O> {
+impl OutputFrameSink for RecordingOutputSink {
     type Error = Infallible;
 
-    fn emit(&mut self, frame: OutputFrame<O>) -> Result<(), Self::Error> {
+    fn emit(&mut self, frame: OutputFrame) -> Result<(), Self::Error> {
         self.frames.push(frame);
         Ok(())
     }
 }
 
 /// Recording adapter boundary for tests and examples.
-pub type RecordingAdapter<C, O> = AdapterBoundary<RecordingResourceSink<C>, RecordingOutputSink<O>>;
+pub type RecordingAdapter<C> = AdapterBoundary<RecordingResourceSink<C>, RecordingOutputSink>;
 
-impl<C, O> Default for RecordingAdapter<C, O> {
+impl<C> Default for RecordingAdapter<C> {
     fn default() -> Self {
         Self::new(
             RecordingResourceSink::default(),

@@ -54,11 +54,8 @@ use trellis_core::{DependencyList, Graph};
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct Command;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct Output;
-
 fn main() -> trellis_core::GraphResult<()> {
-    let mut graph = Graph::<Command, Output>::new_with_command_type();
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction()?;
 
     let source = tx.input::<u32>("source")?;

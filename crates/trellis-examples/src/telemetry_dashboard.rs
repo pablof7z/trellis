@@ -38,7 +38,7 @@ fn cards(topics: &BTreeSet<String>) -> Vec<String> {
 /// Built telemetry-dashboard example graph, inputs, and panel scopes.
 pub struct TelemetryDashboardExample {
     /// Example graph.
-    pub graph: Graph<TopicCommand, Vec<String>>,
+    pub graph: Graph<TopicCommand>,
     /// Selected customer canonical input.
     pub selected_customer: trellis_core::InputNode<Option<String>>,
     /// Device index canonical input.
@@ -54,7 +54,7 @@ pub fn build_graph(
     selected: Option<&str>,
     devices: BTreeMap<String, BTreeMap<String, String>>,
 ) -> TelemetryDashboardExample {
-    let mut graph = Graph::<TopicCommand, Vec<String>>::new_with_command_type();
+    let mut graph = Graph::<TopicCommand>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let left_panel = tx.create_scope("left-panel").unwrap();
     let right_panel = tx.create_scope("right-panel").unwrap();
@@ -140,7 +140,10 @@ mod tests {
         }));
         assert!(matches!(
             &result.output_frames[0].kind,
-            OutputFrameKind::Delta(cards) if cards == &vec!["card:a".to_owned()]
+            OutputFrameKind::Delta(cards)
+                if cards
+                    .get::<Vec<String>>()
+                    .is_some_and(|cards| cards == &vec!["card:a".to_owned()])
         ));
 
         let mut tx = example.graph.begin_transaction().unwrap();

@@ -1,7 +1,7 @@
 use crate::{DependencyList, Graph, GraphError, GraphResult, NodeId, NodeKind};
 use std::collections::BTreeSet;
 
-impl<C, O> Graph<C, O> {
+impl<C> Graph<C> {
     pub(crate) fn validate_dependencies(
         &self,
         node_id: NodeId,

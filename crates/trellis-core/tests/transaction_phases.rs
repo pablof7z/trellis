@@ -1,8 +1,8 @@
 use std::collections::BTreeSet;
 
 use trellis_core::{
-    DependencyList, Graph, OutputError, OutputFrameKind, ResourceCommand, ResourceKey,
-    ResourcePlan, TransactionPhase,
+    DependencyList, Graph, OutputError, ResourceCommand, ResourceKey, ResourcePlan,
+    TransactionPhase,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -51,7 +51,7 @@ fn same_input_sequence_produces_same_phase_trace() {
 
 #[test]
 fn resource_plans_and_outputs_see_final_derived_state() {
-    let mut graph = Graph::<Command, String>::new_with_command_type();
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<String>("source").unwrap();
@@ -101,20 +101,20 @@ fn resource_plans_and_outputs_see_final_derived_state() {
         }]
     );
     assert_eq!(
-        result.output_frames[0].kind,
-        OutputFrameKind::Baseline("final:first".to_owned())
+        result.output_frames[0].kind.payload::<String>(),
+        Some(&"final:first".to_owned())
     );
 }
 
 #[test]
 fn failed_transaction_emits_no_partial_plans_or_frames() {
-    let mut graph = Graph::<Command, String>::new_with_command_type();
+    let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<String>("source").unwrap();
     tx.set_input(source, "ok".to_owned()).unwrap();
     let output = tx
-        .materialized_output(
+        .materialized_output::<String>(
             "output",
             scope,
             DependencyList::new([source.id()]).unwrap(),

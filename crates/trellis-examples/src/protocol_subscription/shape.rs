@@ -10,14 +10,11 @@ use super::types::{
 };
 
 pub(super) fn open_session(
-    graph: &mut Graph<ProtocolCommand, FeedSnapshot>,
+    graph: &mut Graph<ProtocolCommand>,
     source_catalog: InputNode<SourceCatalog>,
     local_rows: InputNode<LocalRows>,
     params: ArticleFeedParams,
-) -> (
-    InternalSession,
-    TransactionResult<ProtocolCommand, FeedSnapshot>,
-) {
+) -> (InternalSession, TransactionResult<ProtocolCommand>) {
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("article-feed-session").unwrap();
     let params_input = tx.input::<ArticleFeedParams>("session-params").unwrap();
