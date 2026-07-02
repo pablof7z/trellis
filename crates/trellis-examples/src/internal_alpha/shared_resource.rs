@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use super::{AlphaCommand, command_closes, key, members};
-use trellis_core::{DependencyList, Graph, ResourcePlan};
+use trellis_core::{DependencyList, Graph};
 
 #[test]
 fn alpha_catches_shared_resource_closing_before_last_owner() {
@@ -19,20 +19,12 @@ fn alpha_catches_shared_resource_closing_before_last_owner() {
         )
         .unwrap();
     for scope in [first, second] {
-        tx.set_resource_planner(demand, scope, move |ctx| {
-            let mut plan = ResourcePlan::new();
-            for added in &ctx.diff().added {
-                plan.open(
-                    key(added.value),
-                    ctx.scope(),
-                    AlphaCommand::Open(added.value),
-                );
-            }
-            for removed in &ctx.diff().removed {
-                plan.close(key(removed.value), ctx.scope());
-            }
-            Ok(plan)
-        })
+        tx.open_close_planner(
+            demand,
+            scope,
+            |value| key(*value),
+            |value| AlphaCommand::Open(*value),
+        )
         .unwrap();
     }
     tx.commit().unwrap();

@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use trellis_core::{DependencyList, Graph, ResourceKey, ResourcePlan};
+use trellis_core::{DependencyList, Graph, ResourceKey};
 
 /// Host command payload for topic subscriptions.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -88,20 +88,12 @@ pub fn build_graph(
         )
         .unwrap();
     for scope in [left_panel, right_panel] {
-        tx.set_resource_planner(topics, scope, move |ctx| {
-            let mut plan = ResourcePlan::new();
-            for added in &ctx.diff().added {
-                plan.open(
-                    key(&added.value),
-                    ctx.scope(),
-                    TopicCommand::Subscribe(added.value.clone()),
-                );
-            }
-            for removed in &ctx.diff().removed {
-                plan.close(key(&removed.value), ctx.scope());
-            }
-            Ok(plan)
-        })
+        tx.open_close_planner(
+            topics,
+            scope,
+            |topic| key(topic),
+            |topic| TopicCommand::Subscribe(topic.clone()),
+        )
         .unwrap();
     }
     tx.materialized_output(

@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use trellis_core::{DependencyList, Graph, ResourceKey, ResourcePlan};
+use trellis_core::{DependencyList, Graph, ResourceKey};
 
 /// Host command payload for workspace sync windows.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -80,20 +80,12 @@ pub fn build_graph(
             move |ctx| Ok(ctx.derived(projects)?.clone()),
         )
         .unwrap();
-    tx.set_resource_planner(windows, scope, move |ctx| {
-        let mut plan = ResourcePlan::new();
-        for added in &ctx.diff().added {
-            plan.open(
-                key(&added.value),
-                ctx.scope(),
-                SyncCommand::OpenWindow(added.value.clone()),
-            );
-        }
-        for removed in &ctx.diff().removed {
-            plan.close(key(&removed.value), ctx.scope());
-        }
-        Ok(plan)
-    })
+    tx.open_close_planner(
+        windows,
+        scope,
+        |project| key(project),
+        |project| SyncCommand::OpenWindow(project.clone()),
+    )
     .unwrap();
     tx.materialized_output(
         "issue-board",
