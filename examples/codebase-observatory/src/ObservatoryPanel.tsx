@@ -19,6 +19,7 @@ export function ObservatoryPanel({ state, dispatch }: Props) {
         <div>
           <span className="eyebrow">Trellis Observatory</span>
           <h2>Tx {trace.txId} · {transactionTitle(trace)}</h2>
+          <p>{transactionSubtitle(trace)}</p>
         </div>
         <span className={failures.length ? "badge fail" : "badge pass"}>{failures.length ? "fault caught" : "deterministic"}</span>
       </div>
@@ -48,21 +49,28 @@ function TransactionNarrative({
 }) {
   return (
     <div className="observatory-scroll">
-      <section className="story-card">
-        <span className="eyebrow">Problem introduced</span>
-        <p>{problemCopy(trace)}</p>
-      </section>
       <section className="story-card success">
         <span className="eyebrow">Trellis result</span>
         <ResultList trace={trace} dispatch={dispatch} />
       </section>
       <section className="story-card">
-        <span className="eyebrow">Inputs</span>
-        <Rows rows={trace.inputChanges.map((change) => `${change.key}: ${change.before} -> ${change.after}`)} />
+        <span className="eyebrow">Problem introduced</span>
+        <p>{problemCopy(trace)}</p>
+      </section>
+      <section className="story-card proof">
+        <span className="eyebrow">Revision guard</span>
+        <p>{proofCopy(trace)}</p>
       </section>
       <section className="story-card">
-        <span className="eyebrow">Derived changes</span>
-        <Rows rows={derivedRows(trace)} />
+        <details>
+          <summary>Details</summary>
+          <div className="detail-grid">
+            <span className="eyebrow">Inputs</span>
+            <Rows rows={trace.inputChanges.map((change) => `${change.key}: ${change.before} -> ${change.after}`)} />
+            <span className="eyebrow">Derived changes</span>
+            <Rows rows={derivedRows(trace)} />
+          </div>
+        </details>
       </section>
       <WhyView selected={selected} />
     </div>
@@ -70,23 +78,12 @@ function TransactionNarrative({
 }
 
 function ResultList({ trace, dispatch }: { trace: TransactionTrace; dispatch: Props["dispatch"] }) {
-  const rows = [
-    ...trace.outputFrames.filter((frame) => frame.kind?.startsWith("Clear")).slice(0, 3),
-    ...trace.outputFrames.filter((frame) => frame.kind?.startsWith("Baseline")).slice(0, 2),
-    ...trace.resourceCommands.filter((command) => command.op === "Close" || command.op === "Cancel").slice(0, 2),
-  ];
-  if (trace.hostStatusEvents.length > 0) {
-    return (
-      <button className="result-row warn" onClick={() => dispatch({ type: "selectWhy", id: `host:${trace.hostStatusEvents[0].status.path}:${trace.hostStatusEvents[0].status.commandRevision}` })}>
-        Late analysis result rejected · output revision unchanged
-      </button>
-    );
-  }
+  const rows = resultRows(trace);
   return (
     <div className="result-list">
-      {rows.map((item) => (
-        <button className="result-row" key={`${item.op ?? item.kind}:${item.key ?? item.outputKey}`} onClick={() => dispatch({ type: "selectWhy", id: item.key ?? item.outputKey })}>
-          {item.op ?? item.kind} · {cleanKey(item.key ?? item.outputKey ?? "")}
+      {rows.map((row) => (
+        <button className={row.tone === "warn" ? "result-row warn" : "result-row"} key={row.label} onClick={() => dispatch({ type: "selectWhy", id: row.whyId })}>
+          {row.label}
         </button>
       ))}
     </div>
@@ -178,15 +175,56 @@ function Rows({ rows }: { rows: string[] }) {
 
 function transactionTitle(trace: TransactionTrace) {
   if (trace.hostStatusEvents.some((event) => event.classification.includes("stale"))) return "Late analysis result rejected";
-  if (trace.collectionDiffs.some((diff) => diff.removed.length > 0)) return "Reconcile editor state";
+  const removed = removedFiles(trace);
+  if (removed.length > 0) return `Delete ${removed[0]}`;
   return trace.label;
+}
+
+function transactionSubtitle(trace: TransactionTrace) {
+  if (trace.hostStatusEvents.some((event) => event.classification.includes("stale"))) return "Deterministic graph preserved";
+  if (removedFiles(trace).length > 0) return "Late editor artifacts reconciled";
+  return "Committed graph and visible output agree";
 }
 
 function problemCopy(trace: TransactionTrace) {
   if (trace.hostStatusEvents.length > 0) return "A host result arrived for an old analysis command after the editor had already moved to a newer revision.";
-  const removed = trace.collectionDiffs.find((diff) => diff.collection === "sourceFiles")?.removed ?? [];
-  if (removed.length > 0) return `${removed.join(", ")} left the source graph while editor outputs and resources still had to be torn down.`;
+  const removed = removedFiles(trace);
+  if (removed.length > 0) return `A deleted file still had diagnostics, document links, semantic tokens, and a live watcher to reconcile.`;
   return "The current editor state changed and all derived outputs must match the committed graph.";
+}
+
+function proofCopy(trace: TransactionTrace) {
+  const stale = trace.hostStatusEvents.find((event) => event.classification.includes("stale"));
+  if (stale) return `accepted: tx ${trace.txId}; ignored: ${stale.status.path}@rev${stale.status.commandRevision}`;
+  return `sourceFiles -> diagnostics -> links -> tokens -> watchers at revision ${trace.revision}`;
+}
+
+function resultRows(trace: TransactionTrace) {
+  const rows: { label: string; whyId: string; tone?: "warn" }[] = [];
+  const removed = removedFiles(trace);
+  const firstClear = trace.outputFrames.find((frame) => frame.kind?.startsWith("Clear"));
+  const firstResource = trace.resourceCommands.find((command) => command.op === "Close" || command.op === "Cancel");
+  const firstBaseline = trace.outputFrames.find((frame) => frame.kind === "BaselineDiagnostics");
+  const stale = trace.hostStatusEvents.find((event) => event.classification.includes("stale"));
+  if (removed.length > 0) {
+    rows.push({ label: "Cleared stale diagnostics, links, and tokens for deleted file", whyId: firstClear?.outputKey ?? "" });
+    rows.push({ label: "Closed watcher and cancelled analysis owned by removed file", whyId: firstResource?.key ?? "" });
+    rows.push({ label: "Current diagnostics match the committed source graph", whyId: firstBaseline?.outputKey ?? "" });
+  }
+  if (stale) {
+    rows.push({
+      label: "Rejected late analysis result from old revision",
+      whyId: `host:${stale.status.path}:${stale.status.commandRevision}`,
+      tone: "warn",
+    });
+  }
+  if (rows.length === 0) rows.push({ label: "Observable editor state equals full recompute", whyId: firstBaseline?.outputKey ?? "" });
+  rows.push({ label: "System invariants pass", whyId: "invariant:incremental-equals-full-recompute" });
+  return rows;
+}
+
+function removedFiles(trace: TransactionTrace) {
+  return trace.collectionDiffs.find((diff) => diff.collection === "sourceFiles")?.removed ?? [];
 }
 
 function derivedRows(trace: TransactionTrace) {

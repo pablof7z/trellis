@@ -20,6 +20,12 @@
   font-weight: 760;
 }
 
+.observatory-head p {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
 .observatory-scroll {
   display: grid;
   align-content: start;
@@ -50,7 +56,7 @@
 
 .story-card.success {
   border-color: rgba(62, 207, 142, 0.24);
-  background: var(--success-bg);
+  background: linear-gradient(180deg, rgba(62, 207, 142, 0.14), rgba(62, 207, 142, 0.08));
 }
 
 .story-card.fail {
@@ -60,6 +66,47 @@
 
 .story-card.pass {
   border-color: rgba(62, 207, 142, 0.24);
+}
+
+.story-card.proof {
+  border-color: rgba(110, 168, 255, 0.22);
+  background: rgba(110, 168, 255, 0.07);
+}
+
+.story-card details {
+  display: grid;
+  gap: 10px;
+}
+
+.story-card summary {
+  height: auto;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+  padding: 0;
+}
+
+.story-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.story-card summary::before {
+  content: "▸";
+  margin-right: 7px;
+  color: var(--text-faint);
+}
+
+.story-card details[open] summary::before {
+  content: "▾";
+}
+
+.detail-grid {
+  display: grid;
+  gap: 8px;
+  padding-top: 10px;
 }
 
 .result-list,
@@ -78,14 +125,20 @@
 }
 
 .result-row {
+  grid-template-columns: 16px minmax(0, 1fr);
+  column-gap: 8px;
+  height: auto;
+  min-height: 36px;
+  padding: 7px 10px;
   border-color: transparent;
   background: rgba(62, 207, 142, 0.08);
   color: var(--text);
+  line-height: 1.25;
+  white-space: normal;
 }
 
 .result-row::before {
   content: "✓";
-  margin-right: 8px;
   color: var(--success);
 }
 

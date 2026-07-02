@@ -30,6 +30,8 @@
 }
 
 .folder-name {
+  display: flex;
+  gap: 6px;
   padding: 4px 8px;
   color: var(--text-muted);
   font-size: 12px;
@@ -113,8 +115,14 @@
   right: 14px;
   bottom: 14px;
   display: grid;
-  width: min(420px, 54%);
+  width: min(360px, 46%);
   gap: 8px;
+  pointer-events: none;
+}
+
+.line-diagnostics {
+  position: absolute;
+  inset: 0;
   pointer-events: none;
 }
 
@@ -127,6 +135,16 @@
   color: var(--text);
   font-size: 12px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.diag-row {
+  position: absolute;
+  left: min(470px, 54%);
+  max-width: 390px;
+  min-height: 25px;
+  padding: 5px 9px;
+  background: rgba(18, 22, 29, 0.74);
+  line-height: 1.25;
 }
 
 .diag-row span,
@@ -216,4 +234,23 @@
 .severity-dot {
   color: var(--danger);
   font-weight: 700;
+}
+
+.problems-table tbody tr {
+  cursor: pointer;
+}
+
+.problems-table tbody tr:hover {
+  background: rgba(110, 168, 255, 0.06);
+}
+
+.diagnostic-squiggle {
+  text-decoration: underline wavy var(--danger);
+  text-underline-offset: 3px;
+}
+
+.diagnostic-glyph::before {
+  content: "●";
+  color: var(--danger);
+  font-size: 11px;
 }

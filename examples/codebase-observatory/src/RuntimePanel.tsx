@@ -31,7 +31,7 @@ export function RuntimePanel({ state }: { state: AppState }) {
           <tbody>
             {flattenDiagnostics(state).map((d) => (
               <tr key={d.id}>
-                <td><span className="severity-dot">Error</span></td>
+                <td><span className="severity-dot">●</span> Error</td>
                 <td>{d.filePath}</td>
                 <td>{d.line}</td>
                 <td>{formatMessage(d.message)}</td>

@@ -74,7 +74,7 @@ function Folder({
 }) {
   return (
     <div className="folder">
-      <div className="folder-name">{name}/</div>
+      <div className="folder-name"><span>▾</span>{name}/</div>
       {rows.map((row) => (
         <button
           className={row.path === active ? "tree-row active" : "tree-row"}
@@ -82,7 +82,7 @@ function Folder({
           onClick={() => dispatch({ type: "openFile", path: row.path })}
         >
           <span className="file-name">{row.name}</span>
-          {row.diagnosticCount > 0 && <span className="file-meta danger">{row.diagnosticCount} errors</span>}
+          {row.diagnosticCount > 0 && <span className="file-meta danger">{plural(row.diagnosticCount, "error")}</span>}
         </button>
       ))}
     </div>
@@ -107,4 +107,8 @@ function latestRemovedFiles(state: AppState) {
 
 function basename(path: string) {
   return path.split("/").pop() ?? path;
+}
+
+function plural(count: number, noun: string) {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
