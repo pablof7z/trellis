@@ -30,6 +30,11 @@ fn app_step_strategy() -> impl Strategy<Value = AppStep> {
 }
 
 proptest! {
+    #![proptest_config(ProptestConfig {
+        failure_persistence: None,
+        ..ProptestConfig::default()
+    })]
+
     #[test]
     fn generic_sequence_helpers_are_debuggable(seq in model_sequence_strategy(app_step_strategy(), 1..=8)) {
         prop_assert!(!seq.is_empty());
