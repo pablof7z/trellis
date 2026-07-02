@@ -266,6 +266,7 @@ where
             invariant_results: Vec::new(),
         };
         self.working.record_transaction_audit(&result);
+        self.working.reclaim_closed_scopes(&closed_scopes);
         std::mem::swap(self.graph, &mut self.working);
         self.close();
         Ok(result)

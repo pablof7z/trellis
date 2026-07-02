@@ -59,14 +59,9 @@ facts.
 External resource leaks are usually lifetime bugs. Trellis treats scope as a
 semantic owner, not a convenience label.
 
-Closing a scope must close owned resources, clear owned outputs, detach scoped
+Closing a scope must close owned resources, clear owned outputs, reclaim scoped
 nodes, and leave no orphan resource ownership. Shared resources stay alive while
 another scope still owns them and close when the last owner leaves.
-
-Note "detach", not "remove": today, detached nodes retain their values and
-keep recomputing. The intent is full reclamation
-([#126](https://github.com/pablof7z/trellis/issues/126)). Scope ownership is
-currently stronger for resources and outputs than for nodes.
 
 ## Why Outputs Are Frames
 

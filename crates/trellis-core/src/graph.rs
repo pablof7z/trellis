@@ -20,6 +20,7 @@ pub struct Graph<C = (), O = ()> {
     pub(crate) revision: Revision,
     pub(crate) nodes: BTreeMap<NodeId, NodeMeta>,
     pub(crate) scopes: BTreeMap<ScopeId, ScopeMeta>,
+    pub(crate) scope_children: BTreeMap<ScopeId, BTreeSet<ScopeId>>,
     pub(crate) input_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
     pub(crate) derived_specs: BTreeMap<NodeId, DerivedSpec<C, O>>,
     pub(crate) derived_values: BTreeMap<NodeId, Box<dyn StoredInput>>,
@@ -48,6 +49,7 @@ impl<C, O> Graph<C, O> {
             revision: Revision::default(),
             nodes: BTreeMap::new(),
             scopes: BTreeMap::new(),
+            scope_children: BTreeMap::new(),
             input_values: BTreeMap::new(),
             derived_specs: BTreeMap::new(),
             derived_values: BTreeMap::new(),
@@ -111,6 +113,9 @@ impl<C, O> Graph<C, O> {
 
         self.scopes
             .insert(id, ScopeMeta::new(id, debug_name, parent));
+        if let Some(parent) = parent {
+            self.scope_children.entry(parent).or_default().insert(id);
+        }
         Ok(id)
     }
 

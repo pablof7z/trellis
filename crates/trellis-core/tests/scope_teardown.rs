@@ -18,7 +18,7 @@ fn set(entries: &[&str]) -> BTreeSet<String> {
 }
 
 #[test]
-fn closing_parent_closes_children_first_and_detaches_nodes() {
+fn closing_parent_closes_children_first_and_reclaims_nodes_and_scopes() {
     let mut graph = Graph::new();
     let mut tx = graph.begin_transaction().unwrap();
     let root = tx.create_scope("root").unwrap();
@@ -47,11 +47,15 @@ fn closing_parent_closes_children_first_and_detaches_nodes() {
         })
         .collect();
     assert_eq!(closed_scopes, vec![grandchild, child, root]);
-    assert!(graph.scope_meta(root).unwrap().is_closed());
-    assert!(graph.scope_meta(child).unwrap().is_closed());
-    assert!(graph.scope_meta(grandchild).unwrap().is_closed());
-    assert_eq!(graph.node_meta(root_node).unwrap().owning_scope(), None);
-    assert_eq!(graph.node_meta(child_node).unwrap().owning_scope(), None);
+    assert!(graph.scope_meta(root).is_none());
+    assert!(graph.scope_meta(child).is_none());
+    assert!(graph.scope_meta(grandchild).is_none());
+    assert!(graph.node_meta(root_node).is_none());
+    assert!(graph.node_meta(child_node).is_none());
+    assert_eq!(
+        graph.input_value(root_node).unwrap_err(),
+        GraphError::UnknownNode(root_node.id())
+    );
 }
 
 #[test]
@@ -106,7 +110,7 @@ fn closed_scope_rejects_new_children_nodes_and_resources() {
     assert_eq!(
         tx.create_scope_with_parent("child", Some(scope))
             .unwrap_err(),
-        GraphError::ScopeAlreadyClosed(scope)
+        GraphError::UnknownScope(scope)
     );
     drop(tx);
 
@@ -114,7 +118,7 @@ fn closed_scope_rejects_new_children_nodes_and_resources() {
     let node = tx.input::<String>("node").unwrap();
     assert_eq!(
         tx.attach_node_to_scope(node, scope).unwrap_err(),
-        GraphError::ScopeAlreadyClosed(scope)
+        GraphError::UnknownScope(scope)
     );
     drop(tx);
 
@@ -122,7 +126,7 @@ fn closed_scope_rejects_new_children_nodes_and_resources() {
     assert_eq!(
         tx.set_resource_planner(collection, scope, |_| Ok(ResourcePlan::new()))
             .unwrap_err(),
-        GraphError::ScopeAlreadyClosed(scope)
+        GraphError::UnknownScope(scope)
     );
 }
 

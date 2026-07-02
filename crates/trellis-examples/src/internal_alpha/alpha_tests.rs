@@ -4,9 +4,9 @@ use std::collections::BTreeSet;
 mod shared_resource;
 
 use trellis_core::{
-    DependencyList, Graph, InputNode, MaterializedOutput, OutputFrameKind, ResourceCommand,
-    ResourceCommandKind, ResourceKey, ScopeId, TransactionResult, TransactionTrace,
-    assert_transaction_traces_match,
+    DependencyList, Graph, GraphError, InputNode, MaterializedOutput, OutputFrameKind,
+    ResourceCommand, ResourceCommandKind, ResourceKey, ScopeId, TransactionResult,
+    TransactionTrace, assert_transaction_traces_match,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -99,12 +99,9 @@ fn alpha_trace_script() -> Vec<TransactionTrace> {
     let result = tx.commit().unwrap();
     drop(tx);
     assert!(command_closes(&result, 3));
-    assert!(
-        app.graph
-            .scope_resource_inventory(app.scope)
-            .unwrap()
-            .resources
-            .is_empty()
+    assert_eq!(
+        app.graph.scope_resource_inventory(app.scope).unwrap_err(),
+        GraphError::UnknownScope(app.scope)
     );
     app.graph.assert_incremental_equals_full().unwrap();
     traces.push(result.trace());
@@ -252,12 +249,9 @@ fn alpha_catches_scope_close_leaking_resources_or_output() {
             .iter()
             .any(|frame| matches!(frame.kind, OutputFrameKind::Clear(_)))
     );
-    assert!(
-        app.graph
-            .scope_resource_inventory(app.scope)
-            .unwrap()
-            .resources
-            .is_empty()
+    assert_eq!(
+        app.graph.scope_resource_inventory(app.scope).unwrap_err(),
+        GraphError::UnknownScope(app.scope)
     );
     assert!(app.graph.orphan_resources().is_empty());
     app.graph.assert_incremental_equals_full().unwrap();

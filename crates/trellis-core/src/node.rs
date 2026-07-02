@@ -197,12 +197,6 @@ impl NodeMeta {
         self.owning_scope = Some(scope);
     }
 
-    pub(crate) fn detach_scope(&mut self, scope: ScopeId) {
-        if self.owning_scope == Some(scope) {
-            self.owning_scope = None;
-        }
-    }
-
     pub(crate) fn value_type(&self) -> Option<TypeId> {
         self.value_type
     }
