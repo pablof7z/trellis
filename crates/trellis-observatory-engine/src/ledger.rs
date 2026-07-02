@@ -1,6 +1,6 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
-use crate::types::{OutputFrame, OutputLedger, ResourceCommand, ResourceLedgerEntry, Revision};
+use crate::types::{OutputFrame, OutputLedger, ResourceCommand, ResourceLedgerEntry};
 
 pub fn empty_output_ledger() -> OutputLedger {
     OutputLedger {
@@ -99,65 +99,5 @@ pub fn apply_output_frames(ledger: &mut OutputLedger, frames: &[OutputFrame]) {
                 _ => {}
             }
         }
-    }
-}
-
-pub fn resource_commands(
-    before: &[String],
-    after: &[String],
-    revision: Revision,
-    label: &str,
-) -> Vec<ResourceCommand> {
-    let before = before.iter().cloned().collect::<BTreeSet<_>>();
-    let after = after.iter().cloned().collect::<BTreeSet<_>>();
-    let mut commands = Vec::new();
-    for key in before.difference(&after) {
-        commands.push(command(close_op(key), key, revision, label));
-    }
-    for key in after.difference(&before) {
-        commands.push(command("Open", key, revision, label));
-    }
-    commands.sort_by(|a, b| a.key.cmp(&b.key).then(a.op.cmp(&b.op)));
-    commands
-}
-
-fn close_op(key: &str) -> &'static str {
-    if key.starts_with("AnalysisJob(") {
-        "Cancel"
-    } else {
-        "Close"
-    }
-}
-
-fn command(op: &str, key: &str, revision: Revision, label: &str) -> ResourceCommand {
-    ResourceCommand {
-        op: op.to_owned(),
-        key: key.to_owned(),
-        old_key: None,
-        new_key: None,
-        scope: scope_for(key),
-        command_revision: revision,
-        policy: None,
-        cause: crate::compute::cause(
-            "files/config/hostStatuses",
-            label,
-            "resourcePlan",
-            "resource demand reconciled against desired graph",
-        ),
-    }
-}
-
-fn scope_for(key: &str) -> String {
-    let path = key
-        .split_once('(')
-        .and_then(|(_, rest)| rest.split_once(')').map(|(inner, _)| inner))
-        .unwrap_or("workspace")
-        .split_once("@rev")
-        .map(|(path, _)| path)
-        .unwrap_or("workspace");
-    if key.starts_with("WorkspaceIndex(") {
-        format!("WorkspaceScope({path})")
-    } else {
-        format!("FileScope({path})")
     }
 }

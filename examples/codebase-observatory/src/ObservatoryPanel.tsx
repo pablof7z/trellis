@@ -196,7 +196,8 @@ function problemCopy(trace: TransactionTrace) {
 function proofCopy(trace: TransactionTrace) {
   const stale = trace.hostStatusEvents.find((event) => event.classification.includes("stale"));
   if (stale) return `accepted: tx ${trace.txId}; ignored: ${stale.status.path}@rev${stale.status.commandRevision}`;
-  return `sourceFiles -> diagnostics -> links -> tokens -> watchers at revision ${trace.revision}`;
+  const core = trace.coreBacked ? `trellis-core tx ${trace.coreTransactionId} -> rev ${trace.coreRevision}` : "simulator trace";
+  return `${core}; sourceFiles -> diagnostics -> links -> tokens -> watchers`;
 }
 
 function resultRows(trace: TransactionTrace) {

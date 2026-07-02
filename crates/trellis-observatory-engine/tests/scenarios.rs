@@ -29,6 +29,30 @@ fn delete_file_trellis_passes_and_clears_outputs() {
 }
 
 #[test]
+fn delete_file_trace_is_backed_by_trellis_core() {
+    let state = dispatch_action(
+        initial_app_state(),
+        Action::DeleteFile {
+            path: "src/legacy_user.tl".to_owned(),
+        },
+    );
+    let last = state.traces.last().unwrap();
+    assert!(last.core_backed);
+    assert!(last.core_transaction_id.is_some());
+    assert!(last.core_revision.is_some());
+    assert!(
+        last.audit_edges
+            .iter()
+            .any(|edge| edge.starts_with("trellis-core::ProduceResourcePlans"))
+    );
+    assert!(
+        last.resource_commands
+            .iter()
+            .all(|command| command.cause.input_key == "trellis-core transaction")
+    );
+}
+
+#[test]
 fn delete_file_naive_fails_with_stale_diagnostics_and_watcher() {
     let mut state = initial_app_state();
     state.mode = "naive".to_owned();
