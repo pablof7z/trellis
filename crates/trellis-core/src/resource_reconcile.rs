@@ -1,6 +1,6 @@
 use crate::{
-    Graph, GraphError, GraphResult, ResourceCommand, ResourceCommandCause, ResourceKey,
-    ResourcePlan, ScopeId,
+    Graph, GraphError, GraphResult, ResourceCommand, ResourceCommandCause, ResourceCommandKind,
+    ResourceKey, ResourcePlan, ScopeId,
 };
 use std::collections::BTreeSet;
 
@@ -69,7 +69,7 @@ impl<C, O> Graph<C, O> {
                 command,
             } => {
                 self.require_scope_open(scope)?;
-                self.require_resource_owner(&key, scope)?;
+                self.require_resource_owner(&key, scope, ResourceCommandKind::Replace)?;
                 self.resource_owners
                     .entry(key.clone())
                     .or_default()
@@ -84,7 +84,7 @@ impl<C, O> Graph<C, O> {
                 command,
             } => {
                 self.require_scope_open(scope)?;
-                self.require_resource_owner(&key, scope)?;
+                self.require_resource_owner(&key, scope, ResourceCommandKind::Refresh)?;
                 self.resource_owners
                     .entry(key.clone())
                     .or_default()
@@ -143,12 +143,25 @@ impl<C, O> Graph<C, O> {
         }
     }
 
-    fn require_resource_owner(&self, key: &ResourceKey, scope: ScopeId) -> GraphResult<()> {
+    fn require_resource_owner(
+        &self,
+        key: &ResourceKey,
+        scope: ScopeId,
+        command_kind: ResourceCommandKind,
+    ) -> GraphResult<()> {
         let Some(owners) = self.resource_owners.get(key) else {
-            return Err(GraphError::ResourceNotOwned);
+            return Err(GraphError::ResourceNotOwned {
+                key: key.clone(),
+                scope,
+                command_kind,
+            });
         };
         if !owners.contains(&scope) {
-            return Err(GraphError::ResourceNotOwned);
+            return Err(GraphError::ResourceNotOwned {
+                key: key.clone(),
+                scope,
+                command_kind,
+            });
         }
         Ok(())
     }

@@ -1,5 +1,8 @@
-use crate::{Graph, GraphError, GraphResult, NodeId, OutputKey, ResourceKey};
-use std::collections::BTreeMap;
+use crate::{
+    FullRecomputeOutputMismatch, FullRecomputeResourceMismatch, Graph, GraphError, GraphResult,
+    NodeId, OutputKey, ResourceKey, ScopeId,
+};
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Result of comparing incremental graph state against full recompute.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -96,12 +99,10 @@ impl<C, O: Clone> Graph<C, O> {
             .collect();
         full.baseline_collection_diffs(&planner_collections);
         full.produce_resource_plan(&[])?;
-        if self.resource_owners != full.resource_owners {
-            let node = planner_collections
-                .into_iter()
-                .next()
-                .unwrap_or_else(|| NodeId::from_index(1));
-            return Err(GraphError::FullRecomputeMismatch(node));
+        if let Some(mismatch) =
+            first_resource_owner_mismatch(&self.resource_owners, &full.resource_owners)
+        {
+            return Err(GraphError::FullRecomputeResourceMismatch(mismatch));
         }
         Ok(self.resource_owners.keys().cloned().collect())
     }
@@ -121,15 +122,64 @@ impl<C, O: Clone> Graph<C, O> {
             self.next_transaction_id,
             self.revision,
         )?;
-        if self.output_values != full.output_values {
-            let node = self
-                .outputs
-                .values()
-                .flat_map(|meta| meta.dependencies().as_slice().iter().copied())
-                .next()
-                .unwrap_or_else(|| NodeId::from_index(1));
-            return Err(GraphError::FullRecomputeMismatch(node));
+        if let Some(mismatch) =
+            first_output_value_mismatch(&self.output_values, &full.output_values)
+        {
+            return Err(GraphError::FullRecomputeOutputMismatch(mismatch));
         }
         Ok(self.output_values.keys().copied().collect())
     }
+}
+
+fn first_resource_owner_mismatch(
+    incremental: &BTreeMap<ResourceKey, BTreeSet<ScopeId>>,
+    recomputed: &BTreeMap<ResourceKey, BTreeSet<ScopeId>>,
+) -> Option<FullRecomputeResourceMismatch> {
+    let keys: BTreeSet<ResourceKey> = incremental
+        .keys()
+        .chain(recomputed.keys())
+        .cloned()
+        .collect();
+    for key in keys {
+        let incremental_owners = owner_vec(incremental.get(&key));
+        let recomputed_owners = owner_vec(recomputed.get(&key));
+        if incremental_owners != recomputed_owners {
+            return Some(FullRecomputeResourceMismatch {
+                key,
+                incremental_owners,
+                recomputed_owners,
+            });
+        }
+    }
+    None
+}
+
+fn owner_vec(owners: Option<&BTreeSet<ScopeId>>) -> Vec<ScopeId> {
+    owners
+        .into_iter()
+        .flat_map(|owners| owners.iter().copied())
+        .collect()
+}
+
+fn first_output_value_mismatch<O: PartialEq>(
+    incremental: &BTreeMap<OutputKey, O>,
+    recomputed: &BTreeMap<OutputKey, O>,
+) -> Option<FullRecomputeOutputMismatch> {
+    let keys: BTreeSet<OutputKey> = incremental
+        .keys()
+        .chain(recomputed.keys())
+        .copied()
+        .collect();
+    for key in keys {
+        let incremental_value = incremental.get(&key);
+        let recomputed_value = recomputed.get(&key);
+        if incremental_value != recomputed_value {
+            return Some(FullRecomputeOutputMismatch {
+                key,
+                incremental_present: incremental_value.is_some(),
+                recomputed_present: recomputed_value.is_some(),
+            });
+        }
+    }
+    None
 }

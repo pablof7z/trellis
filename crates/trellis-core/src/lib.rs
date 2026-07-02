@@ -61,7 +61,8 @@ pub use collection_diff::{Added, MapDiff, Removed, SetDiff, Unchanged, Updated};
 pub use dependency::DependencyList;
 pub use derive::{DeriveContext, DeriveError};
 pub use error::{
-    ErrorAuditEvent, ErrorCategory, ErrorTarget, GraphError, GraphResult, OutputError, PlanError,
+    ErrorAuditEvent, ErrorCategory, ErrorTarget, FullRecomputeOutputMismatch,
+    FullRecomputeResourceMismatch, GraphError, GraphResult, OutputError, PlanError,
 };
 pub use graph::Graph;
 pub use host_status::{HostResourceOutcome, HostResourceStatus};
