@@ -6,16 +6,18 @@ import { ProjectExplorer } from "./ProjectExplorer";
 import { RuntimePanel } from "./RuntimePanel";
 import { ObservatoryPanel } from "./ObservatoryPanel";
 
+const showcaseStepIndex = 1;
+
 export default function App() {
   const [engine, setEngine] = useState<EngineApi | null>(null);
   const [state, setState] = useState<AppState | null>(null);
-  const [scenarioIndex, setScenarioIndex] = useState(0);
+  const [scenarioIndex, setScenarioIndex] = useState(showcaseStepIndex);
   const [faultsOpen, setFaultsOpen] = useState(false);
 
   useEffect(() => {
     loadEngine().then((api) => {
       setEngine(api);
-      setState(api.initialState());
+      setState(showcaseState(api));
     });
   }, []);
 
@@ -31,8 +33,9 @@ export default function App() {
   };
 
   const reset = () => {
-    dispatch({ type: "reset" });
-    setScenarioIndex(0);
+    if (!engine) return;
+    setState(showcaseState(engine));
+    setScenarioIndex(showcaseStepIndex);
   };
 
   const replayTrace = () => {
@@ -52,7 +55,7 @@ export default function App() {
 
   const trace = latestTrace(state);
   const diagnostics = flattenDiagnostics(state);
-  const currentStep = scenarioSteps[Math.min(scenarioIndex, scenarioSteps.length - 1)];
+  const scenarioText = scenarioStatus(scenarioIndex);
 
   return (
     <main className="app-shell">
@@ -66,7 +69,7 @@ export default function App() {
         <div className="status-strip">
           <span className={`mode ${state.mode}`}>{state.mode === "trellis" ? "Trellis active" : "Naive callbacks"}</span>
           <span className={failures.length ? "badge fail" : "badge pass"}>
-            {failures.length ? `${failures.length} invariant failures` : "All invariants pass"}
+            {failures.length ? `${failures.length} invariant failures` : "System invariants pass"}
           </span>
         </div>
       </header>
@@ -74,9 +77,7 @@ export default function App() {
       <section className="scenario-bar">
         <div className="scenario-copy">
           <strong>Scenario: Reconcile stale editor state</strong>
-          <span>
-            Step {Math.min(scenarioIndex + 1, scenarioSteps.length)} of {scenarioSteps.length} · {currentStep.story}
-          </span>
+          <span>{scenarioText}</span>
         </div>
         <button className="button primary" onClick={runNextStep} disabled={scenarioIndex >= scenarioSteps.length}>
           Run next step
@@ -123,6 +124,19 @@ export default function App() {
 }
 
 const emptyState = { traces: [] } as unknown as AppState;
+
+function showcaseState(engine: EngineApi) {
+  return engine.dispatch(engine.initialState(), scenarioSteps[0].action);
+}
+
+function scenarioStatus(index: number) {
+  const completed = scenarioSteps[index - 1];
+  const next = scenarioSteps[index];
+  if (!completed) return `Step 1 of ${scenarioSteps.length} · ${scenarioSteps[0].story}`;
+  const prefix = `Step ${Math.min(index, scenarioSteps.length)} of ${scenarioSteps.length}`;
+  if (!next) return `${prefix} · ${completed.completed}`;
+  return `${prefix} complete · ${completed.completed}`;
+}
 
 function faultLabel(key: string) {
   const labels: Record<string, string> = {

@@ -28,27 +28,32 @@ export const scenarioSteps = [
   {
     label: "Delete imported file",
     action: { type: "deleteFile", path: "src/legacy_user.tl" },
-    story: "Remove legacy_user.tl and let Trellis clear owned diagnostics, links, tokens, jobs, and watchers.",
+    story: "Next: remove legacy_user.tl and clear every output and resource owned by that file.",
+    completed: "legacy_user.tl removed; owned diagnostics, links, tokens, jobs, and watchers reconciled.",
   },
   {
     label: "Rename import target",
     action: { type: "renameSchema" },
-    story: "Rename schema.tl to schema_v2.tl and rebaseline visible document links without reopening the editor.",
+    story: "Next: rename schema.tl to schema_v2.tl and rebaseline visible document links.",
+    completed: "schema.tl renamed; visible document links rebaselined without reopening the editor.",
   },
   {
     label: "Start slow analysis",
     action: { type: "startSlowAnalysis" },
-    story: "Start a revisioned analysis job for the currently visible editor.",
+    story: "Next: start a revisioned analysis job for the currently visible editor.",
+    completed: "slow analysis started for the visible editor revision.",
   },
   {
     label: "Fix app.tl",
     action: { type: "fixApp" },
-    story: "Commit a newer app.tl revision that should supersede older host results.",
+    story: "Next: commit a newer app.tl revision that supersedes older host results.",
+    completed: "app.tl fixed; older analysis commands are no longer current.",
   },
   {
     label: "Inject late result",
     action: { type: "injectStaleAnalysisResult" },
-    story: "Deliver the old analysis result and verify it is visible as stale but cannot mutate editor output.",
+    story: "Next: deliver the old analysis result and verify it cannot mutate editor output.",
+    completed: "late analysis result arrived and was classified as stale.",
   },
 ] as const;
 

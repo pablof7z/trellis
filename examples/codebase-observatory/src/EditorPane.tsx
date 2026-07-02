@@ -10,6 +10,7 @@ export function EditorPane({ state }: { state: AppState }) {
   const tokens = state.outputLedger.tokensByFile[path] ?? [];
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
+  const decorationRef = useRef<ReturnType<Parameters<OnMount>[0]["createDecorationsCollection"]> | null>(null);
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -17,12 +18,15 @@ export function EditorPane({ state }: { state: AppState }) {
     const model = editor?.getModel();
     if (!monaco || !model) return;
     monaco.editor.setModelMarkers(model, "trellis", diagnostics.map((diagnostic) => marker(monaco, diagnostic)));
+    decorationRef.current?.set(diagnostics.map((diagnostic) => decoration(monaco, diagnostic)));
   }, [diagnostics]);
 
   const handleMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
+    decorationRef.current = editor.createDecorationsCollection();
     monaco.editor.setModelMarkers(editor.getModel(), "trellis", diagnostics.map((diagnostic) => marker(monaco, diagnostic)));
+    decorationRef.current.set(diagnostics.map((diagnostic) => decoration(monaco, diagnostic)));
   };
 
   return (
@@ -54,10 +58,12 @@ export function EditorPane({ state }: { state: AppState }) {
             overviewRulerBorder: false,
           }}
         />
-        <div className="editor-overlays">
-          {diagnostics.slice(0, 2).map((diagnostic) => (
+        <div className="line-diagnostics">
+          {diagnostics.slice(0, 3).map((diagnostic) => (
             <DiagnosticRow key={diagnostic.id} diagnostic={diagnostic} />
           ))}
+        </div>
+        <div className="editor-overlays">
           {diagnostics.length === 0 && <div className="editor-note success">No visible diagnostics in this editor.</div>}
           <LinkSummary links={links} />
         </div>
@@ -68,9 +74,8 @@ export function EditorPane({ state }: { state: AppState }) {
 
 function DiagnosticRow({ diagnostic }: { diagnostic: Diagnostic }) {
   return (
-    <div className="diag-row">
+    <div className="diag-row" style={{ top: `${6 + (diagnostic.line - 1) * 21}px` }}>
       <span>{diagnostic.line}:{diagnostic.column}</span>
-      <strong>{diagnostic.source}</strong>
       {diagnostic.message}
     </div>
   );
@@ -94,5 +99,17 @@ function marker(monaco: Monaco, diagnostic: Diagnostic) {
     startColumn: diagnostic.column,
     endLineNumber: diagnostic.line,
     endColumn: diagnostic.column + Math.max(4, diagnostic.message.split(" ")[0].length),
+  };
+}
+
+function decoration(monaco: Monaco, diagnostic: Diagnostic) {
+  const endColumn = diagnostic.column + Math.max(4, diagnostic.message.split(" ")[0].length);
+  return {
+    range: new monaco.Range(diagnostic.line, diagnostic.column, diagnostic.line, endColumn),
+    options: {
+      glyphMarginClassName: "diagnostic-glyph",
+      inlineClassName: "diagnostic-squiggle",
+      hoverMessage: { value: diagnostic.message },
+    },
   };
 }
