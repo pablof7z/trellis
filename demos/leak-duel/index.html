@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Leak Duel: deterministic chat attachment churn comparing callback bookkeeping against Trellis resource reconciliation.">
+  <title>Leak Duel - Trellis Demo</title>
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/leak-duel.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a>
+      <nav class="nav-links" aria-label="Primary"><a href="/demos" aria-current="page">Demos</a><a href="/guide">Guide</a><a href="/docs">Docs</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav>
+    </div>
+  </header>
+
+  <main class="leak-duel" data-demo-root>
+    <section class="container duel-hero">
+      <div>
+        <span class="eyebrow">Leak Duel / deterministic seed</span>
+        <h1><span>Same churn.</span><span>Two resource ledgers.</span></h1>
+        <p class="lead">The left side is ordinary event-handler bookkeeping for chat attachment streams. The right side is the same desired set reconciled through Trellis.</p>
+      </div>
+      <div class="duel-controls" aria-label="Scenario controls">
+        <label>Seed <input data-seed type="number" min="1" value="1337"></label>
+        <label>Chaos <input data-chaos type="range" min="1" max="10" value="7"></label>
+        <output data-chaos-value>7</output>
+        <button class="button primary" data-step>Step churn</button>
+        <button class="button" data-run>Run 30-second cut</button>
+        <button class="button" data-reset>Reset</button>
+      </div>
+    </section>
+
+    <section class="container duel-board" aria-live="polite">
+      <article class="duel-side side-naive">
+        <div class="side-head">
+          <span>callback ledger</span>
+          <strong data-naive-verdict>loading</strong>
+        </div>
+        <div class="counter-grid">
+          <div><span>open</span><strong data-naive-open>0</strong></div>
+          <div><span>should</span><strong data-naive-should>0</strong></div>
+          <div><span>delta</span><strong data-naive-delta>0</strong></div>
+        </div>
+        <p data-naive-detail class="side-note">compiling the reconciler to wasm - one moment</p>
+      </article>
+
+      <article class="duel-side side-trellis">
+        <div class="side-head">
+          <span>Trellis resource plan</span>
+          <strong data-trellis-verdict>loading</strong>
+        </div>
+        <div class="counter-grid">
+          <div><span>open</span><strong data-trellis-open>0</strong></div>
+          <div><span>should</span><strong data-trellis-should>0</strong></div>
+          <div><span>delta</span><strong data-trellis-delta>0</strong></div>
+        </div>
+        <p data-trellis-detail class="side-note">resource commands are returned as data, then applied by the host</p>
+      </article>
+    </section>
+
+    <section class="container duel-grid">
+      <article class="duel-panel">
+        <div class="panel-head">
+          <h2>Attachment streams</h2>
+          <span data-tick class="mono">tick 0</span>
+        </div>
+        <div data-rows class="attachment-list"></div>
+      </article>
+
+      <article class="duel-panel">
+        <div class="panel-head">
+          <h2>Receipt</h2>
+          <a href="https://github.com/pablof7z/trellis/blob/master/crates/trellis-observatory-engine/src/leak_duel.rs">Rust source</a>
+        </div>
+        <div data-receipt class="receipt"></div>
+      </article>
+    </section>
+
+    <section class="container duel-grid lower">
+      <article class="duel-panel">
+        <div class="panel-head">
+          <h2>Churn log</h2>
+          <a href="https://github.com/pablof7z/trellis/blob/master/demos/leak-duel/leak-duel.js">UI source</a>
+        </div>
+        <div data-activity class="activity-list"></div>
+      </article>
+
+      <details class="duel-panel explainer">
+        <summary>What am I looking at?</summary>
+        <p>Both sides receive the same room joins, follow changes, permission revokes, workspace switches, and network reconnects. The left side opens and closes attachment streams from individual event handlers. That is representative code, not a deliberately broken toy: the bug appears when handlers interleave and one close path does not run.</p>
+        <p>Trellis derives the desired attachment set from canonical input, diffs that collection, and returns open/close commands. Click a stream to read the receipt for why Trellis owns it or why it refuses to keep it open.</p>
+      </details>
+    </section>
+  </main>
+
+  <script type="module" src="/demos/leak-duel/leak-duel.js"></script>
+</body>
+</html>

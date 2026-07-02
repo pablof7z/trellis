@@ -1,0 +1,255 @@
+.duel-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 2rem;
+  align-items: end;
+  padding: 4.5rem 0 2rem;
+}
+
+.duel-controls {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.7rem;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  background: var(--panel);
+}
+
+.duel-hero h1 span {
+  display: block;
+}
+
+.duel-controls label {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.duel-controls input {
+  width: 100%;
+  min-width: 0;
+  accent-color: var(--green);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.45rem;
+  background: #0a0f15;
+  color: var(--text);
+}
+
+.duel-controls .button {
+  grid-column: span 2;
+}
+
+.duel-board,
+.duel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.duel-hero > *,
+.duel-board > *,
+.duel-grid > * {
+  min-width: 0;
+}
+
+.duel-side,
+.duel-panel {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0a0f15;
+}
+
+.duel-side {
+  padding: 1rem;
+}
+
+.side-head,
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.side-head span,
+.panel-head a {
+  color: var(--muted);
+}
+
+.side-head strong {
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  background: rgba(88, 166, 255, 0.1);
+  color: var(--blue);
+}
+
+.side-naive .side-head strong {
+  background: rgba(248, 81, 73, 0.12);
+  color: var(--red);
+}
+
+.counter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.counter-grid div {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0.75rem;
+  background: var(--panel);
+}
+
+.counter-grid span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.counter-grid strong {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.55rem;
+}
+
+.side-note {
+  min-height: 1.5rem;
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+}
+
+.duel-panel {
+  padding: 1rem;
+}
+
+.duel-panel h2 {
+  font-size: 1.15rem;
+}
+
+.attachment-list,
+.activity-list,
+.receipt {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.attachment-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(92px, 0.55fr));
+  gap: 0.5rem;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0.65rem;
+  background: var(--panel);
+  color: var(--text);
+  text-align: left;
+}
+
+.attachment-row:hover,
+.attachment-row.selected {
+  border-color: var(--blue);
+}
+
+.attachment-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.attachment-row span:not(:first-child) {
+  color: var(--muted);
+  font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+}
+
+.receipt h3,
+.receipt p {
+  margin: 0;
+}
+
+.receipt p {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.receipt-step,
+.activity-row {
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0.7rem;
+  background: var(--panel);
+}
+
+.receipt-step span,
+.activity-row span,
+.activity-row em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.activity-row code {
+  overflow-wrap: anywhere;
+  color: var(--green);
+}
+
+.explainer summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.explainer p {
+  color: var(--muted);
+}
+
+.lower {
+  align-items: start;
+  padding-bottom: 3rem;
+}
+
+@media (max-width: 900px) {
+  .duel-hero,
+  .duel-board,
+  .duel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .duel-hero h1 {
+    font-size: clamp(2.35rem, 11vw, 3.15rem);
+  }
+
+  .duel-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .duel-controls .button {
+    grid-column: auto;
+    width: 100%;
+  }
+
+  .duel-controls output {
+    justify-self: start;
+  }
+
+  .counter-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .counter-grid div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .attachment-row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Trellis demos: deterministic browser artifacts for resource lifecycle bugs and receipts.">
+  <title>Trellis Demos</title>
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a>
+      <nav class="nav-links" aria-label="Primary"><a href="/guide">Guide</a><a href="/demos" aria-current="page">Demos</a><a href="/docs">Docs</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="container page-hero">
+      <span class="eyebrow">Browser artifacts</span>
+      <h1>Demos that show resource lifecycle failure, not animation.</h1>
+      <p class="lead">Each demo is a small deterministic app. The point is to show which subscriptions, watchers, or attachment streams should exist, what actually exists, and the receipt Trellis returns.</p>
+    </section>
+
+    <section class="section">
+      <div class="container grid two">
+        <article class="card">
+          <h2>Leak Duel</h2>
+          <p>Same chat attachment state, same seeded churn. The callback ledger drifts; the Trellis resource plan stays reconciled.</p>
+          <p><a class="button primary" href="/demos/leak-duel">Run Leak Duel</a></p>
+        </article>
+        <article class="card">
+          <h2>Flight Recorder</h2>
+          <p>Trace replay for side-effect receipts. This remains tracked behind the trace serialization work in <a href="https://github.com/pablof7z/trellis/issues/114">#114</a>.</p>
+          <p><a class="button" href="https://github.com/pablof7z/trellis/issues/134">Track Flight Recorder</a></p>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
