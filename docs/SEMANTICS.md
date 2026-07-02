@@ -419,9 +419,21 @@ Every live desired resource MUST have at least one owning scope.
 
 Every materialized output surface MUST have an owning scope.
 
-Closing a scope MUST deterministically remove that scope's ownership from all resources and outputs it owns. If a resource has no remaining owners after scope closure, the transaction MUST produce a close command for that resource. If an output is owned by the closed scope, the transaction MUST produce a clear or finalization frame for that output.
+Closing a scope MUST deterministically remove that scope's ownership from all
+resources and outputs it owns. If a resource has no remaining owners after
+scope closure, the transaction MUST produce a close command for that resource.
+If an output is owned by the closed scope, the transaction MUST produce a
+clear or finalization frame for that output.
 
-Closing a scope MUST be idempotent.
+Closing a scope MUST reclaim nodes owned by that scope after close commands,
+output terminal frames, and transaction audit events have been produced. Node
+metadata, values, specs, diffs, and planners attached to the reclaimed nodes
+MUST NOT remain live.
+
+Repeated close requests for a scope already closed in the same candidate
+transaction MAY be a no-op. After a close transaction commits, the closed scope
+is reclaimed; later use of that scope id MUST be rejected as unknown rather
+than silently treated as a tombstone.
 
 Closing a parent scope MUST close child scopes or otherwise remove their ownership according to a documented deterministic order.
 
@@ -434,11 +446,12 @@ The initial scope teardown order is:
 2. Reject unknown scopes before mutating the candidate graph.
 3. For each newly closed scope in that order:
    a. mark the scope closed;
-   b. remove resource planners owned by that scope;
-   c. detach nodes owned by that scope from scope ownership metadata.
+   b. remove resource planners owned by that scope.
 4. Remove closed-scope resource ownership in the same child-before-parent order.
 5. Emit resource close commands when a resource loses its final live owner.
 6. Produce output clear/rebaseline frames for closed-scope outputs once outputs exist.
+7. Record transaction audit events for the close.
+8. Reclaim closed scope metadata and nodes owned by the closed scopes.
 ```
 
 M7 implements this order for scopes, nodes, resources, and materialized output

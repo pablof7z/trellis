@@ -271,8 +271,9 @@ artifact, not an emergent property.
 I/O, retries, task spawning, and real handles. Nothing inside propagation can
 touch the world.
 
-**Scopes own lifecycle.** Resources and outputs attach to scopes. Scope close
-produces deterministic teardown commands and output clear frames.
+**Scopes own lifecycle.** Nodes, resources, and outputs attach to scopes. Scope
+close produces deterministic teardown commands, output clear frames, and node
+reclamation.
 
 **Empty sources fail closed.** A source that derives no targets opens no
 demand. `empty -> nothing`, never `empty -> everything`.

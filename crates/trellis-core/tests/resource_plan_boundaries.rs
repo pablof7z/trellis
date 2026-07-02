@@ -184,24 +184,47 @@ fn shared_resource_closes_only_after_last_owner() {
 }
 
 #[test]
-fn closing_scope_twice_is_idempotent_for_resource_plans() {
+fn closing_scope_twice_in_one_transaction_emits_resource_close_once() {
     let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
+    let collection = tx
+        .set_collection("resources", DependencyList::empty(), |_| Ok(set(&["a"])))
+        .unwrap();
+    tx.set_resource_planner(collection, scope, move |ctx| {
+        let mut plan = ResourcePlan::new();
+        for added in &ctx.diff().added {
+            plan.open(
+                key(&added.value),
+                ctx.scope(),
+                Command::Open(added.value.clone()),
+            );
+        }
+        Ok(plan)
+    })
+    .unwrap();
     tx.commit().unwrap();
     drop(tx);
 
     let mut tx = graph.begin_transaction().unwrap();
     tx.close_scope(scope).unwrap();
-    tx.commit().unwrap();
-    drop(tx);
-
-    let mut tx = graph.begin_transaction().unwrap();
     tx.close_scope(scope).unwrap();
     let result = tx.commit().unwrap();
     drop(tx);
 
-    assert!(result.resource_plan.commands().is_empty());
+    assert_eq!(
+        result.resource_plan.commands(),
+        &[ResourceCommand::Close {
+            key: key("a"),
+            scope,
+        }]
+    );
+
+    let mut tx = graph.begin_transaction().unwrap();
+    assert_eq!(
+        tx.close_scope(scope).unwrap_err(),
+        GraphError::UnknownScope(scope)
+    );
 }
 
 #[test]

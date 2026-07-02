@@ -9,6 +9,7 @@ impl<C, O: Clone> Clone for Graph<C, O> {
             revision: self.revision,
             nodes: self.nodes.clone(),
             scopes: self.scopes.clone(),
+            scope_children: self.scope_children.clone(),
             input_values: self.input_values.clone(),
             derived_specs: self.derived_specs.clone(),
             derived_values: self.derived_values.clone(),

@@ -44,7 +44,7 @@ where
         }
     }
 
-    /// Stages closing a scope for resource ownership teardown.
+    /// Stages closing a scope for scoped resource, output, and node teardown.
     pub fn close_scope(&mut self, scope: ScopeId) -> GraphResult<()> {
         self.ensure_open()?;
         match self.working.close_scope_direct(scope) {

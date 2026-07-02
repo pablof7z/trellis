@@ -1,4 +1,5 @@
 use crate::{Graph, GraphResult, ResourceKey, ScopeId};
+use std::collections::BTreeSet;
 
 impl<C, O> Graph<C, O> {
     pub(crate) fn close_scope_direct(&mut self, scope: ScopeId) -> GraphResult<Vec<ScopeId>> {
@@ -10,11 +11,16 @@ impl<C, O> Graph<C, O> {
             }
             self.resource_planners
                 .retain(|planner| planner.scope != *closing);
-            for node in self.nodes.values_mut() {
-                node.detach_scope(*closing);
-            }
         }
         Ok(scopes)
+    }
+
+    pub(crate) fn reclaim_closed_scopes(&mut self, closed_scopes: &[ScopeId]) {
+        let reclaimed_nodes = self.reclaim_closed_scope_nodes(closed_scopes);
+        self.reclaim_closed_scope_metadata(closed_scopes);
+        if !reclaimed_nodes.is_empty() || !closed_scopes.is_empty() {
+            self.invalidate_topology_cache();
+        }
     }
 
     /// Returns child scopes in stable id order.
@@ -66,12 +72,60 @@ impl<C, O> Graph<C, O> {
     }
 
     fn child_scopes_unchecked(&self, scope: ScopeId) -> Vec<ScopeId> {
-        self.scopes
+        self.scope_children
+            .get(&scope)
+            .map(|children| children.iter().copied().collect())
+            .unwrap_or_default()
+    }
+
+    fn reclaim_closed_scope_nodes(&mut self, closed_scopes: &[ScopeId]) -> Vec<crate::NodeId> {
+        let closed_scopes = closed_scopes.iter().copied().collect::<BTreeSet<_>>();
+        let nodes = self
+            .nodes
             .values()
-            .filter_map(|scope_meta| {
-                (scope_meta.parent() == Some(scope)).then_some(scope_meta.id())
+            .filter_map(|node| {
+                node.owning_scope()
+                    .filter(|scope| closed_scopes.contains(scope))
+                    .map(|_| node.id())
             })
-            .collect()
+            .collect::<Vec<_>>();
+        for node in &nodes {
+            self.remove_node_storage(*node);
+        }
+        nodes
+    }
+
+    fn remove_node_storage(&mut self, node: crate::NodeId) {
+        self.nodes.remove(&node);
+        self.input_values.remove(&node);
+        self.derived_specs.remove(&node);
+        self.derived_values.remove(&node);
+        self.collection_specs.remove(&node);
+        self.collection_values.remove(&node);
+        self.previous_collection_values.remove(&node);
+        self.collection_diffs.remove(&node);
+        self.resource_planners
+            .retain(|planner| planner.collection != node);
+        self.audit.node_changes.remove(&node);
+    }
+
+    fn reclaim_closed_scope_metadata(&mut self, closed_scopes: &[ScopeId]) {
+        for scope in closed_scopes {
+            if let Some(scope_meta) = self.scopes.remove(scope)
+                && let Some(parent) = scope_meta.parent()
+            {
+                let remove_parent = if let Some(children) = self.scope_children.get_mut(&parent) {
+                    children.remove(scope);
+                    children.is_empty()
+                } else {
+                    false
+                };
+                if remove_parent {
+                    self.scope_children.remove(&parent);
+                }
+            }
+            self.scope_children.remove(scope);
+        }
     }
 }
 

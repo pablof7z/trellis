@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use trellis_core::{
-    AuditEvent, DependencyList, Graph, OutputFrameKindTrace, ResourceCommandCause,
+    AuditEvent, DependencyList, Graph, GraphError, OutputFrameKindTrace, ResourceCommandCause,
     ResourceCommandKind, ResourceKey, ResourcePlan, SetDiff,
 };
 
@@ -129,7 +129,7 @@ fn audit_explains_node_resource_and_output_changes() {
 }
 
 #[test]
-fn scope_resource_inventory_is_deterministic_and_empty_after_close() {
+fn scope_resource_inventory_is_deterministic_then_unknown_after_close() {
     let mut graph = Graph::<Command>::new_with_command_type();
     let mut tx = graph.begin_transaction().unwrap();
     let scope = tx.create_scope("scope").unwrap();
@@ -160,12 +160,9 @@ fn scope_resource_inventory_is_deterministic_and_empty_after_close() {
         graph.why_resource_command(&key("a")).unwrap().cause,
         ResourceCommandCause::ScopeClosed { scope }
     );
-    assert!(
-        graph
-            .scope_resource_inventory(scope)
-            .unwrap()
-            .resources
-            .is_empty()
+    assert_eq!(
+        graph.scope_resource_inventory(scope).unwrap_err(),
+        GraphError::UnknownScope(scope)
     );
     assert!(graph.orphan_resources().is_empty());
 }
