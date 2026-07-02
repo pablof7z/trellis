@@ -13,6 +13,7 @@ const requiredRoutes = [
   "/demos",
   "/demos/leak-duel",
   "/demos/flight-recorder",
+  "/adr",
   "/examples",
   "/examples/local-first-sync",
   "/examples/language-server",

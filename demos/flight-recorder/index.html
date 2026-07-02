@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Flight Recorder: inspect versioned Trellis transaction traces and side-effect receipts.">
+  <meta name="description" content="Flight Recorder: inspect versioned Trellis transaction traces and resource-command receipts.">
   <title>Flight Recorder - Trellis Demo</title>
   <link rel="stylesheet" href="/assets/site.css">
   <link rel="stylesheet" href="/assets/flight-recorder.css">
@@ -12,7 +12,7 @@
   <header class="site-header">
     <div class="nav-wrap">
       <a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a>
-      <nav class="nav-links" aria-label="Primary"><a href="/demos" aria-current="page">Demos</a><a href="/guide">Guide</a><a href="/docs">Docs</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav>
+      <nav class="nav-links" aria-label="Primary"><a href="/demos" aria-current="page">Demos</a><a href="/docs">Docs</a><a href="/adr">ADRs</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav>
     </div>
   </header>
 
@@ -20,7 +20,7 @@
     <section class="container recorder-hero">
       <div>
         <span class="eyebrow">Flight Recorder / trace format v1</span>
-        <h1><span>Replay side effects</span><span>from the receipt.</span></h1>
+        <h1><span>Replay resource commands</span><span>from the receipt.</span></h1>
         <p class="lead">Load a Trellis trace file, scrub transaction by transaction, search for a resource, and click a Close command to see the causal chain.</p>
       </div>
       <div class="recorder-controls" data-drop-zone>
