@@ -43,11 +43,10 @@ impl<C> ResourceLedger<C> {
         for command in &self.command_trace {
             writeln!(
                 &mut out,
-                "  key={:?} scope={:?} kind={:?} transition={:?}",
+                "  key={:?} scope={:?} kind={:?}",
                 redactor.resource_key(&command.key),
                 command.scope,
-                command.kind,
-                command.transition
+                command.kind
             )
             .expect("writing to String cannot fail");
         }

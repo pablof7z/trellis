@@ -97,17 +97,6 @@ impl FakeHost {
         self.observe(ledger, resource_key, scope, command_revision)
     }
 
-    /// Reports that an earlier open command succeeded after later graph work.
-    pub fn open_succeeds_later<C: Clone>(
-        &mut self,
-        ledger: &mut ResourceLedger<C>,
-        resource_key: ResourceKey,
-        scope: ScopeId,
-        command_revision: Revision,
-    ) -> FakeHostEvent {
-        self.open_succeeded(ledger, resource_key, scope, command_revision)
-    }
-
     /// Reports that an open command failed.
     pub fn open_failed<C: Clone>(
         &mut self,

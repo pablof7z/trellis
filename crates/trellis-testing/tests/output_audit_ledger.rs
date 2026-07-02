@@ -6,9 +6,7 @@ use trellis_core::{
 };
 use trellis_testing::{
     FullRecomputeOracle, OutputLedger, OutputLedgerError, assert_dependency_path_exists,
-    assert_every_output_frame_has_revision, assert_every_output_frame_has_scope,
-    assert_every_resource_command_has_cause, assert_incremental_equals_full,
-    assert_no_unexplained_output_frame, assert_no_unexplained_plan,
+    assert_incremental_equals_full, assert_no_unexplained_output_frame, assert_no_unexplained_plan,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -140,7 +138,7 @@ fn output_ledger_checks_revision_and_rebaseline_coherence() {
     ledger.apply_result(&rebaseline);
     ledger.assert_revision_monotonic().unwrap();
     ledger
-        .assert_delta_sequence_matches_rebaseline(output_key, &members(&[1, 2]))
+        .assert_current_equals(output_key, &members(&[1, 2]))
         .unwrap();
     ledger
         .assert_consumer_needs_no_hidden_graph_state()
@@ -190,10 +188,7 @@ fn audit_assertions_explain_plans_and_frames() {
     let (target, initial) = build_graph(members(&[1]));
 
     assert_no_unexplained_plan(&target.graph, &initial).unwrap();
-    assert_every_resource_command_has_cause(&target.graph, &initial).unwrap();
     assert_no_unexplained_output_frame(&target.graph, &initial).unwrap();
-    assert_every_output_frame_has_revision(&target.graph, &initial).unwrap();
-    assert_every_output_frame_has_scope(&target.graph, &initial).unwrap();
     assert_dependency_path_exists(&target.graph, target.source.id(), target.collection.id())
         .unwrap();
 }

@@ -46,6 +46,11 @@ pub enum ScenarioError {
     },
     /// A named step was not found.
     MissingStep(String),
+    /// A step name was recorded more than once.
+    DuplicateStep {
+        /// Duplicate step name.
+        step: String,
+    },
     /// A named step had different structural data.
     StepMismatch {
         /// Step whose assertion failed.
@@ -119,16 +124,24 @@ impl Scenario {
     }
 
     /// Records a committed transaction result under a stable step name.
-    pub fn record<C, O>(&mut self, name: impl Into<String>, result: &TransactionResult<C, O>) {
-        self.record_trace(name, result.trace());
+    pub fn record<C, O>(
+        &mut self,
+        name: impl Into<String>,
+        result: &TransactionResult<C, O>,
+    ) -> Result<(), ScenarioError> {
+        self.record_trace(name, result.trace())
     }
 
     /// Records an already-built structural transaction trace under a step name.
-    pub fn record_trace(&mut self, name: impl Into<String>, trace: TransactionTrace) {
-        self.steps.push(ScenarioStep {
-            name: name.into(),
-            trace,
-        });
+    pub fn record_trace(
+        &mut self,
+        name: impl Into<String>,
+        trace: TransactionTrace,
+    ) -> Result<(), ScenarioError> {
+        let name = name.into();
+        self.ensure_step_name_available(&name)?;
+        self.steps.push(ScenarioStep { name, trace });
+        Ok(())
     }
 
     /// Returns all recorded steps in commit order.
@@ -142,6 +155,16 @@ impl Scenario {
             .iter()
             .find(|step| step.name == name)
             .ok_or_else(|| ScenarioError::MissingStep(name.to_owned()))
+    }
+
+    pub(crate) fn ensure_step_name_available(&self, name: &str) -> Result<(), ScenarioError> {
+        if self.steps.iter().any(|step| step.name == name) {
+            Err(ScenarioError::DuplicateStep {
+                step: name.to_owned(),
+            })
+        } else {
+            Ok(())
+        }
     }
 
     /// Compares two scenario trace sequences structurally.

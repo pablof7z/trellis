@@ -68,11 +68,11 @@ fn set_source(
 fn run_scenario() -> Scenario {
     let (mut target, initial) = build_graph(members(&[1, 2]));
     let mut scenario = Scenario::new();
-    scenario.record("initial", &initial);
+    scenario.record("initial", &initial).unwrap();
     let shrink = set_source(&mut target, members(&[1]));
-    scenario.record("shrink", &shrink);
+    scenario.record("shrink", &shrink).unwrap();
     let empty = set_source(&mut target, BTreeSet::new());
-    scenario.record("empty", &empty);
+    scenario.record("empty", &empty).unwrap();
     scenario
 }
 

@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use trellis_core::{
     AuditEvent, CollectionDiffKind, DependencyList, Graph, OutputFrameKindTrace,
-    ResourceCommandKind, ResourceKey, ResourcePlan, ResourceTransitionPolicy, StagedInputOutcome,
+    ResourceCommandKind, ResourceKey, ResourcePlan, StagedInputOutcome,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -110,19 +110,11 @@ fn transaction_trace_records_stable_structural_facts() {
         trace
             .resource_commands
             .iter()
-            .map(|command| (&command.key, command.kind, command.transition))
+            .map(|command| (&command.key, command.kind))
             .collect::<Vec<_>>(),
         vec![
-            (
-                &key("a"),
-                ResourceCommandKind::Open,
-                ResourceTransitionPolicy::Open
-            ),
-            (
-                &key("b"),
-                ResourceCommandKind::Open,
-                ResourceTransitionPolicy::Open
-            ),
+            (&key("a"), ResourceCommandKind::Open),
+            (&key("b"), ResourceCommandKind::Open),
         ]
     );
     assert_eq!(

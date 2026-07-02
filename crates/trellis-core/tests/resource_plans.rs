@@ -2,7 +2,6 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use trellis_core::{
     DependencyList, Graph, ResourceCommand, ResourceCommandKind, ResourceKey, ResourcePlan,
-    ResourceTransitionPolicy,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -200,10 +199,6 @@ fn updated_map_members_produce_replace_commands() {
     assert_eq!(
         result.trace().resource_commands[0].kind,
         ResourceCommandKind::Replace
-    );
-    assert_eq!(
-        result.trace().resource_commands[0].transition,
-        ResourceTransitionPolicy::ReplaceAtomically
     );
 }
 

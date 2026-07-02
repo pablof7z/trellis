@@ -92,8 +92,6 @@ pub struct ResourceCommandTrace {
     pub scope: ScopeId,
     /// Command operation.
     pub kind: ResourceCommandKind,
-    /// Host-facing transition policy requested by the command.
-    pub transition: ResourceTransitionPolicy,
 }
 
 impl ResourceCommandTrace {
@@ -102,7 +100,6 @@ impl ResourceCommandTrace {
             key: command.key().clone(),
             scope: command.scope(),
             kind: ResourceCommandKind::from_command(command),
-            transition: ResourceTransitionPolicy::from_command(command),
         }
     }
 }
@@ -127,33 +124,6 @@ impl ResourceCommandKind {
             ResourceCommand::Open { .. } => Self::Open,
             ResourceCommand::Close { .. } => Self::Close,
             ResourceCommand::Replace { .. } => Self::Replace,
-            ResourceCommand::Refresh { .. } => Self::Refresh,
-        }
-    }
-}
-
-/// Structural resource transition policy without application payload.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum ResourceTransitionPolicy {
-    /// Open a resource that is not currently owned.
-    Open,
-    /// Close a resource after final ownership is removed.
-    Close,
-    /// Replace a live resource through a host-native replace operation.
-    ReplaceAtomically,
-    /// Refresh an already live resource.
-    Refresh,
-    /// No lifecycle transition is requested.
-    Noop,
-}
-
-impl ResourceTransitionPolicy {
-    pub(crate) fn from_command<C>(command: &ResourceCommand<C>) -> Self {
-        match command {
-            ResourceCommand::Open { .. } => Self::Open,
-            ResourceCommand::Close { .. } => Self::Close,
-            ResourceCommand::Replace { .. } => Self::ReplaceAtomically,
             ResourceCommand::Refresh { .. } => Self::Refresh,
         }
     }

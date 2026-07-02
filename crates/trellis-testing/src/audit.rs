@@ -116,14 +116,6 @@ pub fn assert_no_unexplained_plan<C, O>(
     Ok(())
 }
 
-/// Asserts every resource command has a graph-visible cause.
-pub fn assert_every_resource_command_has_cause<C, O>(
-    graph: &Graph<C, O>,
-    result: &TransactionResult<C, O>,
-) -> Result<(), AuditAssertionError> {
-    assert_no_unexplained_plan(graph, result)
-}
-
 /// Asserts every output frame in a result has matching audit explanation.
 pub fn assert_no_unexplained_output_frame<C, O>(
     graph: &Graph<C, O>,
@@ -168,22 +160,6 @@ pub fn assert_no_unexplained_output_frame<C, O>(
         }
     }
     Ok(())
-}
-
-/// Asserts every output frame has a graph-visible revision explanation.
-pub fn assert_every_output_frame_has_revision<C, O>(
-    graph: &Graph<C, O>,
-    result: &TransactionResult<C, O>,
-) -> Result<(), AuditAssertionError> {
-    assert_no_unexplained_output_frame(graph, result)
-}
-
-/// Asserts every output frame has a graph-visible scope explanation.
-pub fn assert_every_output_frame_has_scope<C, O>(
-    graph: &Graph<C, O>,
-    result: &TransactionResult<C, O>,
-) -> Result<(), AuditAssertionError> {
-    assert_no_unexplained_output_frame(graph, result)
 }
 
 /// Asserts that a deterministic dependency path exists in the graph.
@@ -259,7 +235,19 @@ fn output_frame_is_explainable<C, O>(
     explanation: &trellis_core::OutputFrameExplanation,
     result: &TransactionResult<C, O>,
 ) -> bool {
-    result.changed_inputs.is_empty()
-        || explanation.changed_dependencies.is_empty()
-        || (!explanation.input_causes.is_empty() && !explanation.dependency_paths.is_empty())
+    if result.changed_inputs.is_empty() {
+        return true;
+    }
+    if matches!(
+        explanation.kind,
+        OutputFrameKindTrace::Baseline
+            | OutputFrameKindTrace::Clear(_)
+            | OutputFrameKindTrace::Rebaseline(_)
+    ) && explanation.changed_dependencies.is_empty()
+    {
+        return true;
+    }
+    !explanation.changed_dependencies.is_empty()
+        && !explanation.input_causes.is_empty()
+        && !explanation.dependency_paths.is_empty()
 }

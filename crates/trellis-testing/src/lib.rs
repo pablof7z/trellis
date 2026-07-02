@@ -14,6 +14,7 @@
 mod audit;
 mod conformance;
 mod harness;
+mod harness_step;
 mod host;
 mod host_status;
 mod oracle;
@@ -29,15 +30,14 @@ mod script;
 
 pub use audit::{
     AuditAssertionError, OutputAuditContext, ResourceAuditContext, assert_dependency_path_exists,
-    assert_every_output_frame_has_revision, assert_every_output_frame_has_scope,
-    assert_every_resource_command_has_cause, assert_no_unexplained_output_frame,
-    assert_no_unexplained_plan,
+    assert_no_unexplained_output_frame, assert_no_unexplained_plan,
 };
 pub use conformance::{
     ConformanceCheckReport, ConformanceCheckResult, ConformanceFailure, ConformanceLevel,
     ConformanceReport, ConformanceRunner, ConformanceSuite, conformance,
 };
-pub use harness::{HarnessStep, ScenarioTarget, TrellisHarness};
+pub use harness::{ScenarioTarget, TrellisHarness};
+pub use harness_step::HarnessStep;
 pub use host::{FakeHost, FakeHostEvent};
 pub use host_status::{HostStatusClass, HostStatusEvent, HostStatusRecord};
 pub use oracle::{
