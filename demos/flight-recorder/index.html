@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Flight Recorder: inspect versioned Trellis transaction traces and side-effect receipts.">
+  <title>Flight Recorder - Trellis Demo</title>
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/flight-recorder.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a>
+      <nav class="nav-links" aria-label="Primary"><a href="/demos" aria-current="page">Demos</a><a href="/guide">Guide</a><a href="/docs">Docs</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav>
+    </div>
+  </header>
+
+  <main class="flight-recorder">
+    <section class="container recorder-hero">
+      <div>
+        <span class="eyebrow">Flight Recorder / trace format v1</span>
+        <h1><span>Replay side effects</span><span>from the receipt.</span></h1>
+        <p class="lead">Load a Trellis trace file, scrub transaction by transaction, search for a resource, and click a Close command to see the causal chain.</p>
+      </div>
+      <div class="recorder-controls" data-drop-zone>
+        <label>Bundled trace <select data-trace-select></select></label>
+        <label>Trace file <input data-file type="file" accept="application/json,.json,.trellis-trace"></label>
+        <label>Search resource <input data-search type="search" placeholder="relay:wss://"></label>
+      </div>
+    </section>
+
+    <section class="container recorder-status" data-status>
+      <strong>loading trace</strong>
+      <span>reading bundled trace files</span>
+    </section>
+
+    <section class="container recorder-grid">
+      <article class="recorder-panel timeline-panel">
+        <div class="panel-head">
+          <h2>Timeline</h2>
+          <output data-position class="mono">0 / 0</output>
+        </div>
+        <input data-scrubber class="scrubber" type="range" min="0" max="0" value="0">
+        <div data-timeline class="timeline-list"></div>
+      </article>
+
+      <article class="recorder-panel">
+        <div class="panel-head">
+          <h2>Transaction</h2>
+          <a href="https://github.com/pablof7z/trellis/blob/master/crates/trellis-testing/src/serialized.rs">Trace source</a>
+        </div>
+        <div data-transaction class="transaction-view"></div>
+      </article>
+    </section>
+
+    <section class="container recorder-grid lower">
+      <article class="recorder-panel">
+        <div class="panel-head">
+          <h2>Receipt</h2>
+          <span data-selected-command class="mono">select a command</span>
+        </div>
+        <div data-receipt class="receipt-view"></div>
+      </article>
+
+      <article class="recorder-panel">
+        <div class="panel-head">
+          <h2>Diff from previous revision</h2>
+          <span data-version class="mono">v1</span>
+        </div>
+        <div data-diff class="diff-view"></div>
+      </article>
+    </section>
+  </main>
+
+  <script type="module" src="/demos/flight-recorder/flight-recorder.js"></script>
+</body>
+</html>

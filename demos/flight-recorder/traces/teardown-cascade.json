@@ -1,0 +1,55 @@
+{
+  "formatVersion": 1,
+  "steps": [
+    {
+      "name": "open workspace resources",
+      "trace": {
+        "transaction_id": 1,
+        "revision": 1,
+        "staged_input_changes": [{"node": 1, "outcome": "Changed"}],
+        "changed_inputs": [1],
+        "dirty_roots": [1],
+        "recomputed_derived_nodes": [],
+        "changed_derived_nodes": [],
+        "recomputed_collection_nodes": [2],
+        "changed_collection_nodes": [2],
+        "collection_diffs": [{"node": 2, "kind": "Set", "added": 3, "removed": 0, "updated": 0, "unchanged": 0}],
+        "resource_commands": [
+          {"key": "relay:wss://chat.example/workspace/alpha", "scope": 8, "kind": "Open"},
+          {"key": "watcher:file:///alpha/config.toml", "scope": 9, "kind": "Open"},
+          {"key": "job:analysis:alpha", "scope": 9, "kind": "Open"}
+        ],
+        "output_frames": [],
+        "scope_events": [{"scope": 8, "kind": "Created"}, {"scope": 9, "kind": "Created"}],
+        "audit_log": [{"transaction_id": 1, "revision": 1, "event": {"InputChanged": 1}}],
+        "phase_trace": ["StageOperations", "ValidateTransaction", "CommitCanonicalInputs", "MarkDirtyNodes", "RecomputeDerivedNodes", "RecomputeCollectionNodes", "ComputeStructuralDiffs", "ResolveScopeLifecycle", "ProduceResourcePlans", "ProduceOutputFrames", "CommitGraphRevision", "ReturnTransactionResult"],
+        "invariant_results": [{"name": "children close before parent", "passed": true}]
+      }
+    },
+    {
+      "name": "close workspace",
+      "trace": {
+        "transaction_id": 2,
+        "revision": 2,
+        "staged_input_changes": [{"node": 1, "outcome": "Changed"}],
+        "changed_inputs": [1],
+        "dirty_roots": [1],
+        "recomputed_derived_nodes": [],
+        "changed_derived_nodes": [],
+        "recomputed_collection_nodes": [2],
+        "changed_collection_nodes": [2],
+        "collection_diffs": [{"node": 2, "kind": "Set", "added": 0, "removed": 3, "updated": 0, "unchanged": 0}],
+        "resource_commands": [
+          {"key": "job:analysis:alpha", "scope": 9, "kind": "Close"},
+          {"key": "watcher:file:///alpha/config.toml", "scope": 9, "kind": "Close"},
+          {"key": "relay:wss://chat.example/workspace/alpha", "scope": 8, "kind": "Close"}
+        ],
+        "output_frames": [],
+        "scope_events": [{"scope": 9, "kind": "Closed"}, {"scope": 8, "kind": "Closed"}],
+        "audit_log": [{"transaction_id": 2, "revision": 2, "event": {"ScopeClosed": 9}}, {"transaction_id": 2, "revision": 2, "event": {"ScopeClosed": 8}}],
+        "phase_trace": ["StageOperations", "ValidateTransaction", "CommitCanonicalInputs", "MarkDirtyNodes", "RecomputeDerivedNodes", "RecomputeCollectionNodes", "ComputeStructuralDiffs", "ResolveScopeLifecycle", "ProduceResourcePlans", "ProduceOutputFrames", "CommitGraphRevision", "ReturnTransactionResult"],
+        "invariant_results": [{"name": "children close before parent", "passed": true}]
+      }
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "formatVersion": 1,
+  "steps": [
+    {
+      "name": "open relay window",
+      "trace": {
+        "transaction_id": 1,
+        "revision": 1,
+        "staged_input_changes": [{"node": 1, "outcome": "Changed"}],
+        "changed_inputs": [1],
+        "dirty_roots": [1],
+        "recomputed_derived_nodes": [],
+        "changed_derived_nodes": [],
+        "recomputed_collection_nodes": [2],
+        "changed_collection_nodes": [2],
+        "collection_diffs": [{"node": 2, "kind": "Set", "added": 2, "removed": 0, "updated": 0, "unchanged": 0}],
+        "resource_commands": [
+          {"key": "relay:wss://relay.damus.io?filter=contacts", "scope": 1, "kind": "Open"},
+          {"key": "relay:wss://nos.lol?filter=contacts", "scope": 1, "kind": "Open"}
+        ],
+        "output_frames": [],
+        "scope_events": [],
+        "audit_log": [{"transaction_id": 1, "revision": 1, "event": {"InputChanged": 1}}],
+        "phase_trace": ["StageOperations", "ValidateTransaction", "CommitCanonicalInputs", "MarkDirtyNodes", "RecomputeDerivedNodes", "RecomputeCollectionNodes", "ComputeStructuralDiffs", "ResolveScopeLifecycle", "ProduceResourcePlans", "ProduceOutputFrames", "CommitGraphRevision", "ReturnTransactionResult"],
+        "invariant_results": [{"name": "no orphan relay subscriptions", "passed": true}]
+      }
+    },
+    {
+      "name": "switch follow filter",
+      "trace": {
+        "transaction_id": 2,
+        "revision": 2,
+        "staged_input_changes": [{"node": 1, "outcome": "Changed"}],
+        "changed_inputs": [1],
+        "dirty_roots": [1],
+        "recomputed_derived_nodes": [],
+        "changed_derived_nodes": [],
+        "recomputed_collection_nodes": [2],
+        "changed_collection_nodes": [2],
+        "collection_diffs": [{"node": 2, "kind": "Set", "added": 1, "removed": 1, "updated": 0, "unchanged": 1}],
+        "resource_commands": [
+          {"key": "relay:wss://relay.damus.io?filter=contacts", "scope": 1, "kind": "Close"},
+          {"key": "relay:wss://relay.primal.net?filter=follows", "scope": 1, "kind": "Open"}
+        ],
+        "output_frames": [],
+        "scope_events": [],
+        "audit_log": [{"transaction_id": 2, "revision": 2, "event": {"CollectionChanged": 2}}],
+        "phase_trace": ["StageOperations", "ValidateTransaction", "CommitCanonicalInputs", "MarkDirtyNodes", "RecomputeDerivedNodes", "RecomputeCollectionNodes", "ComputeStructuralDiffs", "ResolveScopeLifecycle", "ProduceResourcePlans", "ProduceOutputFrames", "CommitGraphRevision", "ReturnTransactionResult"],
+        "invariant_results": [{"name": "no orphan relay subscriptions", "passed": true}]
+      }
+    },
+    {
+      "name": "close side panel",
+      "trace": {
+        "transaction_id": 3,
+        "revision": 3,
+        "staged_input_changes": [{"node": 3, "outcome": "Changed"}],
+        "changed_inputs": [3],
+        "dirty_roots": [3],
+        "recomputed_derived_nodes": [],
+        "changed_derived_nodes": [],
+        "recomputed_collection_nodes": [2],
+        "changed_collection_nodes": [2],
+        "collection_diffs": [{"node": 2, "kind": "Set", "added": 0, "removed": 2, "updated": 0, "unchanged": 0}],
+        "resource_commands": [
+          {"key": "relay:wss://nos.lol?filter=contacts", "scope": 1, "kind": "Close"},
+          {"key": "relay:wss://relay.primal.net?filter=follows", "scope": 1, "kind": "Close"}
+        ],
+        "output_frames": [],
+        "scope_events": [{"scope": 1, "kind": "Closed"}],
+        "audit_log": [{"transaction_id": 3, "revision": 3, "event": {"ScopeClosed": 1}}],
+        "phase_trace": ["StageOperations", "ValidateTransaction", "CommitCanonicalInputs", "MarkDirtyNodes", "RecomputeDerivedNodes", "RecomputeCollectionNodes", "ComputeStructuralDiffs", "ResolveScopeLifecycle", "ProduceResourcePlans", "ProduceOutputFrames", "CommitGraphRevision", "ReturnTransactionResult"],
+        "invariant_results": [{"name": "no orphan relay subscriptions", "passed": true}]
+      }
+    }
+  ]
+}
