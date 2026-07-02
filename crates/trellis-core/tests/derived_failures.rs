@@ -3,7 +3,12 @@ use std::sync::{
     atomic::{AtomicUsize, Ordering},
 };
 
-use trellis_core::{DependencyList, DeriveError, Graph, GraphError};
+use std::collections::BTreeSet;
+
+use trellis_core::{
+    DependencyList, DeriveError, FullRecomputeOutputMismatch, FullRecomputeResourceMismatch, Graph,
+    GraphError, ResourceKey, ResourcePlan,
+};
 
 #[test]
 fn undeclared_dependency_read_fails_transaction() {
@@ -65,4 +70,67 @@ fn full_recompute_check_detects_mismatch() {
         GraphError::FullRecomputeMismatch(derived.id())
     );
     assert_eq!(graph.derived_value(derived).unwrap(), Some(&1));
+}
+
+#[test]
+fn full_recompute_resource_mismatch_names_resource_key() {
+    let runs = Arc::new(AtomicUsize::new(0));
+    let runs_for_planner = Arc::clone(&runs);
+
+    let mut graph = Graph::<String>::new_with_command_type();
+    let mut tx = graph.begin_transaction().unwrap();
+    let scope = tx.create_scope("scope").unwrap();
+    let collection = tx
+        .set_collection("resources", DependencyList::empty(), |_| {
+            Ok(BTreeSet::from(["member".to_owned()]))
+        })
+        .unwrap();
+    tx.set_resource_planner(collection, scope, move |ctx| {
+        let run = runs_for_planner.fetch_add(1, Ordering::Relaxed) + 1;
+        let mut plan = ResourcePlan::new();
+        for added in &ctx.diff().added {
+            let key = ResourceKey::new(format!("{}-{run}", added.value));
+            plan.open(key, ctx.scope(), added.value.clone());
+        }
+        Ok(plan)
+    })
+    .unwrap();
+    tx.commit().unwrap();
+    drop(tx);
+
+    assert_eq!(
+        graph.full_recompute_check().unwrap_err(),
+        GraphError::FullRecomputeResourceMismatch(FullRecomputeResourceMismatch {
+            key: ResourceKey::new("member-1"),
+            incremental_owners: vec![scope],
+            recomputed_owners: Vec::new(),
+        })
+    );
+}
+
+#[test]
+fn full_recompute_output_mismatch_names_output_key() {
+    let runs = Arc::new(AtomicUsize::new(0));
+    let runs_for_output = Arc::clone(&runs);
+
+    let mut graph = Graph::<(), u64>::new_with_output_type();
+    let mut tx = graph.begin_transaction().unwrap();
+    let scope = tx.create_scope("scope").unwrap();
+    let output = tx
+        .materialized_output("output", scope, DependencyList::empty(), move |_| {
+            let next = runs_for_output.fetch_add(1, Ordering::Relaxed) + 1;
+            Ok(next as u64)
+        })
+        .unwrap();
+    tx.commit().unwrap();
+    drop(tx);
+
+    assert_eq!(
+        graph.full_recompute_check().unwrap_err(),
+        GraphError::FullRecomputeOutputMismatch(FullRecomputeOutputMismatch {
+            key: output.key(),
+            incremental_present: true,
+            recomputed_present: true,
+        })
+    );
 }

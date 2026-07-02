@@ -1,4 +1,6 @@
-use crate::{DeriveError, NodeId, OutputKey, ScopeId, TransactionId};
+use crate::{
+    DeriveError, NodeId, OutputKey, ResourceCommandKind, ResourceKey, ScopeId, TransactionId,
+};
 use core::fmt;
 
 /// Result type used by graph metadata operations.
@@ -79,6 +81,28 @@ impl From<DeriveError> for OutputError {
     }
 }
 
+/// Resource-owner divergence found by a full-recompute check.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FullRecomputeResourceMismatch {
+    /// Resource key whose owner set diverged.
+    pub key: ResourceKey,
+    /// Owner scopes in committed incremental state.
+    pub incremental_owners: Vec<ScopeId>,
+    /// Owner scopes found by full recompute.
+    pub recomputed_owners: Vec<ScopeId>,
+}
+
+/// Materialized-output divergence found by a full-recompute check.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct FullRecomputeOutputMismatch {
+    /// Output key whose payload diverged.
+    pub key: OutputKey,
+    /// Whether committed incremental state had a payload for the output.
+    pub incremental_present: bool,
+    /// Whether full recompute produced a payload for the output.
+    pub recomputed_present: bool,
+}
+
 /// Errors for graph metadata and input transaction operations.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum GraphError {
@@ -121,7 +145,14 @@ pub enum GraphError {
     /// A resource command used a scope outside its registered planner scope.
     ResourceScopeMismatch(ScopeId),
     /// A resource command required an existing owned resource.
-    ResourceNotOwned,
+    ResourceNotOwned {
+        /// Resource key that was required to be owned.
+        key: ResourceKey,
+        /// Scope that emitted the command.
+        scope: ScopeId,
+        /// Kind of resource command that required ownership.
+        command_kind: ResourceCommandKind,
+    },
     /// A dependency cycle was detected.
     CycleDetected(NodeId),
     /// A scalar derived node declared a collection dependency.
@@ -132,6 +163,10 @@ pub enum GraphError {
     CollectionFailed(NodeId, DeriveError),
     /// Incremental derived state differs from full recompute.
     FullRecomputeMismatch(NodeId),
+    /// Incremental resource-owner state differs from full recompute.
+    FullRecomputeResourceMismatch(FullRecomputeResourceMismatch),
+    /// Incremental materialized-output state differs from full recompute.
+    FullRecomputeOutputMismatch(FullRecomputeOutputMismatch),
 }
 
 impl fmt::Display for GraphError {
@@ -160,7 +195,14 @@ impl fmt::Display for GraphError {
                 write!(f, "resource planner failed for {scope:?}: {error:?}")
             }
             Self::ResourceScopeMismatch(id) => write!(f, "resource scope mismatch: {id:?}"),
-            Self::ResourceNotOwned => write!(f, "resource is not owned"),
+            Self::ResourceNotOwned {
+                key,
+                scope,
+                command_kind,
+            } => write!(
+                f,
+                "resource is not owned: key {key:?}, scope {scope:?}, command {command_kind:?}"
+            ),
             Self::CycleDetected(id) => write!(f, "dependency cycle detected at node: {id:?}"),
             Self::CollectionDependencyNotAllowed(id) => {
                 write!(
@@ -175,6 +217,16 @@ impl fmt::Display for GraphError {
             Self::FullRecomputeMismatch(id) => {
                 write!(f, "full recompute mismatch for node: {id:?}")
             }
+            Self::FullRecomputeResourceMismatch(mismatch) => write!(
+                f,
+                "full recompute resource mismatch for key: {:?}",
+                mismatch.key
+            ),
+            Self::FullRecomputeOutputMismatch(mismatch) => write!(
+                f,
+                "full recompute output mismatch for key: {:?}",
+                mismatch.key
+            ),
         }
     }
 }
@@ -215,11 +267,15 @@ impl GraphError {
                 | Self::ScopeClosed(scope)
                 | Self::ResourceScopeMismatch(scope)
                 | Self::PlanFailed(scope, _) => ErrorTarget::Scope(*scope),
+                Self::ResourceNotOwned { scope, .. } => ErrorTarget::Scope(*scope),
                 Self::TransactionClosed(transaction) => ErrorTarget::Transaction(*transaction),
                 Self::UnknownOutput(output) | Self::OutputFailed(output, _) => {
                     ErrorTarget::Output(*output)
                 }
-                Self::NestedTransaction | Self::ResourceNotOwned => ErrorTarget::Graph,
+                Self::FullRecomputeOutputMismatch(mismatch) => ErrorTarget::Output(mismatch.key),
+                Self::NestedTransaction | Self::FullRecomputeResourceMismatch(_) => {
+                    ErrorTarget::Graph
+                }
             },
         }
     }

@@ -1,6 +1,9 @@
 use std::collections::BTreeSet;
 
-use trellis_core::{DependencyList, Graph, GraphError, ResourceCommand, ResourceKey, ResourcePlan};
+use trellis_core::{
+    DependencyList, Graph, GraphError, ResourceCommand, ResourceCommandKind, ResourceKey,
+    ResourcePlan,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Command {
@@ -104,7 +107,14 @@ fn replace_without_existing_owner_fails_atomically() {
     let error = tx.commit().unwrap_err();
     drop(tx);
 
-    assert_eq!(error, GraphError::ResourceNotOwned);
+    assert_eq!(
+        error,
+        GraphError::ResourceNotOwned {
+            key: key("a"),
+            scope,
+            command_kind: ResourceCommandKind::Replace,
+        }
+    );
     assert!(graph.resource_owners(&key("a")).is_none());
 }
 
