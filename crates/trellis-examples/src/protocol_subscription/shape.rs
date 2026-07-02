@@ -156,23 +156,28 @@ pub(super) fn open_session(
 }
 
 pub(super) fn resource_key(target: &SubscriptionTarget) -> ResourceKey {
-    ResourceKey::new(format!(
-        "article-feed/{}/{}/{}",
-        target.account, target.route, target.source
-    ))
+    ResourceKey::from_segments([
+        "article-feed",
+        target.account.as_str(),
+        target.route.as_str(),
+        target.source.as_str(),
+    ])
 }
 
-pub(super) fn target_from_key(key: &ResourceKey) -> SubscriptionTarget {
-    let mut parts = key.as_str().splitn(4, '/');
-    let _prefix = parts.next();
-    let account = parts.next().unwrap_or_default().to_owned();
-    let route = parts.next().unwrap_or_default().to_owned();
-    let source = parts.next().unwrap_or_default().to_owned();
-    SubscriptionTarget {
+pub(super) fn target_from_key(key: &ResourceKey) -> Option<SubscriptionTarget> {
+    let mut segments = key.segments();
+    let prefix = segments.next()?;
+    let account = segments.next()?.to_owned();
+    let route = segments.next()?.to_owned();
+    let source = segments.next()?.to_owned();
+    if prefix != "article-feed" || segments.next().is_some() {
+        return None;
+    }
+    Some(SubscriptionTarget {
         account,
         route,
         source,
-    }
+    })
 }
 
 fn admit_rows(local_rows: &LocalRows, sources: &BTreeSet<String>, limit: usize) -> Vec<ArticleRow> {

@@ -185,9 +185,12 @@ impl ArticleFeedApp {
                 } => self
                     .subscription_effects
                     .push_back(SubscriptionEffect::Replace(shape.clone())),
-                ResourceCommand::Close { key, .. } => self
-                    .subscription_effects
-                    .push_back(SubscriptionEffect::Close(target_from_key(key))),
+                ResourceCommand::Close { key, .. } => {
+                    let target =
+                        target_from_key(key).expect("article feed resource key must be structured");
+                    self.subscription_effects
+                        .push_back(SubscriptionEffect::Close(target));
+                }
                 ResourceCommand::Refresh { .. } => {}
             }
         }

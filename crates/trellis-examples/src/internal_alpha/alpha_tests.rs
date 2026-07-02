@@ -28,7 +28,7 @@ fn members(values: &[u8]) -> BTreeSet<u8> {
 }
 
 fn key(value: u8) -> ResourceKey {
-    ResourceKey::new(format!("alpha:{value}"))
+    ResourceKey::from_segments(["alpha".to_owned(), value.to_string()])
 }
 
 fn command_closes(result: &TransactionResult<AlphaCommand>, value: u8) -> bool {

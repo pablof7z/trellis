@@ -107,6 +107,19 @@ fn versioned_trace_file_round_trips_to_scenario() {
 }
 
 #[test]
+fn resource_key_json_accepts_legacy_strings_and_structured_segments() {
+    let legacy: ResourceKey = serde_json::from_str(r#""resource:2""#).unwrap();
+    assert_eq!(legacy.segments().collect::<Vec<_>>(), vec!["resource:2"]);
+    assert_eq!(serde_json::to_string(&legacy).unwrap(), r#""resource:2""#);
+
+    let structured = ResourceKey::from_segments(["article-feed", "acct/a", "home/main"]);
+    let json = serde_json::to_string(&structured).unwrap();
+    assert_eq!(json, r#"["article-feed","acct/a","home/main"]"#);
+    let decoded: ResourceKey = serde_json::from_str(&json).unwrap();
+    assert_eq!(decoded, structured);
+}
+
+#[test]
 fn unsupported_script_version_is_a_graceful_replay_error() {
     let json = GOLDEN_SCRIPT.replace("\"formatVersion\": 1", "\"formatVersion\": 99");
     let script = DataTransactionScript::<Operation>::from_json(&json).unwrap();

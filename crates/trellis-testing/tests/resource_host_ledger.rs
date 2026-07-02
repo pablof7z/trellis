@@ -98,7 +98,10 @@ fn set_source(
 fn resource_ledger_detects_lifecycle_and_status_classes() {
     let (mut target, initial) = build_graph(members(&[1, 2]));
     let broad_key = ResourceKey::wildcard("all-devices");
-    assert_eq!(broad_key.as_str(), "wildcard:all-devices");
+    assert_eq!(
+        broad_key.segments().collect::<Vec<_>>(),
+        vec!["wildcard", "all-devices"]
+    );
 
     let mut forbidden = ResourceLedger::new();
     forbidden.mark_forbidden_unless_explicit(key(1));

@@ -1,13 +1,13 @@
 use crate::{
     AuditState, DependencyList, DerivedNode, GraphError, GraphResult, InputNode, NodeHandle,
-    NodeId, NodeKind, NodeMeta, OutputKey, OutputMeta, Revision, ScopeId, ScopeMeta, Transaction,
-    TransactionId, TransactionOptions,
+    NodeId, NodeKind, NodeMeta, OutputKey, OutputMeta, ResourceKey, Revision, ScopeId, ScopeMeta,
+    Transaction, TransactionId, TransactionOptions,
     collection::{CollectionSpec, StoredCollection, StoredDiff},
     derive::DerivedSpec,
     input::{StoredInput, value_type},
     output::OutputSpec,
     output_payload::StoredOutput,
-    resource::{ResourceKey, ResourcePlanner},
+    resource::ResourcePlanner,
     topology::TopologyCache,
 };
 use std::collections::{BTreeMap, BTreeSet};

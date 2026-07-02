@@ -10,7 +10,7 @@ pub enum TopicCommand {
 }
 
 fn key(topic: &str) -> ResourceKey {
-    ResourceKey::new(format!("topic:{topic}"))
+    ResourceKey::from_segments(["topic", topic])
 }
 
 #[cfg(test)]
