@@ -3,56 +3,36 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Trellis documentation entry point: install status, module overview, crate docs, README, and feature policy.">
+  <meta name="description" content="Trellis docs gateway. Source documentation lives in the GitHub repository.">
   <title>Docs - Trellis</title>
   <link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
-  <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/guide">Guide</a><a href="/examples">Examples</a><a href="/docs" aria-current="page">Docs</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a>
+      <nav class="nav-links" aria-label="Primary"><a href="/demos">Demos</a><a href="/docs" aria-current="page">Docs</a><a href="/adr">ADRs</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav>
+    </div>
+  </header>
   <main>
     <section class="container page-hero">
       <span class="eyebrow">Docs</span>
-      <h1>Documentation starts with the model.</h1>
-      <p class="lead">The crate API is still early. The durable contract is the category model: explicit nodes, structural diffs, resource plans, scopes, transactions, revisioned outputs, and full-recompute checks.</p>
+      <h1>The docs live with the code.</h1>
+      <p class="lead">The website does not mirror Trellis semantics. The repository is the source of truth for the charter, transaction semantics, testing support, shadow mode, and performance model.</p>
+      <div class="button-row">
+        <a class="button primary" href="https://github.com/pablof7z/trellis/tree/master/docs">Open docs on GitHub</a>
+        <a class="button" href="https://github.com/pablof7z/trellis/blob/master/README.md">Read the README</a>
+      </div>
     </section>
-    <section class="section"><div class="container content">
-      <article>
-        <h2>Install status</h2>
-        <p>The product working name is Trellis. A live crates.io check found that the package name <span class="mono">trellis</span> is already taken, so the final Rust package name is pending.</p>
-        <pre><code>[dependencies]
-# package name pending
-# docs.rs link pending crate publication</code></pre>
-        <h2>Module overview</h2>
-        <div class="grid two">
-          <div class="card"><h3>graph</h3><p>Graph construction, node identity, dependency edges, validation, and transaction entry points.</p></div>
-          <div class="card"><h3>diff</h3><p>Set and map structural diffs with deterministic ordering.</p></div>
-          <div class="card"><h3>plan</h3><p>ResourcePlan and plain command payloads returned to the host actor.</p></div>
-          <div class="card"><h3>scope</h3><p>Scope ownership, teardown, shared resource ownership, and output attachment.</p></div>
-          <div class="card"><h3>output</h3><p>MaterializedOutput frames, revisions, baselines, deltas, clears, and rebaselines.</p></div>
-          <div class="card"><h3>testing</h3><p>FullRecomputeCheck, invariant helpers, and replay/model-test support.</p></div>
-        </div>
-        <h2>Feature policy</h2>
-        <p>The current workspace does not publish a stable feature matrix. Core should stay independent of async runtimes, and runtime-specific dependencies belong in adapter crates.</p>
-      </article>
-      <aside class="toc">
-        <strong>Source docs</strong>
-        <a href="https://github.com/pablof7z/trellis/blob/master/README.md">README</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/CHARTER.md">Charter</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/SEMANTICS.md">Semantics</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/INVARIANTS.md">Invariants</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/TESTING.md">Testing</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/SHADOW_MODE.md">Shadow-Mode Adoption</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/ALPHA.md">Internal Alpha</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/RELEASE_CANDIDATE.md">Release Candidate</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/DESIGN_ESSAY.md">Design Essay</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/RELEASE_NOTES_0_1.md">0.1 Release Notes</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/POST_RELEASE.md">Post-Release</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/ADAPTERS.md">Adapters</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/PERFORMANCE.md">Performance</a>
-        <a href="https://github.com/pablof7z/trellis/blob/master/docs/GLOSSARY.md">Glossary</a>
-      </aside>
-    </div></section>
+    <section class="section">
+      <div class="container grid two">
+        <a class="card" href="https://github.com/pablof7z/trellis/blob/master/docs/SEMANTICS.md"><h2>Semantics</h2><p>Transaction phases, resource plans, output frames, and deterministic trace rules.</p></a>
+        <a class="card" href="https://github.com/pablof7z/trellis/blob/master/docs/SHADOW_MODE.md"><h2>Shadow mode</h2><p>The adoption path: run Trellis beside existing reconciliation and compare desired state.</p></a>
+        <a class="card" href="https://github.com/pablof7z/trellis/blob/master/docs/PERFORMANCE.md"><h2>Performance</h2><p>The honest cost model and the tracked optimization gaps.</p></a>
+        <a class="card" href="https://github.com/pablof7z/trellis/blob/master/docs/TESTING.md"><h2>Testing</h2><p>Oracle checks, replay, ledgers, conformance, and serialized trace support.</p></a>
+      </div>
+    </section>
   </main>
-  <footer class="footer"><div class="container"><p>Before 1.0, breaking changes should be documented with migration notes.</p></div></footer>
+  <footer class="footer"><div class="container"><p class="mono">MIT OR Apache-2.0. Pre-1.0. Semantics first, names second.</p></div></footer>
 </body>
 </html>
