@@ -1,37 +1,5 @@
-use crate::{Graph, GraphResult, NodeId, ScopeId};
-use core::fmt;
+use crate::{Graph, GraphResult, NodeId, ResourceKey, ScopeId};
 use std::sync::Arc;
-
-/// Stable identity for a desired external resource.
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct ResourceKey(Box<str>);
-
-impl ResourceKey {
-    /// Creates a resource key from deterministic host-chosen identity.
-    pub fn new(key: impl Into<Box<str>>) -> Self {
-        Self(key.into())
-    }
-
-    /// Creates an explicit broad-resource key.
-    ///
-    /// Core treats this as an opaque identity; tests and applications decide
-    /// whether the key represents a forbidden fallback or wildcard resource.
-    pub fn wildcard(key: impl AsRef<str>) -> Self {
-        Self::new(format!("wildcard:{}", key.as_ref()))
-    }
-
-    /// Returns this key as a string slice.
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl fmt::Debug for ResourceKey {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("ResourceKey").field(&self.0).finish()
-    }
-}
 
 /// Data-only command describing an external resource lifecycle change.
 #[derive(Clone, Debug, Eq, PartialEq)]

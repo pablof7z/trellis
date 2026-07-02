@@ -10,7 +10,7 @@ pub enum WatchCommand {
 }
 
 fn key(file: &str) -> ResourceKey {
-    ResourceKey::new(format!("watch:{file}"))
+    ResourceKey::from_segments(["watch", file])
 }
 
 #[cfg(test)]

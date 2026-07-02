@@ -304,10 +304,11 @@ A resource command SHOULD include:
 - graph revision;
 - cause or audit pointer.
 
-Resource identity MUST be represented by graph-visible `ResourceKey` data. It
-MUST NOT be hidden inside application command payloads. Payloads remain
-application-defined, but identity, owning scope, operation, transition policy,
-and cause metadata are Trellis-visible structural data.
+Resource identity MUST be represented by graph-visible `ResourceKey` data. A
+resource key is an ordered list of identity segments; hosts MUST recover product
+identity from those segments rather than parsing a flattened string. Payloads
+remain application-defined, but identity, owning scope, operation, transition
+policy, and cause metadata are Trellis-visible structural data.
 
 Allowed operation vocabulary SHOULD begin small:
 

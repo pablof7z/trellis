@@ -119,6 +119,42 @@ fn empty_source_opens_no_broad_demand() {
 }
 
 #[test]
+fn resource_keys_preserve_subscription_target_segments_with_slashes() {
+    let account = "acct/with/slash";
+    let route = "home/main";
+    let source = "relay/wss://example";
+    let expected_target = SubscriptionTarget {
+        account: account.to_owned(),
+        route: route.to_owned(),
+        source: source.to_owned(),
+    };
+    let key = resource_key(&expected_target);
+    assert_eq!(
+        key.segments().collect::<Vec<_>>(),
+        vec!["article-feed", account, route, source]
+    );
+
+    let mut app = ArticleFeedApp::new();
+    app.set_route_sources(account, route, [source]);
+    app.replace_source_rows(source, vec![row(source, "1")]);
+    let handle = app.open_article_feed(ArticleFeedParams::new(account, route, 100));
+    assert_eq!(
+        app.drain_subscription_effects(),
+        vec![SubscriptionEffect::Open(LiveSubscription {
+            target: expected_target.clone(),
+            limit: 100,
+            replay_epoch: 0,
+        })]
+    );
+
+    app.close(handle);
+    assert_eq!(
+        app.drain_subscription_effects(),
+        vec![SubscriptionEffect::Close(expected_target)]
+    );
+}
+
+#[test]
 fn replay_and_baseline_frames_are_coherent() {
     let mut app = seeded_app(&["a"]);
     let handle = app.open_article_feed(params());

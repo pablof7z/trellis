@@ -46,6 +46,7 @@ mod output_reconcile;
 mod read;
 mod resource;
 mod resource_build;
+mod resource_key;
 mod resource_reconcile;
 mod scope;
 mod scope_lifecycle;
@@ -80,7 +81,8 @@ pub use oracle::FullRecomputeCheck;
 pub use output::{MaterializedOutput, OutputContext, OutputMeta, OutputOptions};
 pub use output_frame::{ClearReason, OutputFrame, OutputFrameKind, RebaselineReason};
 pub use output_payload::OutputPayload;
-pub use resource::{PlanContext, ResourceCommand, ResourceKey, ResourcePlan};
+pub use resource::{PlanContext, ResourceCommand, ResourcePlan};
+pub use resource_key::ResourceKey;
 pub use scope::ScopeMeta;
 pub use trace::{
     OutputFrameKindTrace, OutputFrameTrace, ResourceCommandKind, ResourceCommandTrace,

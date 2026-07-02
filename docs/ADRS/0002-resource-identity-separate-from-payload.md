@@ -15,7 +15,8 @@ deterministic replacement.
 ## Decision
 
 Resource identity is represented by a stable `ResourceKey` that is separate
-from command payload.
+from command payload. ADR 0007 refines `ResourceKey` into ordered structured
+segments so hosts do not need to parse identity out of flattened strings.
 
 A resource command exposes:
 

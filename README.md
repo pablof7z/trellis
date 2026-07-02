@@ -69,7 +69,7 @@ enum SyncCommand {
 }
 
 fn key(project: &str) -> ResourceKey {
-    ResourceKey::new(format!("sync:{project}"))
+    ResourceKey::from_segments(["sync", project])
 }
 
 let mut graph = Graph::<SyncCommand>::new_with_command_type();

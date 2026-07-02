@@ -49,7 +49,7 @@ source set changed
 
 A resource planner returns `ResourcePlan<C>` as data. The command payload `C` is
 application-defined, but resource identity stays visible to Trellis through
-`ResourceKey`.
+structured `ResourceKey` segments.
 
 The host applies returned commands outside graph propagation.
 

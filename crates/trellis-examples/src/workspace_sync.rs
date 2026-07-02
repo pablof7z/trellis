@@ -10,7 +10,7 @@ pub enum SyncCommand {
 }
 
 fn key(project: &str) -> ResourceKey {
-    ResourceKey::new(format!("sync:{project}"))
+    ResourceKey::from_segments(["sync", project])
 }
 
 #[cfg(test)]
