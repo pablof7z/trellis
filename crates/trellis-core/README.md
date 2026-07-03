@@ -36,14 +36,14 @@ Names and exact APIs may change before 1.0.
 
 ```toml
 [dependencies]
-trellis-core = "0.1"
+trellis-core = "0.2"
 ```
 
 Optional serialization support:
 
 ```toml
 [dependencies]
-trellis-core = { version = "0.1", features = ["serde"] }
+trellis-core = { version = "0.2", features = ["serde"] }
 ```
 
 ## Quick Sketch

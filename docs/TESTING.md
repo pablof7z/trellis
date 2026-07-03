@@ -171,7 +171,7 @@ you are using:
 
 ```toml
 [dev-dependencies]
-trellis-testing = { version = "0.1", features = ["proptest"] }
+trellis-testing = { version = "0.2", features = ["proptest"] }
 ```
 
 Current feature boundaries:

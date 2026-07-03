@@ -245,7 +245,7 @@ plan to authority is the milestone the roadmap is sequenced around.
 
 ```toml
 [dependencies]
-trellis-core = "0.1"
+trellis-core = "0.2"
 ```
 
 To use unreleased repository changes:
@@ -258,7 +258,7 @@ trellis-core = { git = "https://github.com/pablof7z/trellis", package = "trellis
 Optional serialization support:
 
 ```toml
-trellis-core = { version = "0.1", features = ["serde"] }
+trellis-core = { version = "0.2", features = ["serde"] }
 ```
 
 ## Core rules

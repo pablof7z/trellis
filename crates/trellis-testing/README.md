@@ -14,14 +14,14 @@ runtime, network simulator, UI harness, or mock library.
 
 ```toml
 [dev-dependencies]
-trellis-testing = "0.1"
+trellis-testing = "0.2"
 ```
 
 Optional helpers are feature-gated:
 
 ```toml
 [dev-dependencies]
-trellis-testing = { version = "0.1", features = ["proptest"] }
+trellis-testing = { version = "0.2", features = ["proptest"] }
 ```
 
 Available optional features:
