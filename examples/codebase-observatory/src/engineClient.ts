@@ -1,7 +1,7 @@
 import type { AppState, EngineApi, ReplayResult } from "./types";
 
 export async function loadEngine(): Promise<EngineApi> {
-  const wasm = await import("./wasm/trellis_observatory_engine.js");
+  const wasm = await import("../../../demos/leak-duel/engine/trellis_observatory_engine.js");
   await wasm.default();
   return {
     initialState: () => JSON.parse(wasm.initial_state()) as AppState,

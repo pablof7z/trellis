@@ -1,4 +1,4 @@
-declare module "./wasm/trellis_observatory_engine.js" {
+declare module "../../../demos/leak-duel/engine/trellis_observatory_engine.js" {
   export default function init(): Promise<void>;
   export function initial_state(): string;
   export function dispatch(stateJson: string, actionJson: string): string;
