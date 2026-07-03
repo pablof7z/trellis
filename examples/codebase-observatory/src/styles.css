@@ -1,23 +1,23 @@
 :root {
-  --bg: #0b0f14;
-  --surface-1: #10161f;
-  --surface-2: #141c27;
-  --surface-3: #192332;
-  --border-soft: #223044;
-  --border-strong: #314158;
-  --text: #e7edf5;
-  --text-muted: #96a6ba;
-  --text-faint: #66758a;
-  --accent: #6ea8ff;
-  --accent-bg: rgba(110, 168, 255, 0.12);
-  --success: #3ecf8e;
-  --success-bg: rgba(62, 207, 142, 0.12);
-  --danger: #ff6475;
-  --danger-bg: rgba(255, 100, 117, 0.12);
-  --warning: #f5b84b;
-  --warning-bg: rgba(245, 184, 75, 0.12);
-  --font-ui: Inter, Geist, system-ui, sans-serif;
-  --font-code: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  --bg: #141311;
+  --surface-1: #191815;
+  --surface-2: #201e1a;
+  --surface-3: #28241f;
+  --border-soft: #39342d;
+  --border-strong: #5c4f3f;
+  --text: #f2eee6;
+  --text-muted: #aaa196;
+  --text-faint: #7d7468;
+  --accent: #d58d38;
+  --accent-bg: #2d2117;
+  --success: #64ad81;
+  --success-bg: #1d251d;
+  --danger: #cf6259;
+  --danger-bg: #2a1c1a;
+  --warning: #c99b4b;
+  --warning-bg: #292318;
+  --font-ui: "Berkeley Mono", "JetBrains Mono", ui-monospace, monospace;
+  --font-code: "Berkeley Mono", "JetBrains Mono", ui-monospace, monospace;
   color: var(--text);
   background: var(--bg);
   font-family: var(--font-ui);
@@ -44,7 +44,7 @@ button,
 select {
   height: 32px;
   border: 1px solid var(--border-soft);
-  border-radius: 8px;
+  border-radius: 2px;
   background: var(--surface-2);
   color: var(--text);
 }
@@ -83,7 +83,7 @@ select {
   gap: 12px;
   border-bottom: 1px solid var(--border-soft);
   padding: 0 16px;
-  background: rgba(11, 15, 20, 0.94);
+  background: var(--bg);
 }
 
 .topbar {
@@ -99,7 +99,9 @@ p {
 
 h1 {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
 }
 
 .topbar p,
@@ -118,21 +120,24 @@ h1 {
 
 .mode,
 .badge {
-  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  border-radius: 2px;
   padding: 4px 9px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
 .mode.trellis,
 .badge.pass {
+  border-color: var(--success);
   background: var(--success-bg);
   color: var(--success);
 }
 
 .mode.naive,
 .badge.fail {
+  border-color: var(--danger);
   background: var(--danger-bg);
   color: var(--danger);
 }
@@ -149,10 +154,10 @@ h1 {
 }
 
 .button.primary {
-  border-color: rgba(110, 168, 255, 0.5);
+  border-color: var(--accent);
   background: var(--accent-bg);
-  color: #cfe2ff;
-  font-weight: 700;
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .button.secondary {
@@ -174,7 +179,7 @@ h1 {
   height: 32px;
   place-items: center;
   border: 1px solid var(--border-soft);
-  border-radius: 8px;
+  border-radius: 2px;
   padding: 0 11px;
   cursor: pointer;
   list-style: none;
@@ -193,10 +198,9 @@ h1 {
   width: 300px;
   gap: 10px;
   border: 1px solid var(--border-strong);
-  border-radius: 10px;
+  border-radius: 2px;
   padding: 12px;
   background: var(--surface-2);
-  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.36);
 }
 
 .fault-menu label,

@@ -1,30 +1,45 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1px;
+  border: 1px solid var(--rule);
+  background: var(--rule);
 }
 
 .grid.two {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.card {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem;
-  background: var(--panel);
-  box-shadow: 0 16px 36px var(--shadow);
+.card,
+.diagram,
+.trace-card,
+.lane,
+.toc {
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--paper-high);
 }
 
-.card .mono {
-  color: var(--text);
-  font-size: 0.9rem;
+.card,
+.lane,
+.toc {
+  padding: 1rem;
+}
+
+.card .mono,
+.card h2,
+.card h3,
+.card a {
+  font-family: var(--font-mono);
 }
 
 .card p,
-.card ul {
+.card ul,
+.lane p,
+.lane ul {
   margin: 0.6rem 0 0;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .card ul,
@@ -33,27 +48,25 @@
 }
 
 .diagram {
-  min-width: 0;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border: 1px solid var(--rule);
   padding: 1rem;
-  background: #0a0f15;
 }
 
 .phase-row {
   display: grid;
   grid-template-columns: repeat(6, minmax(92px, 1fr));
-  gap: 0.55rem;
+  gap: 1px;
   overflow-x: auto;
+  border: 1px solid var(--rule);
+  background: var(--rule);
 }
 
 .phase {
   min-width: 0;
   min-height: 74px;
-  border: 1px solid var(--border);
-  border-radius: 7px;
   padding: 0.65rem;
-  background: var(--panel);
+  background: var(--paper-high);
+  font-family: var(--font-mono);
 }
 
 .hero .phase-row {
@@ -63,205 +76,207 @@
 
 .phase b {
   display: block;
-  color: var(--text);
+  color: var(--ink);
+  font-weight: 500;
 }
 
 .phase small {
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .path-line {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  gap: 0.3rem;
   align-items: center;
   margin: 1rem 0 0;
-  color: var(--muted);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
 }
 
-.path-line span {
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 0.25rem 0.55rem;
-  background: var(--panel);
+.path-line span,
+.revision-chip,
+.cost-list a {
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.18rem 0.45rem;
+  background: var(--paper-high);
 }
 
 .muted {
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
-.accent-green {
-  color: var(--green);
+.accent-green,
+.delta.add,
+.kind-open,
+.kind-added {
+  color: var(--open);
 }
 
-.accent-blue {
-  color: var(--blue);
+.accent-red,
+.delta.remove,
+.kind-close,
+.kind-removed {
+  color: var(--close);
 }
 
-.accent-violet {
-  color: var(--violet);
-}
-
+.accent-blue,
+.accent-violet,
 .accent-amber {
-  color: var(--amber);
-}
-
-.accent-red {
-  color: var(--red);
+  color: var(--stamp);
 }
 
 .toc {
   position: sticky;
-  top: 88px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem;
-  background: var(--panel);
+  top: 78px;
+  border: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
 }
 
 .toc a {
   display: block;
   padding: 0.25rem 0;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .callout {
-  border-left: 3px solid var(--blue);
-  padding: 0.8rem 1rem;
-  background: rgba(88, 166, 255, 0.08);
-  color: var(--text);
+  border-left: 2px solid var(--stamp);
+  padding: 0.75rem 1rem;
+  background: var(--paper-high);
+  color: var(--ink);
+}
+
+.comparison,
+.bug-list,
+.genre-table,
+.receipt-block {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--rule);
 }
 
 .comparison {
-  display: grid;
   grid-template-columns: 180px minmax(0, 1fr) minmax(0, 1fr);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: hidden;
 }
 
-.comparison div {
+.comparison div,
+.bug-list p {
+  margin: 0;
   padding: 0.8rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--panel);
+  background: var(--paper-high);
 }
 
 .comparison div:nth-child(3n + 1) {
-  color: var(--text);
-  font-weight: 700;
-}
-
-.comparison div:nth-last-child(-n + 3) {
-  border-bottom: 0;
-}
-
-.trace-card,
-.lane {
-  min-width: 0;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #0a0f15;
-  box-shadow: 0 16px 36px var(--shadow);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-weight: 500;
 }
 
 .trace-card {
-  padding: 0;
   overflow: hidden;
+  border: 1px solid var(--rule);
 }
 
 .hero-trace {
   align-self: stretch;
 }
 
-.trace-head {
+.trace-head,
+.receipt-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.8rem 0.9rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 700;
+  padding: 0.7rem 0.8rem;
+  background: var(--paper-high);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.trace-block {
+.trace-block,
+.receipt-row {
   display: grid;
-  gap: 0.45rem;
-  padding: 0.9rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.trace-block:last-child {
-  border-bottom: 0;
+  gap: 0.35rem;
+  padding: 0.72rem 0.8rem;
+  background: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.55;
 }
 
 .trace-block strong {
-  color: var(--text);
-  font-size: 0.88rem;
+  color: var(--ink);
+  font-weight: 500;
 }
 
 .trace-block p {
   margin: 0;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
-.trace-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  color: var(--muted);
-  font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.9rem;
+.trace-row,
+.receipt-line {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) minmax(8rem, 0.72fr);
+  gap: 0.8rem;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
 }
 
-.delta {
-  font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-weight: 700;
+.receipt-line b,
+.receipt-line code {
+  color: var(--ink);
+  font-weight: 400;
 }
 
-.delta.add {
-  color: var(--green);
+.kind-badge {
+  font-family: var(--font-mono);
+  font-weight: 500;
 }
 
-.delta.remove {
-  color: var(--red);
+.cause-chain {
+  color: var(--ink-muted);
+}
+
+.oracle-line {
+  color: var(--open);
+}
+
+.delta,
+.counter-grid strong {
+  font-family: var(--font-mono);
+  font-weight: 500;
 }
 
 .delta.keep {
-  color: var(--muted);
-}
-
-.bug-list {
-  display: grid;
-  gap: 1px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--border);
-}
-
-.bug-list p {
-  margin: 0;
-  padding: 0.85rem 1rem;
-  background: var(--panel);
-  color: var(--text);
+  color: var(--ink-muted);
 }
 
 .lane-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1px;
   margin-top: 1.4rem;
+  border: 1px solid var(--rule);
+  background: var(--rule);
 }
 
-.lane {
-  padding: 1rem;
+.demo-ledger {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
 
-.lane p,
-.lane ul {
-  color: var(--muted);
+.demo-card .button {
+  justify-self: start;
+  margin: 0.2rem 0 0;
 }

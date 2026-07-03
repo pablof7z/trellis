@@ -1,9 +1,9 @@
 .recorder-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-columns: minmax(0, 1fr) 24rem;
   gap: 2rem;
   align-items: end;
-  padding: 4.5rem 0 2rem;
+  padding: 3rem 0 2rem;
 }
 
 .recorder-hero > *,
@@ -18,26 +18,31 @@
 .recorder-controls,
 .recorder-status,
 .recorder-panel {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #0a0f15;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper-high);
 }
 
 .recorder-controls {
   display: grid;
-  gap: 0.8rem;
-  padding: 1rem;
+  gap: 1px;
+  padding: 0;
+  background: var(--rule);
+  font-family: var(--font-mono);
 }
 
 .recorder-controls.dragging {
-  border-color: var(--green);
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
 }
 
 .recorder-controls label {
   display: grid;
   gap: 0.3rem;
-  color: var(--muted);
-  font-size: 0.86rem;
+  padding: 0.7rem;
+  background: var(--paper-high);
+  color: var(--ink-muted);
+  font-size: 0.72rem;
 }
 
 .recorder-controls input,
@@ -45,15 +50,16 @@
 .scrubber {
   width: 100%;
   min-width: 0;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0.48rem;
-  background: var(--graphite);
-  color: var(--text);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.45rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-mono);
 }
 
 .scrubber {
-  accent-color: var(--green);
+  accent-color: var(--stamp);
   padding: 0;
 }
 
@@ -62,16 +68,17 @@
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1rem;
-  padding: 0.8rem 1rem;
+  padding: 0.75rem 0.9rem;
+  font-family: var(--font-mono);
 }
 
 .recorder-status span {
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .recorder-status.error {
-  border-color: rgba(248, 81, 73, 0.6);
-  color: var(--red);
+  border-color: var(--close);
+  color: var(--close);
 }
 
 .recorder-grid {
@@ -95,10 +102,11 @@
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 0.9rem;
+  font-family: var(--font-mono);
 }
 
 .panel-head h2 {
-  font-size: 1.12rem;
+  font-size: 1rem;
 }
 
 .timeline-list,
@@ -106,7 +114,9 @@
 .receipt-view,
 .diff-view {
   display: grid;
-  gap: 0.55rem;
+  gap: 1px;
+  border: 1px solid var(--rule);
+  background: var(--rule);
 }
 
 .timeline-step,
@@ -114,25 +124,29 @@
 .receipt-step,
 .diff-row,
 .trace-fact {
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 0.7rem;
-  background: var(--panel);
+  border: 0;
+  border-radius: 0;
+  padding: 0.68rem;
+  background: var(--paper);
 }
 
-.timeline-step {
+.timeline-step,
+.command-row {
   width: 100%;
-  color: var(--text);
+  color: var(--ink);
+  font-family: var(--font-mono);
   text-align: left;
 }
 
 .timeline-step.selected,
 .command-row.selected {
-  border-color: var(--blue);
+  outline: 2px solid var(--stamp);
+  outline-offset: -2px;
 }
 
-.timeline-step.leak {
-  border-color: rgba(248, 81, 73, 0.65);
+.timeline-step.leak,
+.command-row[data-kind="Close"] {
+  color: var(--close);
 }
 
 .timeline-step span,
@@ -140,7 +154,7 @@
 .diff-row span,
 .receipt-step span {
   display: block;
-  color: var(--muted);
+  color: var(--ink-muted);
   overflow-wrap: anywhere;
 }
 
@@ -148,13 +162,10 @@
   display: grid;
   grid-template-columns: 86px minmax(0, 1fr) 72px;
   gap: 0.6rem;
-  width: 100%;
-  color: var(--text);
-  text-align: left;
 }
 
-.command-row[data-kind="Close"] {
-  border-color: rgba(248, 81, 73, 0.45);
+.command-row[data-kind="Open"] {
+  color: var(--open);
 }
 
 .receipt-step strong,
@@ -162,6 +173,8 @@
 .trace-fact strong {
   display: block;
   margin-bottom: 0.2rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
 }
 
 .lower {
@@ -171,19 +184,14 @@
 
 @media (max-width: 900px) {
   .recorder-hero,
-  .recorder-grid {
+  .recorder-grid,
+  .command-row {
     grid-template-columns: 1fr;
-  }
-
-  .recorder-hero h1 {
-    font-size: clamp(2.35rem, 11vw, 3.15rem);
   }
 
   .recorder-status,
-  .panel-head,
-  .command-row {
+  .panel-head {
     align-items: stretch;
-    grid-template-columns: 1fr;
   }
 
   .recorder-status {

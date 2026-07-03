@@ -73,6 +73,8 @@ for (const file of htmlFiles) {
       if (!existsSync(join(root, link))) errors.push(`Broken asset link in ${file}: ${link}`);
       continue;
     }
+    const fileTarget = normalize(join(root, link));
+    if (existsSync(fileTarget) && statSync(fileTarget).isFile()) continue;
     const target = normalize(join(root, link, "index.html"));
     if (!existsSync(target)) errors.push(`Broken route link in ${file}: ${link}`);
   }

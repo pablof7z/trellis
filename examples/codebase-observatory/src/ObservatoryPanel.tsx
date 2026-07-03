@@ -17,11 +17,11 @@ export function ObservatoryPanel({ state, dispatch }: Props) {
     <aside className="panel observatory">
       <div className="observatory-head">
         <div>
-          <span className="eyebrow">Trellis Observatory</span>
+          <span className="eyebrow">trellis observatory</span>
           <h2>Tx {trace.txId} · {transactionTitle(trace)}</h2>
           <p>{transactionSubtitle(trace)}</p>
         </div>
-        <span className={failures.length ? "badge fail" : "badge pass"}>{failures.length ? "fault caught" : "deterministic"}</span>
+        <span className={failures.length ? "badge fail" : "badge pass"}>{failures.length ? "[FAULT]" : "[DETERMINISTIC]"}</span>
       </div>
       <div className="tabbar compact">
         {tabs.map((name) => (
@@ -108,7 +108,7 @@ function InvariantView({ trace, dispatch }: { trace: TransactionTrace; dispatch:
     <div className="observatory-scroll">
       {trace.invariantChecks.map((check) => (
         <button className={`invariant ${check.status}`} key={check.id} onClick={() => dispatch({ type: "selectWhy", id: `invariant:${check.id}` })}>
-          <span>{check.status === "pass" ? "PASS" : "FAIL"}</span>
+          <span>{check.status === "pass" ? "[PASS]" : "[FAIL]"}</span>
           {check.label}
           {check.details && <small>{check.details}</small>}
         </button>
@@ -128,7 +128,7 @@ function ReplayView({ state }: { state: AppState }) {
       </div>
       {result.checks.map((check) => (
         <div className={`invariant ${check.status}`} key={check.id}>
-          <span>{check.status}</span>
+          <span>{check.status === "pass" ? "[PASS]" : "[FAIL]"}</span>
           {check.label}
         </div>
       ))}

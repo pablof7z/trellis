@@ -54,7 +54,7 @@
 }
 
 .tree-row.active {
-  border-color: rgba(110, 168, 255, 0.32);
+  border-color: var(--accent);
   background: var(--accent-bg);
 }
 
@@ -107,7 +107,7 @@
 .editor-body {
   position: relative;
   min-height: 0;
-  background: #0d1117;
+  background: var(--bg);
 }
 
 .editor-overlays {
@@ -128,13 +128,12 @@
 
 .diag-row,
 .editor-note {
-  border: 1px solid rgba(255, 100, 117, 0.28);
-  border-radius: 8px;
+  border: 1px solid var(--danger);
+  border-radius: 2px;
   padding: 8px 10px;
-  background: rgba(18, 22, 29, 0.92);
+  background: var(--danger-bg);
   color: var(--text);
   font-size: 12px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
 }
 
 .diag-row {
@@ -143,7 +142,7 @@
   max-width: 390px;
   min-height: 25px;
   padding: 5px 9px;
-  background: rgba(18, 22, 29, 0.74);
+  background: var(--danger-bg);
   line-height: 1.25;
 }
 
@@ -155,16 +154,19 @@
 
 .editor-note {
   border-color: var(--border-soft);
+  background: var(--surface-2);
   color: var(--text-muted);
 }
 
 .editor-note.success {
-  border-color: rgba(62, 207, 142, 0.24);
+  border-color: var(--success);
+  background: var(--success-bg);
   color: var(--success);
 }
 
 .editor-note.warn {
-  border-color: rgba(245, 184, 75, 0.32);
+  border-color: var(--warning);
+  background: var(--warning-bg);
   color: var(--warning);
 }
 
@@ -204,7 +206,7 @@
 
 .runtime-list div {
   border: 1px solid var(--border-soft);
-  border-radius: 7px;
+  border-radius: 2px;
   padding: 7px 9px;
   color: var(--text-muted);
   font-size: 12px;
@@ -219,7 +221,7 @@
 .problems-table th,
 .problems-table td {
   height: 32px;
-  border-top: 1px solid rgba(34, 48, 68, 0.7);
+  border-top: 1px solid var(--border-soft);
   padding: 0 12px;
   text-align: left;
 }
@@ -241,7 +243,7 @@
 }
 
 .problems-table tbody tr:hover {
-  background: rgba(110, 168, 255, 0.06);
+  background: var(--accent-bg);
 }
 
 .diagnostic-squiggle {
