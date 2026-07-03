@@ -7,7 +7,7 @@ repository.workspace = true
 description = "Proof examples for Trellis graph shapes."
 
 [dependencies]
-trellis-core = { version = "0.1.0", path = "../trellis-core" }
+trellis-core = { version = "0.2.0", path = "../trellis-core" }
 
 [dev-dependencies]
 trellis-testing = { path = "../trellis-testing" }

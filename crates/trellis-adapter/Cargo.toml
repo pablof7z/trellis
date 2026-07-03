@@ -7,4 +7,4 @@ repository.workspace = true
 description = "Runtime-neutral adapter boundary helpers for Trellis."
 
 [dependencies]
-trellis-core = { version = "0.1.0", path = "../trellis-core" }
+trellis-core = { version = "0.2.0", path = "../trellis-core" }
