@@ -1,15 +1,16 @@
 use crate::{
-    Graph, GraphError, GraphResult, ResourceCommand, ResourceCommandCause, ResourceCommandKind,
-    ResourceKey, ResourcePlan, ScopeId,
+    Graph, GraphError, GraphResult, ResourceCoalescedTrace, ResourceCommand, ResourceCommandCause,
+    ResourceCommandKind, ResourceKey, ResourcePayloadConflict, ResourcePlan, ScopeId,
 };
 use std::collections::BTreeSet;
 
-impl<C> Graph<C> {
+impl<C: Clone + PartialEq> Graph<C> {
     pub(crate) fn produce_resource_plan(
         &mut self,
         closed_scopes: &[ScopeId],
     ) -> GraphResult<ResourcePlan<C>> {
         self.audit.pending_resource_causes.clear();
+        self.audit.pending_resource_coalescences.clear();
         let planners = self.resource_planners.clone();
         let mut plan = ResourcePlan::new();
         for planner in planners {
@@ -74,6 +75,7 @@ impl<C> Graph<C> {
                     .entry(key.clone())
                     .or_default()
                     .insert(scope);
+                self.resource_payloads.insert(key.clone(), command.clone());
                 plan.replace(key, scope, command);
                 self.audit.pending_resource_causes.push(cause);
                 Ok(())
@@ -89,6 +91,7 @@ impl<C> Graph<C> {
                     .entry(key.clone())
                     .or_default()
                     .insert(scope);
+                self.resource_payloads.insert(key.clone(), command.clone());
                 plan.refresh(key, scope, command);
                 self.audit.pending_resource_causes.push(cause);
                 Ok(())
@@ -105,21 +108,56 @@ impl<C> Graph<C> {
         cause: ResourceCommandCause,
     ) -> GraphResult<()> {
         self.require_scope_open(scope)?;
+        let existing_payload = self.resource_payloads.get(&key);
+        let existing_owners = self.resource_owners.get(&key);
+        let was_empty = existing_owners.is_none_or(BTreeSet::is_empty);
+        let already_owned = existing_owners.is_some_and(|owners| owners.contains(&scope));
+        if let Some(existing_payload) = existing_payload
+            && existing_payload != &command
+        {
+            return Err(GraphError::ResourcePayloadConflict(
+                ResourcePayloadConflict {
+                    key,
+                    joining_scope: scope,
+                    existing_owners: existing_owners
+                        .into_iter()
+                        .flat_map(|owners| owners.iter().copied())
+                        .collect(),
+                },
+            ));
+        }
+        let existing_owner_count = existing_owners.map_or(0, BTreeSet::len);
         let owners = self.resource_owners.entry(key.clone()).or_default();
-        let was_empty = owners.is_empty();
         owners.insert(scope);
         if was_empty {
+            self.resource_payloads.insert(key.clone(), command.clone());
+            self.record_resource_acquisition(scope, &key);
             plan.open(key, scope, command);
             self.audit.pending_resource_causes.push(cause);
+        } else if !already_owned {
+            self.record_resource_acquisition(scope, &key);
+            self.audit
+                .pending_resource_coalescences
+                .push(ResourceCoalescedTrace {
+                    key,
+                    scope,
+                    existing_owner_count,
+                });
         }
         Ok(())
     }
 
     fn close_scope_resources(&mut self, scope: ScopeId) -> ResourcePlan<C> {
-        let keys: Vec<ResourceKey> = self.resource_owners.keys().cloned().collect();
+        let mut keys: Vec<(u64, ResourceKey)> = self
+            .resource_acquisitions
+            .iter()
+            .filter(|((owner_scope, _), _)| *owner_scope == scope)
+            .map(|((_, key), sequence)| (*sequence, key.clone()))
+            .collect();
+        keys.sort_by(|left, right| right.0.cmp(&left.0).then_with(|| left.1.cmp(&right.1)));
         let mut plan = ResourcePlan::new();
         let cause = ResourceCommandCause::ScopeClosed { scope };
-        for key in keys {
+        for (_, key) in keys {
             self.remove_resource_owner(&key, scope, &mut plan, cause);
         }
         plan
@@ -136,8 +174,10 @@ impl<C> Graph<C> {
             return;
         };
         owners.remove(&scope);
+        self.resource_acquisitions.remove(&(scope, key.clone()));
         if owners.is_empty() {
             self.resource_owners.remove(key);
+            self.resource_payloads.remove(key);
             plan.close(key.clone(), scope);
             self.audit.pending_resource_causes.push(cause);
         }
@@ -165,7 +205,9 @@ impl<C> Graph<C> {
         }
         Ok(())
     }
+}
 
+impl<C> Graph<C> {
     pub(crate) fn require_scope_open(&self, scope: ScopeId) -> GraphResult<()> {
         let scope_meta = self
             .scope_meta(scope)
@@ -179,5 +221,18 @@ impl<C> Graph<C> {
     /// Returns resource owners in deterministic resource-key order.
     pub fn resource_owners(&self, key: &ResourceKey) -> Option<&BTreeSet<ScopeId>> {
         self.resource_owners.get(key)
+    }
+
+    pub(crate) fn take_pending_resource_coalescences(&mut self) -> Vec<ResourceCoalescedTrace> {
+        std::mem::take(&mut self.audit.pending_resource_coalescences)
+    }
+
+    fn record_resource_acquisition(&mut self, scope: ScopeId, key: &ResourceKey) {
+        let entry = (scope, key.clone());
+        if !self.resource_acquisitions.contains_key(&entry) {
+            let sequence = self.next_resource_acquisition;
+            self.next_resource_acquisition += 1;
+            self.resource_acquisitions.insert(entry, sequence);
+        }
     }
 }

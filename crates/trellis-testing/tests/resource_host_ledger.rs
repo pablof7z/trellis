@@ -249,6 +249,44 @@ fn resource_ledger_detects_lifecycle_and_status_classes() {
 }
 
 #[test]
+fn resource_ledger_tracks_coalesced_open_owners() {
+    let mut graph = Graph::<Command>::new_with_command_type();
+    let mut tx = graph.begin_transaction().unwrap();
+    let first = tx.create_scope("first").unwrap();
+    let second = tx.create_scope("second").unwrap();
+    for (name, scope) in [("first", first), ("second", second)] {
+        let collection = tx
+            .set_collection(name, DependencyList::empty(), |_| Ok(members(&[1])))
+            .unwrap();
+        tx.set_resource_planner(collection, scope, move |ctx| {
+            let mut plan = ResourcePlan::new();
+            for added in &ctx.diff().added {
+                plan.open(key(added.value), ctx.scope(), Command::Open(added.value));
+            }
+            Ok(plan)
+        })
+        .unwrap();
+    }
+    let result = tx.commit().unwrap();
+    drop(tx);
+
+    let mut ledger = ResourceLedger::new();
+    ledger.apply_result(&result);
+    ledger.assert_no_unexplained_coalescing().unwrap();
+    ledger.assert_resource_opened_once(&key(1)).unwrap();
+    ledger
+        .assert_resource_shared_by(&key(1), BTreeSet::from([first, second]))
+        .unwrap();
+    ledger
+        .assert_command_order(&[ResourceCommandTrace {
+            key: key(1),
+            scope: first,
+            kind: ResourceCommandKind::Open,
+        }])
+        .unwrap();
+}
+
+#[test]
 fn fake_host_close_status_is_current_for_the_close_command() {
     let (mut target, initial) = build_graph(members(&[9]));
     let mut ledger = ResourceLedger::new();

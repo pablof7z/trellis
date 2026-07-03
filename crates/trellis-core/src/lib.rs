@@ -59,7 +59,7 @@ mod transaction_types;
 
 pub(crate) use audit_types::AuditState;
 pub use audit_types::{
-    NodeChangeExplanation, OutputFrameExplanation, ResourceCommandCause,
+    NodeChangeExplanation, OutputFrameExplanation, ResourceCoalescedTrace, ResourceCommandCause,
     ResourceCommandExplanation, ScopeResourceInventory,
 };
 pub use collection::CollectionContext;
@@ -69,6 +69,7 @@ pub use derive::{DeriveContext, DeriveError};
 pub use error::{
     ErrorAuditEvent, ErrorCategory, ErrorTarget, FullRecomputeOutputMismatch,
     FullRecomputeResourceMismatch, GraphError, GraphResult, OutputError, PlanError,
+    ResourcePayloadConflict,
 };
 pub use graph::Graph;
 pub use host_status::{

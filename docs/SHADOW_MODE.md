@@ -111,7 +111,9 @@ never adjudicated. All three are process failures, not tool failures.
 
 **Comparing at the wrong altitude.** Asserting on command sequences produces
 false divergences from legitimate ordering differences; asserting on logs
-produces false agreement. Compare desired state.
+produces false agreement. Compare desired state. Command order is especially
+expected to differ when promoting across teardown-order fixes such as
+reverse-acquisition close ordering.
 
 **Input drift.** If the two paths observe inputs at different points, the
 comparison is meaningless. Both must consume the same canonical inputs from

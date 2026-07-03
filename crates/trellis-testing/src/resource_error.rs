@@ -1,7 +1,8 @@
 use std::collections::BTreeSet;
 
 use trellis_core::{
-    ResourceCommandKind, ResourceCommandTrace, ResourceKey, Revision, ScopeId, TransactionId,
+    ResourceCoalescedTrace, ResourceCommandKind, ResourceCommandTrace, ResourceKey, Revision,
+    ScopeId, TransactionId,
 };
 
 use crate::{HostStatusClass, HostStatusEvent};
@@ -117,6 +118,13 @@ pub enum ResourceLedgerError {
         expected: Vec<ResourceCommandTrace>,
         /// Actual command trace.
         actual: Vec<ResourceCommandTrace>,
+    },
+    /// A coalesced Open could not be matched to an already-live resource.
+    UnexplainedCoalescence {
+        /// Resource key that was coalesced.
+        key: ResourceKey,
+        /// Coalescence trace emitted by the graph.
+        coalescence: ResourceCoalescedTrace,
     },
     /// No matching status classification was recorded.
     MissingStatus {

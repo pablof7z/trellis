@@ -1,8 +1,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use trellis_core::{
-    HostResourceCommandState, ResourceCommand, ResourceCommandTrace, ResourceKey, Revision,
-    TransactionResult, classify_host_resource_status,
+    HostResourceCommandState, ResourceCoalescedTrace, ResourceCommand, ResourceCommandTrace,
+    ResourceKey, Revision, TransactionResult, classify_host_resource_status,
 };
 
 use crate::host_status::{HostStatusClass, HostStatusEvent, HostStatusIdentity, HostStatusRecord};
@@ -20,6 +20,7 @@ pub struct ResourceLedger<C = ()> {
     pub(crate) status_records: Vec<HostStatusRecord>,
     pub(crate) command_trace: Vec<ResourceCommandTrace>,
     pub(crate) command_records: Vec<ResourceCommandRecord<C>>,
+    pub(crate) unexplained_coalescences: Vec<ResourceCoalescedTrace>,
 }
 
 impl<C> Default for ResourceLedger<C> {
@@ -34,6 +35,7 @@ impl<C> Default for ResourceLedger<C> {
             status_records: Vec::new(),
             command_trace: Vec::new(),
             command_records: Vec::new(),
+            unexplained_coalescences: Vec::new(),
         }
     }
 }
@@ -88,6 +90,22 @@ impl<C: Clone> ResourceLedger<C> {
         self.command_trace.extend(result.trace().resource_commands);
         for command in result.resource_plan.commands() {
             self.apply_command(command, result.transaction_id, result.revision);
+        }
+        for coalesced in &result.resource_coalescences {
+            self.apply_coalescence(coalesced);
+        }
+    }
+
+    fn apply_coalescence(&mut self, coalesced: &ResourceCoalescedTrace) {
+        let inserted = if let Some(snapshot) = self.resources.get_mut(&coalesced.key) {
+            snapshot.owners.insert(coalesced.scope)
+        } else {
+            false
+        };
+        if inserted {
+            self.record_history(&coalesced.key);
+        } else {
+            self.unexplained_coalescences.push(coalesced.clone());
         }
     }
 

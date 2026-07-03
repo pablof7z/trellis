@@ -31,6 +31,9 @@ pub struct Graph<C = ()> {
     pub(crate) collection_diffs: BTreeMap<NodeId, Box<dyn StoredDiff>>,
     pub(crate) resource_planners: Vec<ResourcePlanner<C>>,
     pub(crate) resource_owners: BTreeMap<ResourceKey, BTreeSet<ScopeId>>,
+    pub(crate) resource_payloads: BTreeMap<ResourceKey, C>,
+    pub(crate) resource_acquisitions: BTreeMap<(ScopeId, ResourceKey), u64>,
+    pub(crate) next_resource_acquisition: u64,
     pub(crate) output_specs: BTreeMap<OutputKey, OutputSpec<C>>,
     pub(crate) output_values: BTreeMap<OutputKey, Box<dyn StoredOutput>>,
     pub(crate) outputs: BTreeMap<OutputKey, OutputMeta>,
@@ -60,6 +63,9 @@ impl<C> Graph<C> {
             collection_diffs: BTreeMap::new(),
             resource_planners: Vec::new(),
             resource_owners: BTreeMap::new(),
+            resource_payloads: BTreeMap::new(),
+            resource_acquisitions: BTreeMap::new(),
+            next_resource_acquisition: 1,
             output_specs: BTreeMap::new(),
             output_values: BTreeMap::new(),
             outputs: BTreeMap::new(),
@@ -75,7 +81,10 @@ impl<C> Graph<C> {
     }
 
     /// Begins an input transaction with default options.
-    pub fn begin_transaction(&mut self) -> GraphResult<Transaction<'_, C>> {
+    pub fn begin_transaction(&mut self) -> GraphResult<Transaction<'_, C>>
+    where
+        C: Clone,
+    {
         self.begin_transaction_with_options(TransactionOptions::default())
     }
 
@@ -83,7 +92,10 @@ impl<C> Graph<C> {
     pub fn begin_transaction_with_options(
         &mut self,
         options: TransactionOptions,
-    ) -> GraphResult<Transaction<'_, C>> {
+    ) -> GraphResult<Transaction<'_, C>>
+    where
+        C: Clone,
+    {
         if self.transaction_open {
             return Err(GraphError::NestedTransaction);
         }

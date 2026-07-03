@@ -466,9 +466,21 @@ A resource MAY be desired by multiple scopes.
 
 Shared ownership MUST be explicit.
 
-If one scope closes but another live scope still owns the same resource key, the graph MUST NOT emit a final close command for that resource. It MAY emit an ownership-change audit entry.
+If a scope opens a key that is already live, the graph MUST compare the joining
+command payload to the live payload for that key. Equal payloads coalesce: the
+joining scope is recorded as an owner, no second host `Open` command is
+emitted, and the transaction result includes a coalescing trace and audit
+event. Different payloads are a typed transaction failure because the resource
+identity is underspecified.
+
+If one scope closes but another live scope still owns the same resource key,
+the graph MUST NOT emit a final close command for that resource.
 
 A final close command MUST be emitted only when the resource key is no longer desired by any live scope.
+
+Within one scope close, final close commands MUST be emitted in reverse
+acquisition order for that scope. Child scopes still close before parent
+scopes; reverse acquisition applies inside each closing scope.
 
 ## Empty-source semantics
 

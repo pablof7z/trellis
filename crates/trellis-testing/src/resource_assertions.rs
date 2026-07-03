@@ -68,6 +68,18 @@ impl<C> ResourceLedger<C> {
         }
     }
 
+    /// Asserts every coalesced Open joined an already-open resource.
+    pub fn assert_no_unexplained_coalescing(&self) -> Result<(), ResourceLedgerError> {
+        if let Some(coalescence) = self.unexplained_coalescences.first() {
+            Err(ResourceLedgerError::UnexplainedCoalescence {
+                key: coalescence.key.clone(),
+                coalescence: coalescence.clone(),
+            })
+        } else {
+            Ok(())
+        }
+    }
+
     /// Asserts no forbidden resource key was opened.
     pub fn assert_no_forbidden_opened(&self) -> Result<(), ResourceLedgerError> {
         if let Some(context) = self.forbidden_opened.first() {
