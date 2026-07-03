@@ -1,239 +1,261 @@
-.duel-hero {
+.leak-duel {
+  --lab-width: min(100% - 2rem, 92rem);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 24rem;
-  gap: 2rem;
-  align-items: end;
-  padding: 3rem 0 2rem;
+  gap: 1rem;
+  padding: 1rem 0 3rem;
+  font-family: var(--font-mono);
 }
 
-.duel-hero h1 span {
-  display: block;
+.leak-duel h1,
+.leak-duel h2,
+.leak-duel p {
+  margin: 0;
 }
 
-.duel-controls {
+.lab-rail,
+.control-ledger,
+.duel-grid,
+.proof-grid {
+  width: var(--lab-width);
+  margin: 0 auto;
+}
+
+.lab-rail {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(10rem, 0.8fr) minmax(0, 1.6fr) auto;
   gap: 1px;
-  align-items: stretch;
   border: 1px solid var(--rule);
   background: var(--rule);
-  font-family: var(--font-mono);
 }
 
-.duel-controls label,
-.duel-controls output,
-.duel-controls .button {
-  display: grid;
-  gap: 0.25rem;
-  margin: 0;
-  padding: 0.65rem;
+.lab-title,
+.status-ledger,
+.source-links,
+.control-ledger > *,
+.ledger-panel {
   background: var(--paper-high);
+}
+
+.lab-title {
+  padding: 0.8rem;
+}
+
+.lab-title h1 {
+  margin-top: 0.18rem;
+  font-size: 2.05rem;
+  line-height: 1.05;
+}
+
+.status-ledger,
+.source-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.8rem;
+}
+
+.status-ledger span,
+.source-links a,
+.bracket-badge {
+  border: 1px solid var(--rule);
+  border-radius: 1px;
+  padding: 0.2rem 0.42rem;
   color: var(--ink-muted);
   font-size: 0.72rem;
+  text-decoration: none;
+  text-transform: uppercase;
 }
 
-.duel-controls input {
+[data-verdict-chip],
+.source-links a:hover,
+.source-links a:focus-visible {
+  color: var(--stamp);
+}
+
+.control-ledger {
+  position: sticky;
+  top: 4.4rem;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 8rem minmax(9rem, 1fr) 3rem minmax(12rem, 1.2fr) 4.8rem repeat(4, auto) minmax(8rem, 0.7fr);
+  gap: 1px;
+  border: 1px solid var(--rule);
+  background: var(--rule);
+}
+
+.control-ledger label,
+.control-ledger output,
+.control-ledger button {
+  display: grid;
+  align-content: center;
+  min-height: 2.9rem;
+  margin: 0;
+  padding: 0.5rem 0.62rem;
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.control-ledger input {
   width: 100%;
   min-width: 0;
-  accent-color: var(--stamp);
   border: 1px solid var(--rule);
-  border-radius: 2px;
-  padding: 0.4rem;
+  border-radius: 1px;
+  margin-top: 0.22rem;
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-mono);
+  accent-color: var(--stamp);
+  font: inherit;
 }
 
-.duel-controls .button {
-  grid-column: span 2;
+.control-ledger input[type="number"] {
+  padding: 0.35rem;
 }
 
-.duel-board,
-.duel-grid {
+.control-ledger .button {
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: var(--paper-high);
+  color: var(--ink-muted);
+}
+
+.control-ledger .primary {
+  border: 1px solid var(--stamp);
+  background: var(--paper);
+  color: var(--stamp);
+}
+
+.replay-proof {
+  color: var(--stamp);
+}
+
+.mobile-tabs {
+  display: none;
+}
+
+.duel-grid,
+.proof-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
-  margin-bottom: 1rem;
+  align-items: start;
 }
 
-.duel-hero > *,
-.duel-board > *,
-.duel-grid > * {
-  min-width: 0;
+.duel-grid {
+  grid-template-columns: minmax(18rem, 0.8fr) minmax(32rem, 1.55fr) minmax(23rem, 1fr);
 }
 
-.duel-side,
-.duel-panel {
+.proof-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ledger-panel {
   min-width: 0;
   border: 1px solid var(--rule);
-  border-radius: 2px;
-  background: var(--paper-high);
+  border-radius: 1px;
 }
 
-.duel-side,
-.duel-panel {
-  padding: 1rem;
-}
-
-.side-head,
-.panel-head {
+.panel-head,
+.side-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.9rem;
-  font-family: var(--font-mono);
+  gap: 0.8rem;
+  border-bottom: 1px solid var(--rule);
+  padding: 0.65rem 0.72rem;
 }
 
-.side-head span,
-.panel-head a {
-  color: var(--ink-muted);
+.panel-head h2,
+.side-head span {
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-transform: uppercase;
 }
 
+.panel-head span,
 .side-head strong {
-  border: 1px solid var(--rule);
-  padding: 0.18rem 0.45rem;
-  color: var(--open);
+  color: var(--ink-muted);
+  font-size: 0.72rem;
   font-weight: 500;
 }
 
-.side-naive .side-head strong {
-  color: var(--close);
+.side-head strong {
+  border: 1px solid currentColor;
+  border-radius: 1px;
+  padding: 0.18rem 0.38rem;
+}
+
+.duel-scoreboard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid var(--rule);
+}
+
+.duel-scoreboard section:first-child {
+  border-right: 1px solid var(--rule);
 }
 
 .counter-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1px;
-  border: 1px solid var(--rule);
   background: var(--rule);
 }
 
 .counter-grid div {
-  padding: 0.7rem;
+  min-width: 0;
+  padding: 0.6rem;
   background: var(--paper);
 }
 
 .counter-grid span {
   display: block;
   color: var(--ink-muted);
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
+  font-size: 0.65rem;
   text-transform: uppercase;
 }
 
 .counter-grid strong {
   display: block;
   margin-top: 0.15rem;
-  font-size: 1.45rem;
+  font-size: 1.22rem;
 }
 
-.side-note,
-.receipt p,
-.receipt-step span,
-.activity-row span,
-.activity-row em,
-.explainer p {
-  color: var(--ink-muted);
-}
-
-.side-note {
-  min-height: 1.5rem;
-  margin: 0.75rem 0 0;
-}
-
-.duel-panel h2 {
-  font-size: 1rem;
-}
-
-.attachment-list,
-.activity-list,
-.receipt {
+.timeline-list,
+.stream-table,
+.receipt-view,
+.proof-list,
+.command-list {
   display: grid;
   gap: 1px;
-  border: 1px solid var(--rule);
   background: var(--rule);
 }
 
-.attachment-row,
-.receipt-step,
-.activity-row {
-  display: grid;
-  gap: 0.35rem;
+.timeline-row,
+.stream-row,
+.fact-row,
+.command-row,
+.receipt-title {
   width: 100%;
   border: 0;
   border-radius: 0;
-  padding: 0.65rem;
+  padding: 0.62rem 0.7rem;
   background: var(--paper);
   color: var(--ink);
   text-align: left;
 }
 
-.attachment-row {
-  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(92px, 0.55fr));
-  font-family: var(--font-mono);
-}
-
-.attachment-row:hover,
-.attachment-row.selected {
-  outline: 2px solid var(--stamp);
-  outline-offset: -2px;
-}
-
-.attachment-row span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.attachment-row span:not(:first-child) {
-  color: var(--ink-muted);
-  font-size: 0.78rem;
-}
-
-.receipt h3,
-.receipt p {
-  margin: 0;
-}
-
-.activity-row code {
-  overflow-wrap: anywhere;
+.kind-open,
+.bracket-badge.open,
+.command-row[data-kind="OPEN"] .bracket-badge {
   color: var(--open);
 }
 
-.explainer summary {
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-weight: 500;
-}
-
-.lower {
-  align-items: start;
-  padding-bottom: 3rem;
-}
-
-@media (max-width: 900px) {
-  .duel-hero,
-  .duel-board,
-  .duel-grid,
-  .duel-controls {
-    grid-template-columns: 1fr;
-  }
-
-  .duel-controls .button {
-    grid-column: auto;
-    width: 100%;
-  }
-
-  .counter-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .counter-grid div:last-child {
-    grid-column: 1 / -1;
-  }
-
-  .attachment-row {
-    grid-template-columns: 1fr;
-  }
+.kind-close,
+.bracket-badge.close,
+.command-row[data-kind="CLOSE"] .bracket-badge {
+  color: var(--close);
 }

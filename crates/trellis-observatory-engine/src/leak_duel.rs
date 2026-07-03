@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
 use trellis_core::{
     DependencyList, Graph, InputNode, ResourceCommand, ResourceKey, ResourcePlan, TransactionResult,
 };
@@ -32,6 +33,7 @@ pub struct LeakDuelState {
     pub trellis: SideStats,
     pub activity: Vec<Activity>,
     pub selected_receipt: Receipt,
+    pub proof: Value,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -99,7 +101,10 @@ struct AttachmentCommand {
 struct TrellisHarness {
     graph: Graph<AttachmentCommand>,
     inputs: InputNode<ChatInputs>,
-    last_action: BTreeMap<String, String>,
+    last_action: BTreeMap<String, Value>,
+    last_commands: Vec<Value>,
+    transaction_id: u64,
+    revision: u64,
 }
 
 pub fn run(request: LeakDuelRequest) -> LeakDuelState {
@@ -111,6 +116,7 @@ pub fn run(request: LeakDuelRequest) -> LeakDuelState {
     let initial = desired_attachments(&inputs);
     let mut naive_open = counted(&initial);
     let (mut trellis, mut trellis_open) = TrellisHarness::new(&inputs);
+    let mut desired_diff = diff(&BTreeSet::new(), &initial);
     let mut activity = vec![Activity {
         tick: 0,
         label: "Open initial workspace".to_owned(),
@@ -124,6 +130,7 @@ pub fn run(request: LeakDuelRequest) -> LeakDuelState {
         let event = next_event(&mut rng, tick, chaos, &inputs);
         apply_event(&mut inputs, &event);
         let after = desired_attachments(&inputs);
+        desired_diff = diff(&before, &after);
         let naive_note = apply_naive(&mut naive_open, &before, &after, &event, chaos);
         let trellis_note = trellis.apply(&inputs, &mut trellis_open, &event.label);
         activity.push(Activity {
@@ -142,6 +149,18 @@ pub fn run(request: LeakDuelRequest) -> LeakDuelState {
         .or_else(|| should.iter().next().cloned())
         .or_else(|| naive_open.keys().next().cloned())
         .unwrap_or_else(|| "attachment:none".to_owned());
+    let receipt_actions = trellis
+        .last_action
+        .iter()
+        .map(|(key, command)| {
+            let cause = command
+                .get("cause")
+                .and_then(Value::as_str)
+                .unwrap_or("no prior command")
+                .to_owned();
+            (key.clone(), cause)
+        })
+        .collect();
 
     LeakDuelState {
         seed,
@@ -152,8 +171,18 @@ pub fn run(request: LeakDuelRequest) -> LeakDuelState {
         rows: rows(&should, &naive_open, &trellis_open),
         naive: stats(&naive_open, &should, "drift"),
         trellis: stats(&trellis_open, &should, "reconciled"),
-        activity: activity.into_iter().rev().take(9).collect(),
-        selected_receipt: receipt_for(&selected, &inputs, &should, &trellis.last_action),
+        activity,
+        selected_receipt: receipt_for(&selected, &inputs, &should, &receipt_actions),
+        proof: proof_for(ProofInput {
+            seed,
+            chaos,
+            ticks,
+            selected,
+            desired_diff,
+            naive: stats(&naive_open, &should, "drift"),
+            trellis: stats(&trellis_open, &should, "reconciled"),
+            harness: &trellis,
+        }),
     }
 }
 
@@ -195,6 +224,9 @@ impl TrellisHarness {
             graph,
             inputs: input,
             last_action: BTreeMap::new(),
+            last_commands: Vec::new(),
+            transaction_id: 0,
+            revision: 0,
         };
         let mut open = BTreeMap::new();
         harness.apply_plan(&result, &mut open, "bootstrap");
@@ -222,33 +254,162 @@ impl TrellisHarness {
     ) -> String {
         let mut opens = 0;
         let mut closes = 0;
+        let transaction_id = result.transaction_id.get();
+        let revision = result.revision.get();
+        let mut commands = Vec::new();
         for command in result.resource_plan.commands() {
             match command {
-                ResourceCommand::Open { key, command, .. } => {
+                ResourceCommand::Open {
+                    key,
+                    scope,
+                    command,
+                } => {
                     open.insert(key.as_str().to_owned(), 1);
-                    self.last_action.insert(
-                        key.as_str().to_owned(),
-                        format!(
-                            "tx {} opened after {label} ({})",
-                            result.transaction_id.get(),
-                            command.key
-                        ),
-                    );
+                    let proof = command_proof(CommandProofInput {
+                        kind: "OPEN",
+                        key: key.as_str(),
+                        label: command.key.as_str(),
+                        scope_id: scope.get(),
+                        transaction_id,
+                        revision,
+                        event_label: label,
+                        cause: "desiredAttachments added this key",
+                        applied: "open=1",
+                    });
+                    self.last_action
+                        .insert(key.as_str().to_owned(), proof.clone());
+                    commands.push(proof);
                     opens += 1;
                 }
-                ResourceCommand::Close { key, .. } => {
+                ResourceCommand::Close { key, scope } => {
                     open.remove(key.as_str());
-                    self.last_action.insert(
-                        key.as_str().to_owned(),
-                        format!("tx {} closed after {label}", result.transaction_id.get()),
-                    );
+                    let label_text = short_label(key.as_str());
+                    let proof = command_proof(CommandProofInput {
+                        kind: "CLOSE",
+                        key: key.as_str(),
+                        label: &label_text,
+                        scope_id: scope.get(),
+                        transaction_id,
+                        revision,
+                        event_label: label,
+                        cause: "desiredAttachments removed this key",
+                        applied: "open=0",
+                    });
+                    self.last_action
+                        .insert(key.as_str().to_owned(), proof.clone());
+                    commands.push(proof);
                     closes += 1;
                 }
                 _ => {}
             }
         }
+        self.last_commands = commands;
+        self.transaction_id = transaction_id;
+        self.revision = revision;
         format!("{opens} open, {closes} close from the resource plan")
     }
+}
+
+struct ProofInput<'a> {
+    seed: u64,
+    chaos: u8,
+    ticks: u32,
+    selected: String,
+    desired_diff: Value,
+    naive: SideStats,
+    trellis: SideStats,
+    harness: &'a TrellisHarness,
+}
+
+fn proof_for(input: ProofInput<'_>) -> Value {
+    json!({
+        "wasmBundle": "demos/leak-duel/engine/trellis_observatory_engine_bg.wasm",
+        "rustSource": "crates/trellis-observatory-engine/src/leak_duel.rs",
+        "uiSource": "demos/leak-duel/leak-duel.js",
+        "inputNode": "chatInputs",
+        "collection": "desiredAttachments",
+        "scope": "chat-session",
+        "transactionId": input.harness.transaction_id,
+        "revision": input.harness.revision,
+        "deterministicReplay": format!(
+            "seed={} chaos={} ticks={} selected={}",
+            input.seed, input.chaos, input.ticks, input.selected
+        ),
+        "desiredDiff": input.desired_diff,
+        "currentCommands": input.harness.last_commands.clone(),
+        "selectedCommand": input.harness.last_action.get(&input.selected).cloned(),
+        "invariants": invariants(&input.naive, &input.trellis),
+    })
+}
+
+fn diff(before: &BTreeSet<String>, after: &BTreeSet<String>) -> Value {
+    json!({
+        "added": after.difference(before).cloned().collect::<Vec<_>>(),
+        "removed": before.difference(after).cloned().collect::<Vec<_>>(),
+        "unchanged": after.intersection(before).cloned().collect::<Vec<_>>(),
+    })
+}
+
+fn invariants(naive: &SideStats, trellis: &SideStats) -> Vec<Value> {
+    vec![
+        invariant(
+            "Trellis open == shouldOpen",
+            trellis.open == trellis.should_open,
+        ),
+        invariant("Trellis delta == 0", trellis.delta == 0),
+        invariant("Trellis orphaned == 0", trellis.orphaned == 0),
+        invariant(
+            "Trellis duplicateHandles == 0",
+            trellis.duplicate_handles == 0,
+        ),
+        json!({
+            "name": "callback drift observed",
+            "passed": naive.delta != 0 || naive.orphaned > 0 || naive.duplicate_handles > 0,
+            "detail": format!(
+                "delta={}, orphaned={}, duplicateHandles={}",
+                naive.delta, naive.orphaned, naive.duplicate_handles
+            ),
+        }),
+    ]
+}
+
+fn invariant(name: &str, passed: bool) -> Value {
+    json!({ "name": name, "passed": passed, "detail": if passed { "pass" } else { "fail" } })
+}
+
+struct CommandProofInput<'a> {
+    kind: &'a str,
+    key: &'a str,
+    label: &'a str,
+    scope_id: u64,
+    transaction_id: u64,
+    revision: u64,
+    event_label: &'a str,
+    cause: &'a str,
+    applied: &'a str,
+}
+
+fn command_proof(input: CommandProofInput<'_>) -> Value {
+    json!({
+        "kind": input.kind,
+        "key": input.key,
+        "label": input.label,
+        "scope": "chat-session",
+        "scopeId": input.scope_id,
+        "transactionId": input.transaction_id,
+        "revision": input.revision,
+        "cause": format!(
+            "{} -> {} -> [{}] {}",
+            input.event_label, input.cause, input.kind, input.label
+        ),
+        "appliedLedgerResult": input.applied,
+    })
+}
+
+fn short_label(key: &str) -> String {
+    key.strip_prefix("attachment:")
+        .unwrap_or(key)
+        .replace(':', " / ")
 }
 
 #[cfg(test)]

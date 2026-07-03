@@ -1,0 +1,67 @@
+.receipt-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.command-proof {
+  border-left: 2px solid var(--stamp);
+}
+
+.invariant-row[data-status="pass"] strong {
+  color: var(--open);
+}
+
+.invariant-row[data-status="fail"] strong {
+  color: var(--close);
+}
+
+.command-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.2rem 0.55rem;
+}
+
+.command-row code {
+  overflow-wrap: anywhere;
+}
+
+.command-row span,
+.command-row em {
+  grid-column: 2;
+}
+
+.raw-panel {
+  grid-column: 1 / -1;
+}
+
+.raw-panel pre {
+  max-height: 24rem;
+  margin: 0;
+  overflow: auto;
+  border-top: 1px solid var(--rule);
+  padding: 0.75rem;
+  background: var(--paper);
+  color: var(--ink-muted);
+  font-size: 0.74rem;
+}
+
+.leak-error {
+  border: 1px solid var(--close);
+  padding: 1rem;
+  color: var(--close);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .stream-row.selected,
+  .timeline-row.selected,
+  .command-proof {
+    animation: ledgerFlash 120ms steps(2);
+  }
+
+  @keyframes ledgerFlash {
+    from { background: var(--paper-high); }
+    to { background: var(--paper); }
+  }
+}
