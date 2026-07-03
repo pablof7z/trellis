@@ -1,200 +1,241 @@
-.recorder-hero {
+.flight-recorder {
+  min-height: calc(100vh - 64px);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.workstation {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 24rem;
-  gap: 2rem;
-  align-items: end;
-  padding: 3rem 0 2rem;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  min-height: calc(100vh - 64px);
+  border-top: 1px solid var(--rule);
 }
 
-.recorder-hero > *,
-.recorder-grid > * {
-  min-width: 0;
-}
-
-.recorder-hero h1 span {
-  display: block;
-}
-
-.recorder-controls,
-.recorder-status,
-.recorder-panel {
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  background: var(--paper-high);
-}
-
-.recorder-controls {
+.workstation-head {
   display: grid;
-  gap: 1px;
-  padding: 0;
-  background: var(--rule);
+  grid-template-columns: minmax(16rem, 0.8fr) minmax(0, 1.2fr);
+  border-bottom: 1px solid var(--rule);
+}
+
+.trace-heading,
+.manifest-grid > div,
+.source-rail,
+.transaction-recorder,
+.receipt-inspector,
+.ledger {
+  border-right: 1px solid var(--rule);
+}
+
+.trace-heading {
+  padding: 1rem;
+}
+
+.source-badge,
+.inspector-head span,
+.status-line,
+.manifest-grid,
+.source-rail,
+.transaction-recorder,
+.receipt-inspector,
+.ledger {
   font-family: var(--font-mono);
 }
 
-.recorder-controls.dragging {
-  outline: 2px solid var(--stamp);
-  outline-offset: 2px;
+.source-badge {
+  display: inline-block;
+  margin-bottom: 0.55rem;
+  color: var(--stamp);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
-.recorder-controls label {
+.source-badge[data-source="bundledFixture"] {
+  color: var(--stamp);
+}
+
+.source-badge[data-source="uploadedTrace"] {
+  color: var(--ink);
+}
+
+.trace-heading h1 {
+  max-width: none;
+  margin: 0;
+  font-size: 2.05rem;
+  line-height: 1.08;
+}
+
+.trace-heading p {
+  max-width: 70ch;
+  margin: 0.55rem 0 0;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.manifest-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+}
+
+.manifest-grid > div {
+  min-width: 0;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.manifest-grid dt {
+  margin-bottom: 0.22rem;
+  color: var(--ink-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.manifest-grid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.78rem;
+}
+
+.status-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper-high);
+  font-size: 0.78rem;
+}
+
+.status-line span,
+.status-line li {
+  color: var(--ink-muted);
+}
+
+.status-line.error {
+  color: var(--close);
+}
+
+.status-line ul {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.recorder-board {
+  display: grid;
+  grid-template-columns: minmax(13rem, 0.58fr) minmax(24rem, 1.55fr) minmax(18rem, 0.9fr);
+  min-height: 0;
+}
+
+.source-rail,
+.transaction-recorder,
+.receipt-inspector {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.rail-section {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.rail-section h2,
+.transaction-recorder h2,
+.receipt-inspector h2,
+.evidence-section h3 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.source-rail label {
   display: grid;
   gap: 0.3rem;
-  padding: 0.7rem;
-  background: var(--paper-high);
   color: var(--ink-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.source-rail select,
+.source-rail input,
+.proof-button,
+.ledger-tabs button,
+.scrubber {
+  width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+
+.source-rail select,
+.source-rail input,
+.proof-button {
+  min-height: 2.2rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.source-rail.dragging {
+  outline: 2px solid var(--stamp);
+  outline-offset: -2px;
+}
+
+.live-state {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.55rem;
+  border: 1px solid var(--rule);
+}
+
+.live-state strong {
+  color: var(--stamp);
   font-size: 0.72rem;
 }
 
-.recorder-controls input,
-.recorder-controls select,
-.scrubber {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  padding: 0.45rem;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-mono);
+.live-state span,
+.empty-state {
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+}
+
+.proof-button {
+  border-color: var(--stamp);
+  color: var(--stamp);
+  text-transform: uppercase;
+}
+
+.recorder-toolbar,
+.inspector-head {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.recorder-toolbar {
+  grid-template-columns: minmax(10rem, 0.5fr) minmax(12rem, 1fr);
+  align-items: end;
+}
+
+.recorder-toolbar output,
+.inspector-head span {
+  color: var(--ink-muted);
+  font-size: 0.76rem;
 }
 
 .scrubber {
   accent-color: var(--stamp);
   padding: 0;
-}
-
-.recorder-status {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 0.75rem 0.9rem;
-  font-family: var(--font-mono);
-}
-
-.recorder-status span {
-  color: var(--ink-muted);
-}
-
-.recorder-status.error {
-  border-color: var(--close);
-  color: var(--close);
-}
-
-.recorder-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.recorder-panel {
-  padding: 1rem;
-}
-
-.timeline-panel {
-  align-self: start;
-}
-
-.panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.9rem;
-  font-family: var(--font-mono);
-}
-
-.panel-head h2 {
-  font-size: 1rem;
-}
-
-.timeline-list,
-.transaction-view,
-.receipt-view,
-.diff-view {
-  display: grid;
-  gap: 1px;
-  border: 1px solid var(--rule);
-  background: var(--rule);
-}
-
-.timeline-step,
-.command-row,
-.receipt-step,
-.diff-row,
-.trace-fact {
-  border: 0;
-  border-radius: 0;
-  padding: 0.68rem;
-  background: var(--paper);
-}
-
-.timeline-step,
-.command-row {
-  width: 100%;
-  color: var(--ink);
-  font-family: var(--font-mono);
-  text-align: left;
-}
-
-.timeline-step.selected,
-.command-row.selected {
-  outline: 2px solid var(--stamp);
-  outline-offset: -2px;
-}
-
-.timeline-step.leak,
-.command-row[data-kind="Close"] {
-  color: var(--close);
-}
-
-.timeline-step span,
-.trace-fact span,
-.diff-row span,
-.receipt-step span {
-  display: block;
-  color: var(--ink-muted);
-  overflow-wrap: anywhere;
-}
-
-.command-row {
-  display: grid;
-  grid-template-columns: 86px minmax(0, 1fr) 72px;
-  gap: 0.6rem;
-}
-
-.command-row[data-kind="Open"] {
-  color: var(--open);
-}
-
-.receipt-step strong,
-.diff-row strong,
-.trace-fact strong {
-  display: block;
-  margin-bottom: 0.2rem;
-  font-family: var(--font-mono);
-  font-weight: 500;
-}
-
-.lower {
-  align-items: start;
-  padding-bottom: 3rem;
-}
-
-@media (max-width: 900px) {
-  .recorder-hero,
-  .recorder-grid,
-  .command-row {
-    grid-template-columns: 1fr;
-  }
-
-  .recorder-status,
-  .panel-head {
-    align-items: stretch;
-  }
-
-  .recorder-status {
-    flex-direction: column;
-  }
 }

@@ -1,0 +1,204 @@
+.timeline-list,
+.phase-ladder,
+.transaction-view,
+.receipt-view,
+.ledger-panel {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+}
+
+.timeline-list {
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  border-bottom: 1px solid var(--rule);
+}
+
+.timeline-step,
+.evidence-row {
+  display: grid;
+  gap: 0.24rem;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+
+.timeline-step {
+  padding: 0.7rem;
+}
+
+.timeline-step.selected,
+.evidence-row:focus,
+.ledger-tabs button.selected {
+  outline: 2px solid var(--stamp);
+  outline-offset: -2px;
+}
+
+.timeline-step.failed strong,
+.evidence-row.invariant strong,
+.evidence-row.command.close strong {
+  color: var(--close);
+}
+
+.evidence-row.command.open strong {
+  color: var(--open);
+}
+
+.timeline-step small,
+.timeline-step span,
+.evidence-row span,
+.ledger-line,
+.receipt-fact span {
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.phase-ladder {
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  border-bottom: 1px solid var(--rule);
+}
+
+.phase-node {
+  padding: 0.48rem 0.65rem;
+  background: var(--paper-high);
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+}
+
+.transaction-view,
+.receipt-view {
+  align-content: start;
+  padding: 1px;
+}
+
+.evidence-section {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+}
+
+.evidence-section h3,
+.receipt-fact,
+.raw-block,
+.empty-state,
+.ledger-line {
+  margin: 0;
+  padding: 0.62rem 0.72rem;
+  background: var(--paper);
+}
+
+.evidence-row {
+  padding: 0.62rem 0.72rem;
+}
+
+.evidence-row.command strong {
+  overflow-wrap: anywhere;
+}
+
+.receipt-fact {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.receipt-fact strong {
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.raw-block summary {
+  cursor: pointer;
+  color: var(--stamp);
+  text-transform: uppercase;
+}
+
+.raw-block pre {
+  max-height: 18rem;
+  margin: 0.6rem 0 0;
+  overflow: auto;
+  color: var(--ink-muted);
+  font: inherit;
+  white-space: pre-wrap;
+}
+
+.ledger {
+  border-top: 1px solid var(--rule);
+  border-right: 0;
+}
+
+.ledger-tabs {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.ledger-tabs button {
+  min-height: 2.35rem;
+  border-width: 0 1px 1px 0;
+  text-transform: uppercase;
+}
+
+.ledger-panel {
+  min-height: 9rem;
+  padding: 1px;
+}
+
+.ledger-stack {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+}
+
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--paper);
+  font-size: 0.78rem;
+}
+
+.ledger-table th,
+.ledger-table td {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.ledger-table th {
+  color: var(--ink-muted);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1000px) {
+  .workstation-head,
+  .recorder-board,
+  .recorder-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .manifest-grid,
+  .ledger-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .source-rail,
+  .transaction-recorder,
+  .receipt-inspector,
+  .trace-heading,
+  .manifest-grid > div {
+    border-right: 0;
+  }
+}

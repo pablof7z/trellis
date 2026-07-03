@@ -1,5 +1,16 @@
 {
   "formatVersion": 1,
+  "provenance": {
+    "sourceType": "bundledFixture",
+    "generator": "unknown",
+    "repoCommit": "unknown",
+    "buildId": "unknown",
+    "coreBacked": false,
+    "replay": {
+      "status": "unavailable",
+      "reason": "bundled structural fixture; no deterministic replay capsule or live Trellis engine run is included"
+    }
+  },
   "steps": [
     {
       "name": "open trading watchlist",

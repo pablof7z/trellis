@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Flight Recorder: inspect versioned Trellis transaction traces and resource-command receipts.">
+  <meta name="description" content="Flight Recorder: inspect Trellis transaction receipts, resource commands, output frames, scopes, invariants, and replay proof.">
   <title>Flight Recorder - Trellis Demo</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/site.css">
   <link rel="stylesheet" href="/assets/flight-recorder.css">
+  <link rel="stylesheet" href="/assets/flight-recorder-ledger.css">
 </head>
 <body>
   <header class="site-header">
@@ -17,60 +18,81 @@
     </div>
   </header>
 
-  <main class="flight-recorder">
-    <section class="container recorder-hero">
-      <div>
-        <span class="eyebrow">Flight Recorder / trace format v1</span>
-        <h1><span>Replay resource commands</span><span>from the receipt.</span></h1>
-        <p class="lead">Load a Trellis trace file, scrub transaction by transaction, search for a resource, and click a Close command to see the causal chain.</p>
+  <main class="flight-recorder" aria-labelledby="recorder-title">
+    <section class="workstation">
+      <header class="workstation-head">
+        <div class="trace-heading">
+          <span data-source-badge class="source-badge">[BUNDLED FIXTURE]</span>
+          <h1 id="recorder-title" data-trace-title>Flight Recorder</h1>
+          <p data-trace-subtitle>Loading trace evidence.</p>
+        </div>
+        <dl data-manifest class="manifest-grid" aria-label="Evidence manifest"></dl>
+      </header>
+
+      <div class="status-line" data-status role="status" aria-live="polite">
+        <strong>loading bundled trace</strong>
+        <span>reading fixture envelope</span>
       </div>
-      <div class="recorder-controls" data-drop-zone>
-        <label>Bundled trace <select data-trace-select></select></label>
-        <label>Trace file <input data-file type="file" accept="application/json,.json,.trellis-trace"></label>
-        <label>Search resource <input data-search type="search" placeholder="relay:wss://"></label>
+
+      <div class="recorder-board">
+        <aside class="source-rail" data-drop-zone aria-label="Evidence sources and filters">
+          <section class="rail-section">
+            <h2>Evidence Source</h2>
+            <label>Bundled trace <select data-trace-select></select></label>
+            <label>Uploaded trace <input data-file type="file" accept="application/json,.json,.trellis-trace"></label>
+            <div class="live-state" data-live-status>
+              <strong>[LIVE UNAVAILABLE]</strong>
+              <span>No browser action is wired to a Trellis engine/WASM recorder in this slice.</span>
+            </div>
+          </section>
+          <section class="rail-section">
+            <h2>Evidence Rail</h2>
+            <label>Search <input data-search type="search" placeholder="resource, scope, invariant"></label>
+            <label>Command kind
+              <select data-kind-filter>
+                <option value="all">all commands</option>
+                <option value="open">[OPEN]</option>
+                <option value="close">[CLOSE]</option>
+                <option value="other">other</option>
+              </select>
+            </label>
+            <label>Invariant state
+              <select data-invariant-filter>
+                <option value="all">all invariants</option>
+                <option value="fail">failed only</option>
+                <option value="pass">passing only</option>
+              </select>
+            </label>
+          </section>
+          <button data-copy-proof class="proof-button" type="button">Copy Proof Packet</button>
+        </aside>
+
+        <section class="transaction-recorder" aria-label="Transaction and phase recorder">
+          <div class="recorder-toolbar">
+            <div>
+              <h2>Transaction Recorder</h2>
+              <output data-position>0 / 0</output>
+            </div>
+            <input data-scrubber class="scrubber" type="range" min="0" max="0" value="0" aria-label="Transaction timeline">
+          </div>
+          <div data-timeline class="timeline-list" aria-label="Transaction timeline"></div>
+          <div data-phases class="phase-ladder" aria-label="Phase trace"></div>
+          <div data-transaction class="transaction-view" aria-label="Selected transaction evidence"></div>
+        </section>
+
+        <aside class="receipt-inspector" aria-label="Receipt inspector">
+          <div class="inspector-head">
+            <h2>Receipt Inspector</h2>
+            <span data-selected-evidence>select evidence</span>
+          </div>
+          <div data-receipt class="receipt-view"></div>
+        </aside>
       </div>
-    </section>
 
-    <section class="container recorder-status" data-status>
-      <strong>loading trace</strong>
-      <span>reading bundled trace files</span>
-    </section>
-
-    <section class="container recorder-grid">
-      <article class="recorder-panel timeline-panel">
-        <div class="panel-head">
-          <h2>Timeline</h2>
-          <output data-position class="mono">0 / 0</output>
-        </div>
-        <input data-scrubber class="scrubber" type="range" min="0" max="0" value="0">
-        <div data-timeline class="timeline-list"></div>
-      </article>
-
-      <article class="recorder-panel">
-        <div class="panel-head">
-          <h2>Transaction</h2>
-          <a href="https://github.com/pablof7z/trellis/blob/master/crates/trellis-testing/src/serialized.rs">Trace source</a>
-        </div>
-        <div data-transaction class="transaction-view"></div>
-      </article>
-    </section>
-
-    <section class="container recorder-grid lower">
-      <article class="recorder-panel">
-        <div class="panel-head">
-          <h2>Receipt</h2>
-          <span data-selected-command class="mono">select a command</span>
-        </div>
-        <div data-receipt class="receipt-view"></div>
-      </article>
-
-      <article class="recorder-panel">
-        <div class="panel-head">
-          <h2>Diff from previous revision</h2>
-          <span data-version class="mono">v1</span>
-        </div>
-        <div data-diff class="diff-view"></div>
-      </article>
+      <section class="ledger" aria-label="Evidence ledger">
+        <div data-ledger-tabs class="ledger-tabs" role="tablist" aria-label="Ledger tables"></div>
+        <div data-ledger-panel class="ledger-panel"></div>
+      </section>
     </section>
   </main>
 
