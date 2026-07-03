@@ -6,6 +6,7 @@ mod compute;
 mod core_projection;
 mod core_runtime;
 mod engine;
+mod eval;
 mod invariants;
 mod language;
 mod leak_duel;
@@ -19,6 +20,7 @@ pub mod types;
 use wasm_bindgen::prelude::*;
 
 pub use engine::{dispatch_action, initial_app_state};
+pub use eval::{available_bug_capsules, run_all_bug_capsules, run_bug_capsule};
 pub use replay::replay_current_trace;
 
 #[wasm_bindgen]
