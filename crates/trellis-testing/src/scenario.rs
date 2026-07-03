@@ -5,7 +5,7 @@ use trellis_core::{
 
 use crate::{
     FullRecomputeOracle, OracleCheck, OracleMismatch, ResourceLedgerError,
-    assert_incremental_equals_full,
+    assert_incremental_equals_full, scenario_redaction::redact_trace,
 };
 
 /// Named transaction trace captured by a scenario test.
@@ -275,18 +275,4 @@ impl Scenario {
     pub fn to_redacted_debug_string(&self, redactor: &impl TraceRedactor) -> String {
         format!("{:#?}", self.redacted(redactor))
     }
-}
-
-fn redact_trace(trace: &TransactionTrace, redactor: &impl TraceRedactor) -> TransactionTrace {
-    let mut trace = trace.clone();
-    for command in &mut trace.resource_commands {
-        command.key = redactor.resource_key(&command.key);
-    }
-    for coalesced in &mut trace.resource_coalescences {
-        coalesced.key = redactor.resource_key(&coalesced.key);
-    }
-    for result in &mut trace.invariant_results {
-        result.name = redactor.invariant_name(&result.name);
-    }
-    trace
 }
