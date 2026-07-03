@@ -1,0 +1,61 @@
+.timeline-list {
+  max-height: 39rem;
+  overflow: auto;
+}
+
+.timeline-row,
+.stream-row {
+  cursor: pointer;
+  font-family: var(--font-mono);
+}
+
+.timeline-row.selected,
+.stream-row.selected,
+.timeline-row:hover,
+.stream-row:hover {
+  outline: 2px solid var(--stamp);
+  outline-offset: -2px;
+}
+
+.timeline-row strong,
+.timeline-row span,
+.timeline-row em,
+.timeline-row code,
+.fact-row strong,
+.fact-row span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.timeline-row span,
+.timeline-row em,
+.timeline-row code,
+.fact-row span,
+.command-row span,
+.command-row em {
+  margin-top: 0.18rem;
+  color: var(--ink-muted);
+  font-size: 0.76rem;
+  font-style: normal;
+}
+
+.timeline-row em {
+  color: var(--close);
+}
+
+.timeline-row code {
+  color: var(--open);
+}
+
+.stream-row {
+  display: grid;
+  grid-template-columns: minmax(11rem, 1.4fr) 5rem 6rem 6rem 5.5rem;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.stream-row span,
+.stream-row strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

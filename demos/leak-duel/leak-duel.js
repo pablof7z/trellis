@@ -1,197 +1,210 @@
+import { clearTimer } from "./leak-duel-dom.js";
+import { renderAll } from "./leak-duel-render.js";
+
+const DEFAULTS = { seed: 1337, chaos: 8, tick: 24 };
+const MAX_TICK = 120;
+const RUN_CUT = 30;
+
 const els = {
+  root: document.querySelector("[data-demo-root]"),
   seed: document.querySelector("[data-seed]"),
   chaos: document.querySelector("[data-chaos]"),
   chaosValue: document.querySelector("[data-chaos-value]"),
+  tick: document.querySelector("[data-tick-range]"),
+  tickValue: document.querySelector("[data-tick-value]"),
   step: document.querySelector("[data-step]"),
   run: document.querySelector("[data-run]"),
+  replay: document.querySelector("[data-replay]"),
   reset: document.querySelector("[data-reset]"),
-  tick: document.querySelector("[data-tick]"),
+  tabs: document.querySelector("[data-mobile-tabs]"),
+  timeline: document.querySelector("[data-timeline]"),
   rows: document.querySelector("[data-rows]"),
   receipt: document.querySelector("[data-receipt]"),
-  activity: document.querySelector("[data-activity]"),
+  inputs: document.querySelector("[data-inputs]"),
+  proof: document.querySelector("[data-proof]"),
+  commands: document.querySelector("[data-commands]"),
+  raw: document.querySelector("[data-raw-json]"),
 };
 
 let wasm;
-let ticks = Number(new URLSearchParams(location.search).get("ticks") ?? 18);
-let selected = new URLSearchParams(location.search).get("selected");
+let state;
 let timer;
+let selected = urlParam("selected");
+let activePanel = "ledger";
+let replayProof = "[PENDING]";
 
 window.trellisDemoEvents = window.trellisDemoEvents ?? [];
 
 async function boot() {
+  setControls(false);
   wasm = await import("./engine/trellis_observatory_engine.js");
   await wasm.default();
-  const params = new URLSearchParams(location.search);
-  els.seed.value = params.get("seed") ?? "1337";
-  els.chaos.value = params.get("chaos") ?? "7";
-  els.chaosValue.value = els.chaos.value;
-  render();
+  els.seed.value = numberParam("seed", DEFAULTS.seed);
+  els.chaos.value = numberParam("chaos", DEFAULTS.chaos);
+  els.tick.value = numberParam("tick", numberParam("ticks", DEFAULTS.tick));
+  wireEvents();
+  setControls(true);
+  render("ready");
 }
 
-function snapshot() {
+function wireEvents() {
+  els.seed.addEventListener("change", () => resetCut({ keepScenario: true }));
+  els.chaos.addEventListener("input", () => {
+    els.chaosValue.value = els.chaos.value;
+    render("ready");
+  });
+  els.tick.addEventListener("input", () => {
+    stopRun();
+    render("paused");
+  });
+  els.step.addEventListener("click", () => {
+    stopRun();
+    els.tick.value = Math.min(Number(els.tick.value) + 1, MAX_TICK);
+    render("paused");
+  });
+  els.run.addEventListener("click", toggleRun);
+  els.replay.addEventListener("click", replaySeed);
+  els.reset.addEventListener("click", () => resetCut({ keepScenario: false }));
+  els.root.addEventListener("click", handleSelection);
+  els.tabs.addEventListener("click", handleTab);
+}
+
+function render(engineState) {
+  if (!wasm) return;
+  state = snapshot();
+  selected = state.selectedReceipt.key;
+  els.root.dataset.activePanel = activePanel;
+  els.tick.value = state.tick;
+  els.tickValue.value = `tick ${state.tick}`;
+  els.chaosValue.value = els.chaos.value;
+  renderAll(els, state, {
+    selected,
+    activePanel,
+    engineState: `[${engineState.toUpperCase()}]`,
+    running: Boolean(timer),
+    replayProof,
+  });
+  updateUrl();
+  track("render", { tick: state.tick, selected });
+}
+
+function snapshot(override = {}) {
   const request = {
-    seed: Number(els.seed.value || 1337),
-    chaos: Number(els.chaos.value || 7),
-    ticks,
+    seed: Number((override.seed ?? els.seed.value) || DEFAULTS.seed),
+    chaos: Number((override.chaos ?? els.chaos.value) || DEFAULTS.chaos),
+    ticks: Number((override.tick ?? els.tick.value) || DEFAULTS.tick),
     selected,
   };
   return JSON.parse(wasm.leak_duel(JSON.stringify(request)));
 }
 
-function render() {
-  const state = snapshot();
-  selected = state.selectedReceipt.key;
-  els.tick.textContent = `tick ${state.tick}`;
-  renderSide("naive", state.naive);
-  renderSide("trellis", state.trellis);
-  renderRows(state.rows);
-  renderReceipt(state.selectedReceipt);
-  renderActivity(state.activity);
-  updateUrl(state);
+function toggleRun() {
+  if (timer) {
+    stopRun();
+    render("paused");
+    return;
+  }
+  els.run.textContent = "Pause";
+  timer = setInterval(() => {
+    const next = Math.min(Number(els.tick.value) + 1, Math.max(RUN_CUT, Number(els.tick.value)), MAX_TICK);
+    els.tick.value = next;
+    render(next >= RUN_CUT ? "completed" : "running");
+    if (next >= RUN_CUT || next >= MAX_TICK) stopRun();
+  }, prefersReducedMotion() ? 900 : 420);
+  render("running");
 }
 
-function renderSide(name, stats) {
-  setText(`[data-${name}-verdict]`, stats.verdict);
-  setText(`[data-${name}-open]`, stats.open);
-  setText(`[data-${name}-should]`, stats.shouldOpen);
-  setText(`[data-${name}-delta]`, signed(stats.delta));
-  setText(
-    `[data-${name}-detail]`,
-    `${stats.orphaned} orphaned, ${stats.duplicateHandles} duplicate handles`
-  );
+function stopRun() {
+  timer = clearTimer(timer);
+  els.run.textContent = "Run cut";
 }
 
-function renderRows(rows) {
-  els.rows.replaceChildren(
-    ...rows.map((row) => {
-      const button = document.createElement("button");
-      button.className = `attachment-row ${row.key === selected ? "selected" : ""}`;
-      button.type = "button";
-      const intent = row.shouldOpen ? "[OPEN]" : "[CLOSE]";
-      const intentClass = row.shouldOpen ? "kind-open" : "kind-close";
-      button.innerHTML = `
-        <span>${escapeHtml(row.label)}</span>
-        <span class="${intentClass}">${intent}</span>
-        <span>callbacks ${row.naiveOpen}</span>
-        <span>Trellis ${row.trellisOpen}</span>
-      `;
-      button.addEventListener("click", () => {
-        selected = row.key;
-        track("why-open-click", { key: row.key });
-        render();
-      });
-      return button;
-    })
-  );
+function replaySeed() {
+  stopRun();
+  const left = JSON.stringify(snapshot());
+  const right = JSON.stringify(snapshot());
+  replayProof = left === right ? "[PASS] deterministic replay" : "[FAIL] replay diverged";
+  els.tick.value = 0;
+  selected = null;
+  render("paused");
 }
 
-function renderReceipt(receipt) {
-  els.receipt.replaceChildren(
-    el("h3", receipt.title),
-    el("p", `${receipt.status}: ${receipt.key}`),
-    ...receipt.steps.map((step) => {
-      const item = document.createElement("div");
-      item.className = "receipt-step";
-      item.append(el("strong", step.label), el("span", step.detail));
-      return item;
-    })
-  );
+function resetCut({ keepScenario }) {
+  stopRun();
+  if (!keepScenario) {
+    els.seed.value = DEFAULTS.seed;
+    els.chaos.value = DEFAULTS.chaos;
+  }
+  els.tick.value = keepScenario ? 0 : DEFAULTS.tick;
+  selected = null;
+  replayProof = "[PENDING]";
+  render("ready");
 }
 
-function renderActivity(items) {
-  els.activity.replaceChildren(
-    ...items.map((item) => {
-      const row = document.createElement("div");
-      row.className = "activity-row";
-      row.append(
-        el("strong", `${item.tick}. ${item.label}`),
-        el("span", item.detail),
-        el("em", item.naiveNote),
-        el("code", item.trellisNote)
-      );
-      return row;
-    })
-  );
+function handleSelection(event) {
+  const tickButton = event.target.closest("[data-tick-select]");
+  const streamButton = event.target.closest("[data-stream-select]");
+  if (tickButton) {
+    stopRun();
+    els.tick.value = tickButton.dataset.tickSelect;
+    render("paused");
+  }
+  if (streamButton) {
+    selected = streamButton.dataset.streamSelect;
+    render("paused");
+  }
 }
 
-function updateUrl(state) {
+function handleTab(event) {
+  const tab = event.target.closest("[data-panel-tab]");
+  if (!tab) return;
+  activePanel = tab.dataset.panelTab;
+  document.querySelectorAll("[data-panel-tab]").forEach((button) => {
+    button.classList.toggle("active", button === tab);
+  });
+  els.root.dataset.activePanel = activePanel;
+}
+
+function updateUrl() {
   const params = new URLSearchParams({
     seed: String(state.seed),
     chaos: String(state.chaos),
-    ticks: String(state.tick),
+    tick: String(state.tick),
     selected,
   });
   history.replaceState(null, "", `?${params}`);
 }
 
-function setText(selector, value) {
-  document.querySelector(selector).textContent = value;
+function setControls(enabled) {
+  [els.seed, els.chaos, els.tick, els.step, els.run, els.replay, els.reset].forEach((control) => {
+    control.disabled = !enabled;
+  });
 }
 
-function signed(value) {
-  return value > 0 ? `+${value}` : String(value);
+function numberParam(name, fallback) {
+  const raw = urlParam(name);
+  if (raw == null || raw === "") return fallback;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : fallback;
 }
 
-function el(tag, text) {
-  const node = document.createElement(tag);
-  node.textContent = text;
-  return node;
+function urlParam(name) {
+  return new URLSearchParams(location.search).get(name);
 }
 
-function escapeHtml(value) {
-  return value.replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;",
-  })[char]);
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 function track(name, payload = {}) {
   window.trellisDemoEvents.push({ name, payload, at: Date.now() });
 }
 
-els.chaos.addEventListener("input", () => {
-  ticks = Math.min(ticks, 120);
-  els.chaosValue.value = els.chaos.value;
-  track("chaos-slider", { chaos: Number(els.chaos.value) });
-  render();
-});
-
-els.seed.addEventListener("change", () => {
-  ticks = 0;
-  selected = null;
-  render();
-});
-
-els.step.addEventListener("click", () => {
-  ticks = Math.min(ticks + 1, 120);
-  track("step", { ticks });
-  render();
-});
-
-els.reset.addEventListener("click", () => {
-  clearInterval(timer);
-  ticks = 0;
-  selected = null;
-  track("reset");
-  render();
-});
-
-els.run.addEventListener("click", () => {
-  clearInterval(timer);
-  ticks = 0;
-  track("run-30-second-cut");
-  timer = setInterval(() => {
-    ticks += 1;
-    render();
-    if (ticks >= 30) clearInterval(timer);
-  }, 1000);
-});
-
 boot().catch((error) => {
   console.error(error);
-  document.querySelector("[data-demo-root]").innerHTML =
-    '<section class="container page-hero"><h1>Leak Duel failed to load.</h1><p class="lead">The wasm bundle did not initialize. Run the local build script and reload.</p></section>';
+  els.root.innerHTML = `
+    <section class="container leak-error">
+      <h1>Leak Duel failed closed.</h1>
+      <p>Could not load demos/leak-duel/engine/trellis_observatory_engine_bg.wasm. Rebuild the WASM bundle and reload.</p>
+    </section>`;
 });

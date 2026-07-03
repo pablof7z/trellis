@@ -1,0 +1,89 @@
+@media (max-width: 1180px) {
+  .lab-rail,
+  .control-ledger,
+  .duel-grid,
+  .proof-grid {
+    width: min(100% - 1rem, 92rem);
+  }
+
+  .lab-rail,
+  .control-ledger,
+  .duel-grid,
+  .proof-grid,
+  .duel-scoreboard {
+    grid-template-columns: 1fr;
+  }
+
+  .control-ledger {
+    position: static;
+  }
+
+  .duel-scoreboard section:first-child {
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+}
+
+@media (max-width: 760px) {
+  .leak-duel {
+    padding-top: 0.5rem;
+  }
+
+  .lab-rail {
+    position: static;
+  }
+
+  .status-ledger,
+  .source-links {
+    align-items: stretch;
+  }
+
+  .mobile-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: min(100% - 1rem, 92rem);
+    margin: 0 auto;
+    border: 1px solid var(--rule);
+    background: var(--rule);
+    gap: 1px;
+  }
+
+  .mobile-tabs button {
+    border: 0;
+    border-radius: 0;
+    padding: 0.62rem 0.3rem;
+    background: var(--paper-high);
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+  }
+
+  .mobile-tabs button.active {
+    color: var(--stamp);
+    outline: 2px solid var(--stamp);
+    outline-offset: -2px;
+  }
+
+  .leak-duel[data-active-panel="ledger"] [data-panel]:not([data-panel="ledger"]),
+  .leak-duel[data-active-panel="timeline"] [data-panel]:not([data-panel="timeline"]),
+  .leak-duel[data-active-panel="receipt"] [data-panel]:not([data-panel="receipt"]),
+  .leak-duel[data-active-panel="proof"] .duel-grid,
+  .leak-duel:not([data-active-panel="proof"]) .proof-grid {
+    display: none;
+  }
+
+  .stream-row,
+  .counter-grid,
+  .command-row {
+    grid-template-columns: 1fr;
+  }
+
+  .command-row span,
+  .command-row em {
+    grid-column: auto;
+  }
+}
