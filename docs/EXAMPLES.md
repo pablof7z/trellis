@@ -106,3 +106,25 @@ materialized rows, audit explanations, shared ownership, and full-recompute
 checks.
 
 The alpha result and seeded-bug coverage are documented in `docs/ALPHA.md`.
+
+## Observatory Eval Capsules
+
+File: `crates/trellis-observatory-engine/src/eval.rs`
+
+The Observatory engine exposes runnable seeded-bug capsules for the current
+Codebase Observatory showcase. Each capsule runs the Trellis-backed success
+path and a seeded naive path over the same setup, then reports the
+ResourceLedger, OutputLedger, host-status audit, or full-recompute oracle
+failure that proves the lifecycle bug was detected.
+
+Run all capsules:
+
+```sh
+cargo run -p trellis-observatory-engine --example eval_capsules -- --all
+```
+
+Run one capsule by name:
+
+```sh
+cargo run -p trellis-observatory-engine --example eval_capsules -- --capsule delete-file-lifecycle
+```
