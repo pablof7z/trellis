@@ -61,15 +61,15 @@ export default function App() {
     <main className="app-shell">
       <header className="topbar">
         <div>
-          <h1>Codebase Observatory</h1>
+          <h1>trellis observatory</h1>
           <p>
             {state.inputs.activeBranch} · {state.inputs.compilerConfig} config · {state.inputs.activeEditor ?? "no editor"} · tx {trace.txId}
           </p>
         </div>
         <div className="status-strip">
-          <span className={`mode ${state.mode}`}>{state.mode === "trellis" ? "Trellis active" : "Naive callbacks"}</span>
+          <span className={`mode ${state.mode}`}>{state.mode === "trellis" ? "[TRELLIS]" : "[CALLBACKS]"}</span>
           <span className={failures.length ? "badge fail" : "badge pass"}>
-            {failures.length ? `${failures.length} invariant failures` : "System invariants pass"}
+            {failures.length ? `[FAIL] ${failures.length}` : "[PASS] invariants"}
           </span>
         </div>
       </header>

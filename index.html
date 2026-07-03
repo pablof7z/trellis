@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Trellis is a deterministic reconciler for Rust: state changes in, resource commands, output frames, and auditable receipts out.">
   <title>Trellis - Deterministic Reconciliation for Rust</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/site.css">
   <link rel="stylesheet" href="/assets/landing.css">
 </head>
 <body>
   <header class="site-header">
     <div class="nav-wrap">
-      <a class="brand" href="/" aria-current="page"><span class="mark" aria-hidden="true"></span><span>Trellis</span></a>
+      <a class="brand" href="/" aria-current="page"><svg class="mark" aria-hidden="true" viewBox="0 0 28 28" focusable="false"><path d="M9.5 1v26M18.5 1v26M1 9.5h26M1 18.5h26"/><rect class="mark-node" x="16" y="7" width="5" height="5"/></svg><span>trellis</span></a>
       <nav class="nav-links" aria-label="Primary">
         <a href="/demos">Demos</a>
         <a href="https://github.com/pablof7z/trellis/tree/master/docs">Docs</a>
@@ -23,22 +24,32 @@
 
   <main class="landing">
     <section class="container landing-hero">
-      <span class="eyebrow">pre-1.0 / semantics first, names second</span>
-      <h1>Trellis</h1>
-      <p class="hero-claim">A deterministic reconciler for Rust.</p>
-      <p class="lead">State changes in; resource commands, output frames, and an auditable receipt out. When application state decides which subscriptions, watchers, and sync windows should exist, Trellis computes exactly what should open and close.</p>
-      <div class="button-row">
-        <a class="button primary" href="/demos/leak-duel">Run the demo</a>
-        <a class="button" href="https://github.com/pablof7z/trellis/blob/master/docs/SHADOW_MODE.md">Read why you should not trust it</a>
+      <div class="hero-copy">
+        <span class="eyebrow">pre-1.0 / semantics first, names second</span>
+        <h1>trellis</h1>
+        <p class="hero-claim">A deterministic reconciler for Rust.</p>
+        <p class="lead">State changes in; resource commands, output frames, and an auditable receipt out. When application state decides which subscriptions, watchers, and sync windows should exist, Trellis computes exactly what should open and close.</p>
+        <div class="button-row">
+          <a class="button primary" href="/demos/leak-duel">Run the demo</a>
+          <a class="button" href="https://github.com/pablof7z/trellis/blob/master/docs/SHADOW_MODE.md">Read why you should not trust it</a>
+        </div>
       </div>
-      <ol class="loop-diagram" aria-label="Trellis transaction loop">
-        <li><span>1</span>input changes</li>
-        <li><span>2</span>derived nodes</li>
-        <li><span>3</span>collection diffs</li>
-        <li><span>4</span>resource plan</li>
-        <li><span>5</span>output frames</li>
-        <li><span>6</span>receipt</li>
-      </ol>
+      <div class="receipt-block hero-receipt" aria-label="Workspace switch transaction receipt">
+        <div class="receipt-head">
+          <span>tx <b data-receipt-tx>0412</b></span>
+          <span class="revision-chip" data-receipt-rev>rev 87</span>
+        </div>
+        <div class="receipt-row">
+          <div class="receipt-line"><b>input</b><code>active-workspace</code><span>one → two</span></div>
+          <div class="receipt-line"><b>derived</b><code>project-set</code><span>recomputed, changed</span></div>
+          <div class="receipt-line"><b>diff</b><code>sync-window-set</code><span><span class="kind-added">+1</span> <span class="kind-removed">−2</span></span></div>
+          <div class="receipt-line command-line"><span class="kind-badge kind-close">[CLOSE]</span><code>sync/a</code><span class="cause-chain">← project removed</span></div>
+          <div class="receipt-line command-line"><span class="kind-badge kind-close">[CLOSE]</span><code>sync/b</code><span class="cause-chain">← project removed</span></div>
+          <div class="receipt-line command-line"><span class="kind-badge kind-open">[OPEN]</span><code>sync/c</code><span class="cause-chain">← project added</span></div>
+          <div class="receipt-line"><b class="oracle-line">✓</b><code>incremental == full recompute</code><span>checked</span></div>
+        </div>
+        <button class="receipt-replay" data-receipt-replay type="button">[REPLAY]</button>
+      </div>
     </section>
 
     <section class="section" id="bug">
@@ -166,5 +177,6 @@ trellis-core = "0.1"</code></pre>
       </div>
     </div>
   </footer>
+  <script type="module" src="/assets/landing.js"></script>
 </body>
 </html>

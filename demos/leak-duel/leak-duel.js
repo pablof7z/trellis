@@ -67,9 +67,11 @@ function renderRows(rows) {
       const button = document.createElement("button");
       button.className = `attachment-row ${row.key === selected ? "selected" : ""}`;
       button.type = "button";
+      const intent = row.shouldOpen ? "[OPEN]" : "[CLOSE]";
+      const intentClass = row.shouldOpen ? "kind-open" : "kind-close";
       button.innerHTML = `
         <span>${escapeHtml(row.label)}</span>
-        <span>${row.shouldOpen ? "should open" : "should close"}</span>
+        <span class="${intentClass}">${intent}</span>
         <span>callbacks ${row.naiveOpen}</span>
         <span>Trellis ${row.trellisOpen}</span>
       `;

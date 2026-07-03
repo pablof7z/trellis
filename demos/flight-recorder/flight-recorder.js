@@ -150,7 +150,7 @@ function commandButton(command, index) {
   button.className = `command-row ${index === selectedCommand ? "selected" : ""}`;
   button.dataset.kind = command.kind;
   button.type = "button";
-  button.innerHTML = `<strong>${command.kind}</strong><span>${escapeHtml(command.key)}</span><span>scope ${command.scope}</span>`;
+  button.innerHTML = `<strong>${formatKind(command.kind)}</strong><span>${escapeHtml(command.key)}</span><span>scope ${command.scope}</span>`;
   button.addEventListener("click", () => {
     selectedCommand = index;
     track("command-click", { kind: command.kind, key: command.key });
@@ -165,12 +165,12 @@ function renderReceipt(step, command) {
     els.receipt.replaceChildren(fact("No command selected", "Change the search or choose a transaction with commands."));
     return;
   }
-  els.selectedCommand.textContent = `${command.kind} ${command.key}`;
+  els.selectedCommand.textContent = `${formatKind(command.kind)} ${command.key}`;
   els.receipt.replaceChildren(
     receiptStep("input", `transaction ${step.trace.transaction_id} changed input nodes ${step.trace.changed_inputs.join(", ") || "none"}`),
     receiptStep("derived nodes", `collections recomputed: ${step.trace.recomputed_collection_nodes.join(", ") || "none"}`),
     receiptStep("diff", summarizeDiffs(step.trace.collection_diffs)),
-    receiptStep("command", `${command.kind} ${command.key} in scope ${command.scope}`)
+    receiptStep("command", `${formatKind(command.kind)} ${command.key} in scope ${command.scope}`)
   );
 }
 
@@ -205,6 +205,10 @@ function summarizeDiffs(diffs = []) {
 function summarizeInvariants(checks = []) {
   if (!checks.length) return "none recorded";
   return checks.map((check) => `${check.passed ? "pass" : "fail"}: ${check.name}`).join("; ");
+}
+
+function formatKind(kind) {
+  return `[${kind.toUpperCase()}]`;
 }
 
 function fact(label, detail) {
