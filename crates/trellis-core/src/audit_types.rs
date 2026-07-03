@@ -1,16 +1,24 @@
 use crate::{
-    AuditEntry, AuditEvent, NodeId, OutputFrameKindTrace, OutputKey, ResourceCommandKind,
-    ResourceKey, Revision, ScopeId, TransactionId,
+    AuditEvent, NodeId, OutputFrameKindTrace, OutputKey, ResourceCommandKind, ResourceKey,
+    Revision, ScopeId, TransactionId,
 };
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub(crate) struct AuditState {
-    pub(crate) log: Vec<AuditEntry>,
     pub(crate) node_changes: BTreeMap<NodeId, NodeChangeExplanation>,
     pub(crate) resource_commands: BTreeMap<ResourceKey, ResourceCommandExplanation>,
     pub(crate) output_frames: BTreeMap<OutputKey, OutputFrameExplanation>,
     pub(crate) pending_resource_causes: Vec<ResourceCommandCause>,
+}
+
+impl AuditState {
+    pub(crate) fn clear_explanations(&mut self) {
+        self.node_changes.clear();
+        self.resource_commands.clear();
+        self.output_frames.clear();
+        self.pending_resource_causes.clear();
+    }
 }
 
 /// Explanation for why a node last changed.
@@ -24,9 +32,9 @@ pub struct NodeChangeExplanation {
     pub revision: Revision,
     /// Audit event that recorded the change.
     pub event: AuditEvent,
-    /// Canonical input nodes that caused this node change.
+    /// Canonical input nodes that caused this node change, when path explanations are enabled.
     pub input_causes: Vec<NodeId>,
-    /// Dependency paths from changed inputs to this node.
+    /// Dependency paths from changed inputs to this node, when path explanations are enabled.
     pub dependency_paths: Vec<Vec<NodeId>>,
 }
 
@@ -49,9 +57,9 @@ pub struct ResourceCommandExplanation {
     pub collection_diffs: Vec<NodeId>,
     /// Nodes changed in the transaction.
     pub changed_nodes: Vec<NodeId>,
-    /// Canonical input causes for the command.
+    /// Canonical input causes for the command, when path explanations are enabled.
     pub input_causes: Vec<NodeId>,
-    /// Dependency paths from input causes to collection diffs.
+    /// Dependency paths from input causes to collection diffs, when path explanations are enabled.
     pub dependency_paths: Vec<Vec<NodeId>>,
 }
 
@@ -87,9 +95,9 @@ pub struct OutputFrameExplanation {
     pub dependencies: Vec<NodeId>,
     /// Output dependencies that changed in the transaction.
     pub changed_dependencies: Vec<NodeId>,
-    /// Canonical input causes for the frame.
+    /// Canonical input causes for the frame, when path explanations are enabled.
     pub input_causes: Vec<NodeId>,
-    /// Dependency paths from input causes to changed output dependencies.
+    /// Dependency paths from input causes to changed output dependencies, when path explanations are enabled.
     pub dependency_paths: Vec<Vec<NodeId>>,
 }
 

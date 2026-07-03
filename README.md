@@ -151,8 +151,8 @@ Every commit returns a `TransactionResult` that is a complete, deterministic
 record of the transaction: which inputs changed, which nodes recomputed and
 which actually changed, the structural diffs, the resource plan, the output
 frames, scope lifecycle events, an audit log, and the phase trace. Audit
-queries answer "why was this command emitted?" and "which input caused this
-frame?" after the fact.
+queries use bounded latest-state indexes on the graph; shortest dependency-path
+explanations are available when a transaction opts into them.
 
 Output payload types belong to each materialized output, not to the graph. One
 graph can emit different frame payload types for different output surfaces

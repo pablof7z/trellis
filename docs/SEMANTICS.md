@@ -609,13 +609,17 @@ The graph SHOULD produce deterministic audit information sufficient to answer:
 
 If a resource command cannot be explained by graph state, it should not exist.
 
-The M11 implementation persists deterministic audit state on the graph and
-exposes `audit_log()`, `why_changed()`, `why_resource_command()`,
-`why_output_frame()`, `dependency_path()`, and `scope_resource_inventory()`.
-Resource and output explanations are payload-free: they identify transactions,
-revisions, scopes, changed nodes, input causes, collection diffs where present,
-frame/command kinds, and dependency paths without inspecting host command or
-output payload semantics.
+The implementation returns deterministic audit entries on each
+`TransactionResult`. Graphs do not retain full audit history.
+
+The graph retains only bounded latest explanation indexes according to
+`TransactionOptions::audit_explanations` and exposes `why_changed()`,
+`why_resource_command()`, `why_output_frame()`, `dependency_path()`, and
+`scope_resource_inventory()`. Summary explanations identify transactions,
+revisions, scopes, changed nodes, collection diffs where present, and
+frame/command kinds without inspecting host command or output payload
+semantics. Dependency path explanations are opt-in and use stable shortest
+paths from changed inputs.
 
 ## Prohibited behavior
 

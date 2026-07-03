@@ -4,9 +4,9 @@ use std::collections::BTreeSet;
 mod shared_resource;
 
 use trellis_core::{
-    DependencyList, Graph, GraphError, InputNode, MaterializedOutput, OutputFrameKind,
-    ResourceCommand, ResourceCommandKind, ResourceKey, ScopeId, TransactionResult,
-    TransactionTrace, assert_transaction_traces_match,
+    AuditExplanationLevel, DependencyList, Graph, GraphError, InputNode, MaterializedOutput,
+    OutputFrameKind, ResourceCommand, ResourceCommandKind, ResourceKey, ScopeId,
+    TransactionOptions, TransactionResult, TransactionTrace, assert_transaction_traces_match,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -37,6 +37,16 @@ fn command_closes(result: &TransactionResult<AlphaCommand>, value: u8) -> bool {
     })
 }
 
+fn audit_paths_options() -> TransactionOptions {
+    TransactionOptions::default().with_audit_explanations(AuditExplanationLevel::DependencyPaths)
+}
+
+fn begin_alpha_transaction(
+    graph: &mut Graph<AlphaCommand>,
+) -> trellis_core::GraphResult<trellis_core::Transaction<'_, AlphaCommand>> {
+    graph.begin_transaction_with_options(audit_paths_options())
+}
+
 fn apply_frames(consumer: &mut Option<BTreeSet<u8>>, result: &TransactionResult<AlphaCommand>) {
     for frame in &result.output_frames {
         match &frame.kind {
@@ -51,7 +61,7 @@ fn apply_frames(consumer: &mut Option<BTreeSet<u8>>, result: &TransactionResult<
 }
 
 fn commit_source(app: &mut AlphaApp, next: BTreeSet<u8>) -> TransactionResult<AlphaCommand> {
-    let mut tx = app.graph.begin_transaction().unwrap();
+    let mut tx = begin_alpha_transaction(&mut app.graph).unwrap();
     tx.set_input(app.source, next).unwrap();
     let result = tx.commit().unwrap();
     drop(tx);
@@ -60,7 +70,7 @@ fn commit_source(app: &mut AlphaApp, next: BTreeSet<u8>) -> TransactionResult<Al
 }
 
 fn commit_allowed(app: &mut AlphaApp, next: BTreeSet<u8>) -> TransactionResult<AlphaCommand> {
-    let mut tx = app.graph.begin_transaction().unwrap();
+    let mut tx = begin_alpha_transaction(&mut app.graph).unwrap();
     tx.set_input(app.allowed, next).unwrap();
     let result = tx.commit().unwrap();
     drop(tx);
@@ -80,14 +90,14 @@ fn alpha_trace_script() -> Vec<TransactionTrace> {
     assert!(command_closes(&result, 1));
     traces.push(result.trace());
 
-    let mut tx = app.graph.begin_transaction().unwrap();
+    let mut tx = begin_alpha_transaction(&mut app.graph).unwrap();
     tx.rebaseline_output(app.output).unwrap();
     let result = tx.commit().unwrap();
     drop(tx);
     app.graph.assert_incremental_equals_full().unwrap();
     traces.push(result.trace());
 
-    let mut tx = app.graph.begin_transaction().unwrap();
+    let mut tx = begin_alpha_transaction(&mut app.graph).unwrap();
     tx.close_scope(app.scope).unwrap();
     let result = tx.commit().unwrap();
     drop(tx);
@@ -104,7 +114,7 @@ fn alpha_trace_script() -> Vec<TransactionTrace> {
 
 fn build_alpha(source_members: BTreeSet<u8>, allowed_members: BTreeSet<u8>) -> AlphaApp {
     let mut graph = Graph::<AlphaCommand>::new_with_command_type();
-    let mut tx = graph.begin_transaction().unwrap();
+    let mut tx = begin_alpha_transaction(&mut graph).unwrap();
     let scope = tx.create_scope("alpha-session").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
     let allowed = tx.input::<BTreeSet<u8>>("allowed").unwrap();
@@ -232,7 +242,7 @@ fn alpha_catches_stale_derived_visibility_after_permission_shrink() {
 fn alpha_catches_scope_close_leaking_resources_or_output() {
     let mut app = build_alpha(members(&[1, 2]), members(&[1, 2]));
 
-    let mut tx = app.graph.begin_transaction().unwrap();
+    let mut tx = begin_alpha_transaction(&mut app.graph).unwrap();
     tx.close_scope(app.scope).unwrap();
     let result = tx.commit().unwrap();
     drop(tx);
@@ -260,7 +270,7 @@ fn alpha_catches_output_delta_sequence_that_disagrees_with_rebaseline() {
     apply_frames(&mut consumer, &app.initial);
 
     for next in [members(&[1, 2]), members(&[2])] {
-        let mut tx = app.graph.begin_transaction().unwrap();
+        let mut tx = begin_alpha_transaction(&mut app.graph).unwrap();
         tx.set_input(app.source, next).unwrap();
         let result = tx.commit().unwrap();
         drop(tx);
@@ -268,7 +278,7 @@ fn alpha_catches_output_delta_sequence_that_disagrees_with_rebaseline() {
         app.graph.assert_incremental_equals_full().unwrap();
     }
 
-    let mut tx = app.graph.begin_transaction().unwrap();
+    let mut tx = begin_alpha_transaction(&mut app.graph).unwrap();
     tx.rebaseline_output(app.output).unwrap();
     let result = tx.commit().unwrap();
     drop(tx);

@@ -84,3 +84,4 @@ What must be added so the decision is enforceable?
 - [ADR 0005: Scope close reclaims owned nodes](0005-scope-close-reclaims-owned-nodes.md)
 - [ADR 0006: Output payload types are per output](0006-output-payload-types-are-per-output.md)
 - [ADR 0007: Resource keys are structured segments](0007-resource-keys-are-structured-segments.md)
+- [ADR 0008: Audit history is transaction local](0008-audit-history-is-transaction-local.md)

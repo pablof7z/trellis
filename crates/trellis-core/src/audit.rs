@@ -1,16 +1,12 @@
 use crate::{
-    AuditEntry, AuditEvent, Graph, GraphError, GraphResult, NodeChangeExplanation, NodeHandle,
-    NodeId, OutputFrameExplanation, OutputFrameKindTrace, OutputKey, ResourceCommandCause,
-    ResourceCommandExplanation, ResourceCommandKind, ResourceKey, ScopeId, ScopeResourceInventory,
-    TransactionResult,
+    AuditEvent, AuditExplanationLevel, Graph, GraphError, GraphResult, NodeChangeExplanation,
+    NodeHandle, NodeId, OutputFrameExplanation, OutputFrameKindTrace, OutputKey,
+    ResourceCommandCause, ResourceCommandExplanation, ResourceCommandKind, ResourceKey, ScopeId,
+    ScopeResourceInventory, TransactionResult,
 };
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 impl<C> Graph<C> {
-    /// Returns the committed audit log.
-    pub fn audit_log(&self) -> &[AuditEntry] {
-        &self.audit.log
-    }
-
     /// Explains why a typed node last changed.
     pub fn why_changed<H: NodeHandle>(&self, node: H) -> Option<&NodeChangeExplanation> {
         self.why_changed_by_id(node.id())
@@ -36,10 +32,8 @@ impl<C> Graph<C> {
         if !self.nodes.contains_key(&from) || !self.nodes.contains_key(&to) {
             return None;
         }
-        let mut path = vec![from];
-        let mut visited = std::collections::BTreeSet::new();
-        self.dependency_path_inner(from, to, &mut visited, &mut path)
-            .then_some(path)
+        let downstream = self.reverse_dependency_index();
+        shortest_dependency_path(&downstream, from, to)
     }
 
     /// Returns resources currently owned by a scope.
@@ -55,13 +49,25 @@ impl<C> Graph<C> {
         Ok(ScopeResourceInventory { scope, resources })
     }
 
-    pub(crate) fn record_transaction_audit(&mut self, result: &TransactionResult<C>) {
-        self.audit.log.extend(result.audit_log.iter().cloned());
+    pub(crate) fn record_transaction_audit(
+        &mut self,
+        result: &TransactionResult<C>,
+        level: AuditExplanationLevel,
+    ) {
+        let causes = std::mem::take(&mut self.audit.pending_resource_causes);
+        if level == AuditExplanationLevel::Disabled {
+            self.audit.clear_explanations();
+            return;
+        }
+
         let changed_inputs = result.changed_inputs.clone();
         let changed_nodes = changed_nodes(result);
+        let downstream = (level == AuditExplanationLevel::DependencyPaths)
+            .then(|| self.reverse_dependency_index());
         for entry in &result.audit_log {
             if let Some(node) = event_node(entry.event) {
-                let dependency_paths = self.paths_from_inputs_to_targets(&changed_inputs, &[node]);
+                let dependency_paths =
+                    paths_from_inputs_to_targets(downstream.as_ref(), &changed_inputs, &[node]);
                 let input_causes = input_causes_from_paths(&dependency_paths);
                 self.audit.node_changes.insert(
                     node,
@@ -77,16 +83,17 @@ impl<C> Graph<C> {
             }
         }
 
-        let causes = std::mem::take(&mut self.audit.pending_resource_causes);
-        debug_assert_eq!(causes.len(), result.resource_plan.commands().len());
         for (index, command) in result.resource_plan.commands().iter().enumerate() {
             let cause = causes
                 .get(index)
                 .copied()
                 .expect("resource command cause recorded during reconciliation");
             let collection_diffs = cause.collection().into_iter().collect::<Vec<_>>();
-            let dependency_paths =
-                self.paths_from_inputs_to_targets(&changed_inputs, &collection_diffs);
+            let dependency_paths = paths_from_inputs_to_targets(
+                downstream.as_ref(),
+                &changed_inputs,
+                &collection_diffs,
+            );
             let input_causes = input_causes_from_paths(&dependency_paths);
             self.audit.resource_commands.insert(
                 command.key().clone(),
@@ -115,8 +122,11 @@ impl<C> Graph<C> {
                 .copied()
                 .filter(|node| changed_nodes.contains(node))
                 .collect::<Vec<_>>();
-            let dependency_paths =
-                self.paths_from_inputs_to_targets(&changed_inputs, &changed_dependencies);
+            let dependency_paths = paths_from_inputs_to_targets(
+                downstream.as_ref(),
+                &changed_inputs,
+                &changed_dependencies,
+            );
             let input_causes = input_causes_from_paths(&dependency_paths);
             self.audit.output_frames.insert(
                 frame.output_key,
@@ -135,55 +145,77 @@ impl<C> Graph<C> {
         }
     }
 
-    fn paths_from_inputs_to_targets(
-        &self,
-        inputs: &[NodeId],
-        targets: &[NodeId],
-    ) -> Vec<Vec<NodeId>> {
-        inputs
-            .iter()
-            .flat_map(|input| {
-                targets
-                    .iter()
-                    .filter_map(|target| self.dependency_path(*input, *target))
-            })
-            .collect()
-    }
-
-    fn dependency_path_inner(
-        &self,
-        current: NodeId,
-        target: NodeId,
-        visited: &mut std::collections::BTreeSet<NodeId>,
-        path: &mut Vec<NodeId>,
-    ) -> bool {
-        if current == target {
-            return true;
-        }
-        if !visited.insert(current) {
-            return false;
-        }
-        for next in self.downstream_nodes(current) {
-            path.push(next);
-            if self.dependency_path_inner(next, target, visited, path) {
-                return true;
+    fn reverse_dependency_index(&self) -> BTreeMap<NodeId, Vec<NodeId>> {
+        let mut downstream: BTreeMap<NodeId, Vec<NodeId>> = BTreeMap::new();
+        for meta in self.nodes.values() {
+            for dependency in meta.dependencies().as_slice() {
+                downstream.entry(*dependency).or_default().push(meta.id());
             }
-            path.pop();
         }
-        false
+        for nodes in downstream.values_mut() {
+            nodes.sort();
+        }
+        downstream
+    }
+}
+
+fn paths_from_inputs_to_targets(
+    downstream: Option<&BTreeMap<NodeId, Vec<NodeId>>>,
+    inputs: &[NodeId],
+    targets: &[NodeId],
+) -> Vec<Vec<NodeId>> {
+    let Some(downstream) = downstream else {
+        return Vec::new();
+    };
+
+    inputs
+        .iter()
+        .flat_map(|input| {
+            targets
+                .iter()
+                .filter_map(|target| shortest_dependency_path(downstream, *input, *target))
+        })
+        .collect()
+}
+
+fn shortest_dependency_path(
+    downstream: &BTreeMap<NodeId, Vec<NodeId>>,
+    from: NodeId,
+    to: NodeId,
+) -> Option<Vec<NodeId>> {
+    if from == to {
+        return Some(vec![from]);
     }
 
-    fn downstream_nodes(&self, node: NodeId) -> Vec<NodeId> {
-        self.nodes
-            .values()
-            .filter_map(|meta| {
-                meta.dependencies()
-                    .as_slice()
-                    .contains(&node)
-                    .then_some(meta.id())
-            })
-            .collect()
+    let mut queue = VecDeque::from([from]);
+    let mut visited = BTreeSet::from([from]);
+    let mut previous = BTreeMap::new();
+
+    while let Some(current) = queue.pop_front() {
+        for next in downstream.get(&current).into_iter().flatten().copied() {
+            if !visited.insert(next) {
+                continue;
+            }
+            previous.insert(next, current);
+            if next == to {
+                return Some(reconstruct_path(from, to, &previous));
+            }
+            queue.push_back(next);
+        }
     }
+
+    None
+}
+
+fn reconstruct_path(from: NodeId, to: NodeId, previous: &BTreeMap<NodeId, NodeId>) -> Vec<NodeId> {
+    let mut path = vec![to];
+    let mut current = to;
+    while current != from {
+        current = previous[&current];
+        path.push(current);
+    }
+    path.reverse();
+    path
 }
 
 impl ResourceCommandCause {

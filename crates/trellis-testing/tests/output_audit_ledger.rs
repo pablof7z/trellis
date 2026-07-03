@@ -1,8 +1,8 @@
 use std::collections::BTreeSet;
 
 use trellis_core::{
-    CollectionNode, DependencyList, Graph, InputNode, MaterializedOutput, OutputFrameKind,
-    OutputKey, ResourceKey, ResourcePlan, ScopeId,
+    AuditExplanationLevel, CollectionNode, DependencyList, Graph, InputNode, MaterializedOutput,
+    OutputFrameKind, OutputKey, ResourceKey, ResourcePlan, ScopeId, TransactionOptions,
 };
 use trellis_testing::{
     FullRecomputeOracle, OutputLedger, OutputLedgerError, assert_dependency_path_exists,
@@ -30,9 +30,15 @@ fn key(value: u8) -> ResourceKey {
     ResourceKey::new(format!("test:{value}"))
 }
 
+fn audit_paths_options() -> TransactionOptions {
+    TransactionOptions::default().with_audit_explanations(AuditExplanationLevel::DependencyPaths)
+}
+
 fn build_graph(initial: BTreeSet<u8>) -> (TestGraph, trellis_core::TransactionResult<Command>) {
     let mut graph = Graph::<Command>::new_with_command_type();
-    let mut tx = graph.begin_transaction().unwrap();
+    let mut tx = graph
+        .begin_transaction_with_options(audit_paths_options())
+        .unwrap();
     let scope = tx.create_scope("scope").unwrap();
     let source = tx.input::<BTreeSet<u8>>("source").unwrap();
     tx.set_input(source, initial).unwrap();
@@ -81,7 +87,10 @@ fn set_source(
     target: &mut TestGraph,
     values: BTreeSet<u8>,
 ) -> trellis_core::TransactionResult<Command> {
-    let mut tx = target.graph.begin_transaction().unwrap();
+    let mut tx = target
+        .graph
+        .begin_transaction_with_options(audit_paths_options())
+        .unwrap();
     tx.set_input(target.source, values).unwrap();
     let result = tx.commit().unwrap();
     drop(tx);
