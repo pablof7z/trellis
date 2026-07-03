@@ -282,6 +282,9 @@ fn redact_trace(trace: &TransactionTrace, redactor: &impl TraceRedactor) -> Tran
     for command in &mut trace.resource_commands {
         command.key = redactor.resource_key(&command.key);
     }
+    for coalesced in &mut trace.resource_coalescences {
+        coalesced.key = redactor.resource_key(&coalesced.key);
+    }
     for result in &mut trace.invariant_results {
         result.name = redactor.invariant_name(&result.name);
     }

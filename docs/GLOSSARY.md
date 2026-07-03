@@ -64,6 +64,16 @@ The graph may produce commands inside a `ResourcePlan`, but it does not execute 
 
 The application defines the command payload type.
 
+## Coalesced open
+
+A resource `Open` that joins an already live resource with the same
+`ResourceKey` and equal command payload.
+
+Coalescing adds the joining scope to the resource owner set and records a trace
+and audit event, but it does not emit a second host `Open` command. If the
+payload differs, the transaction fails because the two demands are different
+resources sharing one key.
+
 ## Delta
 
 An output frame that describes a change from a previous materialized output revision.

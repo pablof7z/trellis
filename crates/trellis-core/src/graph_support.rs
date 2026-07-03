@@ -1,5 +1,5 @@
 use crate::Graph;
-impl<C> Clone for Graph<C> {
+impl<C: Clone> Clone for Graph<C> {
     fn clone(&self) -> Self {
         Self {
             next_node_id: self.next_node_id,
@@ -19,6 +19,9 @@ impl<C> Clone for Graph<C> {
             collection_diffs: self.collection_diffs.clone(),
             resource_planners: self.resource_planners.clone(),
             resource_owners: self.resource_owners.clone(),
+            resource_payloads: self.resource_payloads.clone(),
+            resource_acquisitions: self.resource_acquisitions.clone(),
+            next_resource_acquisition: self.next_resource_acquisition,
             output_specs: self.output_specs.clone(),
             output_values: self.output_values.clone(),
             outputs: self.outputs.clone(),

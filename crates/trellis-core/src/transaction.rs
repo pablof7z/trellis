@@ -29,7 +29,10 @@ impl<'graph, C> Transaction<'graph, C> {
         graph: &'graph mut Graph<C>,
         id: TransactionId,
         options: TransactionOptions,
-    ) -> Self {
+    ) -> Self
+    where
+        C: Clone,
+    {
         let mut working = graph.clone();
         working.transaction_open = false;
         Self {
@@ -75,7 +78,10 @@ impl<'graph, C> Transaction<'graph, C> {
     }
 
     /// Commits staged input changes atomically.
-    pub fn commit(&mut self) -> GraphResult<TransactionResult<C>> {
+    pub fn commit(&mut self) -> GraphResult<TransactionResult<C>>
+    where
+        C: Clone + PartialEq,
+    {
         self.ensure_open()?;
         let mut phase_trace = vec![TransactionPhase::StageOperations];
         phase_trace.push(TransactionPhase::ValidateTransaction);
@@ -213,6 +219,14 @@ impl<'graph, C> Transaction<'graph, C> {
                 return Err(error);
             }
         };
+        let resource_coalescences = self.working.take_pending_resource_coalescences();
+        audit_events.extend(resource_coalescences.iter().map(|coalesced| {
+            AuditEvent::ResourceOpenCoalesced {
+                key: coalesced.key.clone(),
+                scope: coalesced.scope,
+                existing_owner_count: coalesced.existing_owner_count,
+            }
+        }));
         let mut output_changed = initial_changed.clone();
         output_changed.extend(changed_collection_nodes.iter().copied());
         phase_trace.push(TransactionPhase::ProduceOutputFrames);
@@ -256,6 +270,7 @@ impl<'graph, C> Transaction<'graph, C> {
             changed_collection_nodes,
             collection_diffs,
             resource_plan,
+            resource_coalescences,
             output_frames,
             scope_events,
             audit_log,

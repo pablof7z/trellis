@@ -103,6 +103,17 @@ pub struct FullRecomputeOutputMismatch {
     pub recomputed_present: bool,
 }
 
+/// Shared resource Open payload conflict found during reconciliation.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ResourcePayloadConflict {
+    /// Resource key whose live payload disagreed with the joining payload.
+    pub key: ResourceKey,
+    /// Scope that attempted to join the existing resource.
+    pub joining_scope: ScopeId,
+    /// Scopes that already owned the resource.
+    pub existing_owners: Vec<ScopeId>,
+}
+
 /// Errors for graph metadata and input transaction operations.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum GraphError {
@@ -153,6 +164,8 @@ pub enum GraphError {
         /// Kind of resource command that required ownership.
         command_kind: ResourceCommandKind,
     },
+    /// An Open attempted to join a shared resource with a different payload.
+    ResourcePayloadConflict(ResourcePayloadConflict),
     /// A dependency cycle was detected.
     CycleDetected(NodeId),
     /// A scalar derived node declared a collection dependency.
@@ -202,6 +215,11 @@ impl fmt::Display for GraphError {
             } => write!(
                 f,
                 "resource is not owned: key {key:?}, scope {scope:?}, command {command_kind:?}"
+            ),
+            Self::ResourcePayloadConflict(conflict) => write!(
+                f,
+                "resource payload conflict: key {:?}, joining scope {:?}, existing owners {:?}",
+                conflict.key, conflict.joining_scope, conflict.existing_owners
             ),
             Self::CycleDetected(id) => write!(f, "dependency cycle detected at node: {id:?}"),
             Self::CollectionDependencyNotAllowed(id) => {
@@ -268,6 +286,9 @@ impl GraphError {
                 | Self::ResourceScopeMismatch(scope)
                 | Self::PlanFailed(scope, _) => ErrorTarget::Scope(*scope),
                 Self::ResourceNotOwned { scope, .. } => ErrorTarget::Scope(*scope),
+                Self::ResourcePayloadConflict(conflict) => {
+                    ErrorTarget::Scope(conflict.joining_scope)
+                }
                 Self::TransactionClosed(transaction) => ErrorTarget::Transaction(*transaction),
                 Self::UnknownOutput(output) | Self::OutputFailed(output, _) => {
                     ErrorTarget::Output(*output)

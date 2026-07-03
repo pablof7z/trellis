@@ -10,6 +10,7 @@ pub(crate) struct AuditState {
     pub(crate) resource_commands: BTreeMap<ResourceKey, ResourceCommandExplanation>,
     pub(crate) output_frames: BTreeMap<OutputKey, OutputFrameExplanation>,
     pub(crate) pending_resource_causes: Vec<ResourceCommandCause>,
+    pub(crate) pending_resource_coalescences: Vec<ResourceCoalescedTrace>,
 }
 
 impl AuditState {
@@ -18,6 +19,7 @@ impl AuditState {
         self.resource_commands.clear();
         self.output_frames.clear();
         self.pending_resource_causes.clear();
+        self.pending_resource_coalescences.clear();
     }
 }
 
@@ -76,6 +78,18 @@ pub enum ResourceCommandCause {
         /// Scope being closed.
         scope: ScopeId,
     },
+}
+
+/// Payload-neutral trace for a shared-key Open that joined an existing resource.
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ResourceCoalescedTrace {
+    /// Resource identity joined by the scope.
+    pub key: ResourceKey,
+    /// Scope that joined the existing resource.
+    pub scope: ScopeId,
+    /// Number of owners present before the join.
+    pub existing_owner_count: usize,
 }
 
 /// Explanation for the latest frame emitted for an output key.

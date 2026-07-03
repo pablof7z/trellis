@@ -1,4 +1,7 @@
-use crate::{NodeId, OutputFrame, ResourcePlan, Revision, ScopeId, TransactionId};
+use crate::{
+    NodeId, OutputFrame, ResourceCoalescedTrace, ResourceKey, ResourcePlan, Revision, ScopeId,
+    TransactionId,
+};
 
 /// Configuration for committing input changes.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -56,7 +59,7 @@ pub struct AuditEntry {
 }
 
 /// Deterministic transaction event emitted in the audit log.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum AuditEvent {
     /// An input value changed or was configured to count as changed.
@@ -79,6 +82,15 @@ pub enum AuditEvent {
         node: NodeId,
         /// Owning scope.
         scope: ScopeId,
+    },
+    /// An Open joined an already live resource with an equal payload.
+    ResourceOpenCoalesced {
+        /// Resource identity joined by the scope.
+        key: ResourceKey,
+        /// Scope that joined the existing resource.
+        scope: ScopeId,
+        /// Number of owners present before the join.
+        existing_owner_count: usize,
     },
 }
 
@@ -215,6 +227,8 @@ pub struct TransactionResult<C = ()> {
     pub collection_diffs: Vec<CollectionDiffTrace>,
     /// Data-only resource commands produced by graph propagation.
     pub resource_plan: ResourcePlan<C>,
+    /// Shared-key Open joins that produced no outgoing resource command.
+    pub resource_coalescences: Vec<ResourceCoalescedTrace>,
     /// Data-only materialized output frames produced by graph propagation.
     pub output_frames: Vec<OutputFrame>,
     /// Scope lifecycle events emitted by this transaction.

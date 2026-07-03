@@ -18,7 +18,7 @@ pub struct FullRecomputeCheck {
     pub checked_outputs: Vec<OutputKey>,
 }
 
-impl<C> Graph<C> {
+impl<C: Clone + PartialEq> Graph<C> {
     /// Recomputes supported graph state from canonical inputs and compares it.
     pub fn full_recompute(&self) -> GraphResult<FullRecomputeCheck> {
         self.full_recompute_check()
@@ -37,6 +37,9 @@ impl<C> Graph<C> {
         full.previous_collection_values.clear();
         full.collection_diffs.clear();
         full.resource_owners.clear();
+        full.resource_payloads.clear();
+        full.resource_acquisitions.clear();
+        full.next_resource_acquisition = 1;
         full.output_values.clear();
         let order = full.derived_topological_order()?;
 

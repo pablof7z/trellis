@@ -3,7 +3,7 @@ use crate::{
     RebaselineReason, ResourceCommand, ResourceKey, ScopeId, ScopeLifecycleTrace,
     StagedInputChange, TransactionId, TransactionPhase, TransactionResult,
 };
-use crate::{NodeId, Revision};
+use crate::{NodeId, ResourceCoalescedTrace, Revision};
 
 /// Deterministic payload-free projection of a committed transaction result.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -31,6 +31,12 @@ pub struct TransactionTrace {
     pub collection_diffs: Vec<CollectionDiffTrace>,
     /// Resource command identity and operation trace.
     pub resource_commands: Vec<ResourceCommandTrace>,
+    /// Shared-key Open joins that produced no outgoing resource command.
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Vec::is_empty")
+    )]
+    pub resource_coalescences: Vec<ResourceCoalescedTrace>,
     /// Output frame identity and kind trace.
     pub output_frames: Vec<OutputFrameTrace>,
     /// Scope lifecycle events emitted by the transaction.
@@ -63,6 +69,7 @@ impl TransactionTrace {
                 .iter()
                 .map(ResourceCommandTrace::from_command)
                 .collect(),
+            resource_coalescences: result.resource_coalescences.clone(),
             output_frames: result
                 .output_frames
                 .iter()

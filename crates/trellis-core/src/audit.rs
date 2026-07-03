@@ -65,7 +65,7 @@ impl<C> Graph<C> {
         let downstream = (level == AuditExplanationLevel::DependencyPaths)
             .then(|| self.reverse_dependency_index());
         for entry in &result.audit_log {
-            if let Some(node) = event_node(entry.event) {
+            if let Some(node) = event_node(&entry.event) {
                 let dependency_paths =
                     paths_from_inputs_to_targets(downstream.as_ref(), &changed_inputs, &[node]);
                 let input_causes = input_causes_from_paths(&dependency_paths);
@@ -75,7 +75,7 @@ impl<C> Graph<C> {
                         node,
                         transaction_id: entry.transaction_id,
                         revision: entry.revision,
-                        event: entry.event,
+                        event: entry.event.clone(),
                         input_causes,
                         dependency_paths,
                     },
@@ -246,15 +246,16 @@ fn changed_nodes<C>(result: &TransactionResult<C>) -> Vec<NodeId> {
     nodes
 }
 
-fn event_node(event: AuditEvent) -> Option<NodeId> {
+fn event_node(event: &AuditEvent) -> Option<NodeId> {
     match event {
         AuditEvent::InputChanged(node)
         | AuditEvent::DerivedChanged(node)
         | AuditEvent::CollectionChanged(node)
-        | AuditEvent::NodeCreated(node) => Some(node),
-        AuditEvent::NodeAttached { node, .. } => Some(node),
+        | AuditEvent::NodeCreated(node) => Some(*node),
+        AuditEvent::NodeAttached { node, .. } => Some(*node),
         AuditEvent::InputUnchanged(_)
         | AuditEvent::ScopeCreated(_)
-        | AuditEvent::ScopeClosed(_) => None,
+        | AuditEvent::ScopeClosed(_)
+        | AuditEvent::ResourceOpenCoalesced { .. } => None,
     }
 }
