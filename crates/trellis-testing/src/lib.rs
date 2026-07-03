@@ -26,6 +26,7 @@ mod resource_ledger;
 mod resource_ledger_dump;
 mod resource_state;
 mod scenario;
+mod scenario_redaction;
 mod script;
 mod serialized;
 
