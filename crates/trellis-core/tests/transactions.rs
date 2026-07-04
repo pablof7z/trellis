@@ -207,6 +207,94 @@ fn non_input_node_cannot_be_set_as_input() {
 }
 
 #[test]
+fn preview_does_not_mutate_graph() {
+    let (mut graph, input) = input_graph::<String>("name");
+
+    let before_dump = graph.debug_dump();
+    let before_revision = graph.revision();
+
+    let mut tx = graph.begin_transaction().unwrap();
+    tx.set_input(input, "changed".to_owned()).unwrap();
+    let result = tx.preview().unwrap();
+
+    // preview predicts the next revision but must not apply it.
+    assert_eq!(result.revision.get(), before_revision.get() + 1);
+    assert_eq!(result.changed_inputs, vec![input.id()]);
+
+    // The real graph is untouched: same dump, same revision, input unchanged.
+    assert_eq!(graph.debug_dump(), before_dump);
+    assert_eq!(graph.revision(), before_revision);
+    assert_eq!(graph.input_value(input).unwrap(), None);
+}
+
+#[test]
+fn preview_matches_commit() {
+    fn build() -> (Graph, trellis_core::InputNode<String>) {
+        input_graph::<String>("name")
+    }
+
+    let (mut preview_graph, preview_input) = build();
+    let (mut commit_graph, commit_input) = build();
+    assert_eq!(preview_input.id(), commit_input.id());
+
+    let mut preview_tx = preview_graph.begin_transaction().unwrap();
+    preview_tx
+        .set_input(preview_input, "value".to_owned())
+        .unwrap();
+    let previewed = preview_tx.preview().unwrap();
+
+    let mut commit_tx = commit_graph.begin_transaction().unwrap();
+    commit_tx
+        .set_input(commit_input, "value".to_owned())
+        .unwrap();
+    let committed = commit_tx.commit().unwrap();
+    drop(commit_tx);
+
+    // preview predicts commit exactly: same commands, frames, changed sets,
+    // revision, audit — the whole TransactionResult.
+    assert_eq!(previewed, committed);
+    // And the commit really landed while the preview did not.
+    assert_eq!(
+        commit_graph.input_value(commit_input).unwrap(),
+        Some(&"value".to_owned())
+    );
+    assert_eq!(preview_graph.input_value(preview_input).unwrap(), None);
+}
+
+#[test]
+fn preview_can_be_followed_by_a_real_commit() {
+    let (mut graph, input) = input_graph::<String>("name");
+
+    // A dry run leaves nothing behind...
+    let mut tx = graph.begin_transaction().unwrap();
+    tx.set_input(input, "value".to_owned()).unwrap();
+    let previewed = tx.preview().unwrap();
+
+    // ...so a fresh transaction staging the same change commits cleanly and
+    // produces exactly what the preview predicted.
+    let mut tx = graph.begin_transaction().unwrap();
+    tx.set_input(input, "value".to_owned()).unwrap();
+    let committed = tx.commit().unwrap();
+    drop(tx);
+
+    // The follow-up commit lands the expected state. (Its transaction id is one
+    // higher than the preview's, since `begin_transaction` advances the graph's
+    // tx counter each time it is called — a begin-time bookkeeping step that is
+    // independent of whether a tx previews or commits.)
+    assert_eq!(committed.revision.get(), 2);
+    assert_eq!(committed.changed_inputs, vec![input.id()]);
+    assert_eq!(graph.revision().get(), 2);
+    assert_eq!(graph.input_value(input).unwrap(), Some(&"value".to_owned()));
+
+    // Everything the preview predicted holds, except the transaction id that
+    // begin-time bookkeeping advanced.
+    assert_eq!(previewed.revision, committed.revision);
+    assert_eq!(previewed.changed_inputs, committed.changed_inputs);
+    assert_eq!(previewed.output_frames, committed.output_frames);
+    assert_eq!(previewed.resource_plan, committed.resource_plan);
+}
+
+#[test]
 fn handles_from_aborted_transactions_do_not_alias_future_nodes() {
     let mut graph = Graph::new();
     let mut tx = graph.begin_transaction().unwrap();

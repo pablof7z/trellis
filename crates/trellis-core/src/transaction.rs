@@ -1,7 +1,8 @@
 use crate::input::{StoredInput, boxed_input};
 use crate::transaction_trace_build::{scope_events, stable_node_union};
 use crate::{
-    Graph, GraphError, GraphResult, InputNode, NodeId, OutputKey, RebaselineReason, TransactionId,
+    Graph, GraphError, GraphResult, InputNode, NodeId, OutputKey, RebaselineReason, ScopeId,
+    TransactionId,
     transaction_types::{
         AuditEntry, AuditEvent, StagedInputChange, StagedInputOutcome, TransactionOptions,
         TransactionPhase, TransactionResult,
@@ -79,6 +80,48 @@ impl<'graph, C> Transaction<'graph, C> {
 
     /// Commits staged input changes atomically.
     pub fn commit(&mut self) -> GraphResult<TransactionResult<C>>
+    where
+        C: Clone + PartialEq,
+    {
+        let (result, closed_scopes) = self.run_pipeline()?;
+        self.working.reclaim_closed_scopes(&closed_scopes);
+        std::mem::swap(self.graph, &mut self.working);
+        self.close();
+        Ok(result)
+    }
+
+    /// Runs the full commit pipeline on the working copy and returns the
+    /// resulting [`TransactionResult`] **without committing** — the real graph
+    /// is left untouched and the transaction is consumed.
+    ///
+    /// This is a near-free simulation: "what would committing these staged
+    /// inputs produce?" It is the Terraform-plan / `--dry-run` for a Trellis
+    /// application. The cost is already paid: [`Transaction`] begins by cloning
+    /// the graph into a private working copy, and the entire pipeline
+    /// (recompute, structural diffs, resource plans, output frames, audit) runs
+    /// on that working copy. The only mutation of the real graph performed by
+    /// [`commit`](Self::commit) is the final swap, which `preview` simply skips.
+    ///
+    /// The working copy — including any recomputed values, revision bump, and
+    /// recorded audit — is dropped when the transaction is dropped, so the real
+    /// graph's state, revision, and audit log are all left exactly as they were.
+    pub fn preview(mut self) -> GraphResult<TransactionResult<C>>
+    where
+        C: Clone + PartialEq,
+    {
+        let (result, _closed_scopes) = self.run_pipeline()?;
+        Ok(result)
+    }
+
+    /// Runs the shared pre-swap commit pipeline against `self.working`, leaving
+    /// the working copy fully baked (recomputed, revision-bumped, audit
+    /// recorded) and returning the [`TransactionResult`] together with the
+    /// scopes closed during the transaction (needed by [`commit`](Self::commit)
+    /// to reclaim them before swapping). Every mutation lands on `self.working`
+    /// only; the real graph (`self.graph`) is never touched here, which is what
+    /// makes both [`commit`](Self::commit) and [`preview`](Self::preview) able
+    /// to share it.
+    fn run_pipeline(&mut self) -> GraphResult<(TransactionResult<C>, Vec<ScopeId>)>
     where
         C: Clone + PartialEq,
     {
@@ -279,10 +322,7 @@ impl<'graph, C> Transaction<'graph, C> {
         };
         self.working
             .record_transaction_audit(&result, self.options.audit_explanations);
-        self.working.reclaim_closed_scopes(&closed_scopes);
-        std::mem::swap(self.graph, &mut self.working);
-        self.close();
-        Ok(result)
+        Ok((result, closed_scopes))
     }
 
     pub(crate) fn ensure_open(&self) -> GraphResult<()> {
