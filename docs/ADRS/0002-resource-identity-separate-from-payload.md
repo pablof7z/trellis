@@ -30,6 +30,13 @@ A resource command exposes:
 The core understands resource keys, scopes, ownership, transition policy, and
 ordering. The core does not inspect application command payloads.
 
+Operation and transition policy are distinct structural fields in transaction
+traces. The operation says what kind of resource command the graph emitted
+(`Open`, `Close`, `Replace`, or `Refresh`). The transition policy says what
+host-side transition is required. Today those map directly except `Replace`,
+which carries `ReplaceAtomically` to make clear that the host must use a native
+replacement operation or report the transition unsupported.
+
 ## Consequences
 
 Resource ownership can be tracked generically.
@@ -74,7 +81,7 @@ The implementation must document and test that:
 - source shrink emits deterministic close transitions;
 - updated collection members can emit replace transitions without lowering to
   close plus open;
-- transition policy appears in transaction traces;
+- operation and transition policy appear separately in transaction traces;
 - host statuses are classified by resource key, scope, command revision, and
   status revision;
 - unsupported transitions are host status input, not graph failure.

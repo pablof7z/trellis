@@ -87,7 +87,7 @@ pub use resource_key::ResourceKey;
 pub use scope::ScopeMeta;
 pub use trace::{
     OutputFrameKindTrace, OutputFrameTrace, ResourceCommandKind, ResourceCommandTrace,
-    TraceMismatch, TransactionTrace, assert_transaction_traces_match,
+    ResourceTransitionPolicy, TraceMismatch, TransactionTrace, assert_transaction_traces_match,
 };
 pub use transaction::Transaction;
 pub use transaction_types::{

@@ -18,7 +18,7 @@ const TRACES: &[(&str, &str)] = &[
 ];
 
 #[test]
-fn flight_recorder_demo_traces_use_serialized_scenario_v1() {
+fn flight_recorder_demo_traces_use_current_serialized_scenario_format() {
     for (name, json) in TRACES {
         let scenario = SerializedScenario::from_json(json)
             .unwrap_or_else(|error| panic!("{name} must deserialize: {error}"));

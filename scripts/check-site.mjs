@@ -105,7 +105,7 @@ function validateFlightRecorderTrace(file, expectations) {
     return;
   }
 
-  if (traceFile.formatVersion !== 1) {
+  if (traceFile.formatVersion !== 2) {
     errors.push(`Unsupported trace format in ${file}: ${traceFile.formatVersion}`);
   }
   if (!Array.isArray(traceFile.steps) || traceFile.steps.length === 0) {
@@ -143,7 +143,12 @@ function validateFlightRecorderTrace(file, expectations) {
       .join(",") === "9,9,8";
 
     for (const command of commands) {
-      if (!["Open", "Close"].includes(command.kind) || typeof command.key !== "string" || !Number.isInteger(command.scope)) {
+      if (
+        !["Open", "Close"].includes(command.kind) ||
+        !["Open", "Close"].includes(command.transition_policy) ||
+        typeof command.key !== "string" ||
+        !Number.isInteger(command.scope)
+      ) {
         errors.push(`${prefix} has invalid resource command`);
       }
     }

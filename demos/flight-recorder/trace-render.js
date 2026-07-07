@@ -132,7 +132,7 @@ function renderLedger(state, els, handlers) {
     })
   );
   const renderers = {
-    resources: () => table(["kind", "key", "scope"], step.resourceCommands.map((cmd) => [kindBadge(cmd.kind), cmd.key, cmd.scope])),
+    resources: () => table(["kind", "policy", "key", "scope"], step.resourceCommands.map((cmd) => [kindBadge(cmd.kind), cmd.transitionPolicy, cmd.key, cmd.scope])),
     outputs: () => step.outputFrames.length ? table(["kind", "key", "scope"], step.outputFrames.map((frame) => [frame.kind, frame.key, frame.scope])) : empty("no output frames recorded"),
     scopes: () => stack([section("Scope Events", step.scopeEvents.map(scopeLine), "none"), section("Audit Log", step.auditLog.map(codeLine), "none")]),
     invariants: () => table(["status", "name", "details"], step.invariantResults.map((check) => [check.passed ? "pass" : "fail", check.name, check.details || "-"])),

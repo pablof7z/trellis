@@ -1,4 +1,4 @@
-export const FORMAT_VERSION = 1;
+export const FORMAT_VERSION = 2;
 
 export const bundledTraces = [
   ["normal-session", "Normal session", "/demos/flight-recorder/traces/normal-session.json"],
@@ -146,6 +146,7 @@ function normalizeCollectionDiff(diff) {
 function normalizeResourceCommand(command) {
   return {
     kind: command.kind ?? command.op ?? "Unknown",
+    transitionPolicy: command.transition_policy ?? "Unknown",
     key: command.key ?? command.output_key ?? "unknown",
     scope: String(command.scope ?? "unknown"),
     revision: command.command_revision ?? command.revision ?? null,

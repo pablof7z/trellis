@@ -2,7 +2,8 @@
 
 use trellis_core::{
     AuditEntry, AuditEvent, Graph, ResourceCoalescedTrace, ResourceCommandKind,
-    ResourceCommandTrace, ResourceKey, Revision, ScopeId, TransactionId, TransactionTrace,
+    ResourceCommandTrace, ResourceKey, ResourceTransitionPolicy, Revision, ScopeId, TransactionId,
+    TransactionTrace,
 };
 use trellis_testing::{Scenario, TraceRedactor};
 
@@ -37,6 +38,7 @@ fn redacted_trace_json_removes_resource_keys_from_audit_log() {
             key: command_key.clone(),
             scope,
             kind: ResourceCommandKind::Open,
+            transition_policy: ResourceTransitionPolicy::Open,
         }],
         resource_coalescences: vec![ResourceCoalescedTrace {
             key: coalesced_key.clone(),

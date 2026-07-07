@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 use serde::{Deserialize, Serialize};
 use trellis_core::{
     DependencyList, Graph, GraphResult, ResourceCommandKind, ResourceCommandTrace, ResourceKey,
-    ResourcePlan, ScopeId, Transaction,
+    ResourcePlan, ResourceTransitionPolicy, ScopeId, Transaction,
 };
 use trellis_testing::{
     DataTransactionScript, ScenarioError, ScenarioTarget, SerializedScenario, TRACE_FORMAT_VERSION,
@@ -13,7 +13,7 @@ use trellis_testing::{
 };
 
 const GOLDEN_SCRIPT: &str = r#"{
-  "formatVersion": 1,
+  "formatVersion": 2,
   "steps": [
     {
       "name": "open",
@@ -36,7 +36,7 @@ const GOLDEN_SCRIPT: &str = r#"{
   ]
 }"#;
 
-const GOLDEN_TRACE: &str = include_str!("fixtures/serialized_trace_v1.json");
+const GOLDEN_TRACE: &str = include_str!("fixtures/serialized_trace_v2.json");
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Command {
@@ -121,7 +121,7 @@ fn resource_key_json_accepts_legacy_strings_and_structured_segments() {
 
 #[test]
 fn unsupported_script_version_is_a_graceful_replay_error() {
-    let json = GOLDEN_SCRIPT.replace("\"formatVersion\": 1", "\"formatVersion\": 99");
+    let json = GOLDEN_SCRIPT.replace("\"formatVersion\": 2", "\"formatVersion\": 99");
     let script = DataTransactionScript::<Operation>::from_json(&json).unwrap();
     let error = match replay(&script) {
         Ok(_) => panic!("unsupported script version replayed"),
@@ -144,7 +144,7 @@ fn unsupported_trace_file_version_is_a_graceful_error() {
     let json = SerializedScenario::from_scenario(first.scenario())
         .to_json()
         .unwrap()
-        .replace("\"formatVersion\": 1", "\"formatVersion\": 99");
+        .replace("\"formatVersion\": 2", "\"formatVersion\": 99");
     let trace_file = SerializedScenario::from_json(&json).unwrap();
     let error = match trace_file.into_scenario() {
         Ok(_) => panic!("unsupported trace version loaded"),
@@ -220,6 +220,7 @@ fn command_trace(value: u8, scope: ScopeId, kind: ResourceCommandKind) -> Resour
         key: key(value),
         scope,
         kind,
+        transition_policy: ResourceTransitionPolicy::from_kind(kind),
     }
 }
 
