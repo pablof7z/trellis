@@ -482,6 +482,8 @@ dependencies = [
 name = "trellis-examples"
 version = "0.1.0"
 dependencies = [
+ "serde",
+ "serde_json",
  "trellis-core",
  "trellis-testing",
 ]

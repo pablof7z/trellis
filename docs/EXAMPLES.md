@@ -71,6 +71,25 @@ Covered behavior:
 - shared topic remains live while another panel needs it;
 - incremental result is checked against full recompute.
 
+## Headless Showcase Traces
+
+The flagship proof graphs expose deterministic headless scripts before any
+interactive showcase UI. Each command prints pretty JSON using the shared
+`trellis.showcase.trace` contract:
+
+```sh
+cargo run -p trellis-examples --example workspace_sync_board -- --script switch-workspace
+cargo run -p trellis-examples --example mini_language_server -- --script delete-file
+cargo run -p trellis-examples --example fleetpulse -- --script revoke-permission
+```
+
+The JSON includes the showcase name, script name, reproduction command,
+deterministic replay status, seeded-bug status reserved for
+[#93](https://github.com/pablof7z/trellis/issues/93), and named transaction
+steps. Each step contains the payload-neutral `TransactionTrace`, host-status
+metadata, resource commands, output frames, scope events, audit receipts,
+phase trace, and a full-recompute invariant result.
+
 ## Protocol Subscription Wrapper
 
 File: `crates/trellis-examples/src/protocol_subscription.rs`
