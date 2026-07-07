@@ -1,4 +1,5 @@
 import { evidenceLabel, invariantMatches, itemMatchesQuery, kindMatches, replayStatus } from "./trace-model.js";
+import { labelSummary } from "./trace-labels.js";
 
 const tabs = ["resources", "outputs", "scopes", "invariants", "replay", "raw"];
 
@@ -44,6 +45,7 @@ function renderHeader(state, els) {
     manifest("build", trace.provenance.buildId),
     manifest("core-backed", trace.provenance.coreBacked ? "yes" : "no"),
     manifest("transactions", String(trace.steps.length)),
+    manifest("labels", labelSummary(trace.labelRegistry)),
     manifest("invariants", trace.invariantSummary.label),
     manifest("replay", replay.status)
   );
@@ -217,7 +219,10 @@ function table(headings, rows) {
 
 function replayPanel(trace) {
   const replay = replayStatus(trace);
-  const rows = [fact("status", replay.status)];
+  const rows = [
+    fact("status", replay.status),
+    fact("labels", labelSummary(trace.labelRegistry)),
+  ];
   if (replay.checks?.length) rows.push(...replay.checks.map((check) => fact(check.label, check.status)));
   if (trace.provenance.replay?.reason) rows.push(fact("reason", trace.provenance.replay.reason));
   return stack(rows);
@@ -254,9 +259,7 @@ function codeLine(value) {
   return line(typeof value === "string" ? value : JSON.stringify(value));
 }
 
-function line(text) {
-  return el("div", String(text), "ledger-line");
-}
+function line(text) { return el("div", String(text), "ledger-line"); }
 
 function stack(nodes) {
   const node = el("div", "", "ledger-stack");
@@ -264,21 +267,15 @@ function stack(nodes) {
   return node;
 }
 
-function empty(text) {
-  return el("p", text, "empty-state");
-}
-function row(tag, text) {
-  return el(tag, String(text));
-}
+function empty(text) { return el("p", text, "empty-state"); }
+function row(tag, text) { return el(tag, String(text)); }
 
 function tr(cells, cellTag) {
   const rowNode = document.createElement("tr");
   rowNode.append(...cells.map((cell) => el(cellTag, String(cell))));
   return rowNode;
 }
-function kindBadge(kind = "unknown") {
-  return `[${String(kind).toUpperCase()}]`;
-}
+function kindBadge(kind = "unknown") { return `[${String(kind).toUpperCase()}]`; }
 
 function summarizeDiffs(diffs) {
   return diffs.length ? diffs.map((diff) => `${diff.node} +${formatDiffValue(diff.added)} -${formatDiffValue(diff.removed)}`).join("; ") : "no structural diff";
@@ -287,9 +284,7 @@ function causeText(cause) {
   return `${cause.inputKey ?? "input"} -> ${cause.collection ?? "collection"} -> ${cause.reason ?? "receipt"}`;
 }
 
-function formatDiffValue(value) {
-  return Array.isArray(value) ? value.length : value;
-}
+function formatDiffValue(value) { return Array.isArray(value) ? value.length : value; }
 
 function el(tag, text = "", className = "") {
   const node = document.createElement(tag);

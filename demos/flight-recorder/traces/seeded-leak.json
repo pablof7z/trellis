@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 3,
   "provenance": {
     "sourceType": "bundledFixture",
     "generator": "unknown",
@@ -243,5 +243,42 @@
         ]
       }
     }
-  ]
+  ],
+  "labelRegistry": {
+    "nodes": [
+      {
+        "id": 1,
+        "label": "watchlist/source"
+      },
+      {
+        "id": 2,
+        "label": "quote/demand"
+      },
+      {
+        "id": 5,
+        "label": "node/5"
+      },
+      {
+        "id": 6,
+        "label": "node/6"
+      }
+    ],
+    "scopes": [
+      {
+        "id": 4,
+        "label": "watchlist/session"
+      }
+    ],
+    "resources": [
+      {
+        "key": "relay:wss://market.example/quotes?symbol=AAPL",
+        "label": "relay:wss://market.example/quotes?symbol=AAPL"
+      },
+      {
+        "key": "relay:wss://market.example/quotes?symbol=MSFT",
+        "label": "relay:wss://market.example/quotes?symbol=MSFT"
+      }
+    ],
+    "outputs": []
+  }
 }

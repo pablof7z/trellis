@@ -1,9 +1,9 @@
-use trellis_core::TransactionTrace;
+use trellis_core::{GraphLabelRegistry, TransactionTrace};
 
 use crate::{Scenario, ScenarioError};
 
 /// Version for serialized Trellis script and trace artifacts.
-pub const TRACE_FORMAT_VERSION: u32 = 2;
+pub const TRACE_FORMAT_VERSION: u32 = 3;
 
 /// A versioned, data-only transaction script.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -36,6 +36,7 @@ pub struct DataScriptStepBuilder<'script, Operation> {
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
 pub struct SerializedScenario {
     format_version: u32,
+    label_registry: GraphLabelRegistry,
     steps: Vec<SerializedScenarioStep>,
 }
 
@@ -139,8 +140,24 @@ impl<Operation> DataScriptStepBuilder<'_, Operation> {
 impl SerializedScenario {
     /// Captures a scenario as a versioned structural trace file.
     pub fn from_scenario(scenario: &Scenario) -> Self {
+        Self::from_scenario_with_labels(scenario, GraphLabelRegistry::new())
+    }
+
+    /// Captures a scenario with an explicit label registry.
+    ///
+    /// Trace-referenced ids absent from the provided registry receive stable
+    /// fallback labels such as `node/1`, `scope/1`, and `output/1`.
+    pub fn from_scenario_with_labels(
+        scenario: &Scenario,
+        mut label_registry: GraphLabelRegistry,
+    ) -> Self {
+        for step in scenario.steps() {
+            label_registry.include_trace_defaults(&step.trace);
+        }
+
         Self {
             format_version: TRACE_FORMAT_VERSION,
+            label_registry,
             steps: scenario
                 .steps()
                 .iter()
@@ -155,6 +172,11 @@ impl SerializedScenario {
     /// Returns the serialized format version.
     pub fn format_version(&self) -> u32 {
         self.format_version
+    }
+
+    /// Returns the label registry carried with this trace file.
+    pub fn label_registry(&self) -> &GraphLabelRegistry {
+        &self.label_registry
     }
 
     /// Returns trace steps in commit order.

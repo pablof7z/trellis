@@ -201,6 +201,7 @@ async function copyProofPacket() {
       auditLog: step.auditLog,
       invariantResults: step.invariantResults.map((check) => check.raw),
     },
+    labelRegistry: state.trace.labelRegistry.raw,
     selection: state.selection,
   };
   await writeClipboard(JSON.stringify(packet, null, 2));

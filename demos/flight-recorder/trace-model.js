@@ -1,4 +1,14 @@
-export const FORMAT_VERSION = 2;
+import {
+  FORMAT_VERSION,
+  nodeLabel,
+  normalizeLabelRegistry,
+  outputLabel,
+  resourceLabel,
+  scopeLabel,
+  validateLabelRegistry,
+} from "./trace-labels.js";
+
+export { FORMAT_VERSION };
 
 export const bundledTraces = [
   ["normal-session", "Normal session", "/demos/flight-recorder/traces/normal-session.json"],
@@ -19,13 +29,15 @@ export function normalizeTraceEnvelope(candidate, source) {
   const errors = validateTrace(candidate);
   if (errors.length) return { errors };
   const provenance = provenanceFor(candidate, source);
-  const steps = candidate.steps.map((step, index) => normalizeStep(step, index));
+  const labelRegistry = normalizeLabelRegistry(candidate.labelRegistry);
+  const steps = candidate.steps.map((step, index) => normalizeStep(step, index, labelRegistry));
   return {
     errors: [],
     trace: {
       formatVersion: candidate.formatVersion,
       title: source.label,
       provenance,
+      labelRegistry,
       steps,
       raw: candidate,
       invariantSummary: summarizeTraceInvariants(steps),
@@ -45,6 +57,7 @@ export function validateTrace(candidate) {
     errors.push("steps: missing required non-empty array");
     return errors;
   }
+  validateLabelRegistry(candidate.labelRegistry, errors);
   candidate.steps.forEach((step, index) => {
     if (!step || typeof step !== "object") {
       errors.push(`steps[${index}]: expected an object`);
@@ -103,7 +116,7 @@ export function replayStatus(trace) {
   };
 }
 
-function normalizeStep(step, index) {
+function normalizeStep(step, index, labels) {
   const trace = step.trace;
   return {
     index,
@@ -114,26 +127,27 @@ function normalizeStep(step, index) {
     coreBacked: Boolean(trace.core_backed ?? trace.coreBacked ?? false),
     coreTransactionId: trace.core_transaction_id ?? trace.coreTransactionId ?? null,
     coreRevision: trace.core_revision ?? trace.coreRevision ?? null,
-    changedInputs: trace.changed_inputs.map((input) => String(input)),
+    changedInputs: trace.changed_inputs.map((input) => nodeLabel(labels, input)),
     stagedInputChanges: trace.staged_input_changes ?? [],
     dirtyRoots: trace.dirty_roots ?? [],
     recomputedDerivedNodes: trace.recomputed_derived_nodes ?? [],
     changedDerivedNodes: trace.changed_derived_nodes ?? [],
     recomputedCollectionNodes: trace.recomputed_collection_nodes ?? [],
     changedCollectionNodes: trace.changed_collection_nodes ?? [],
-    collectionDiffs: trace.collection_diffs.map(normalizeCollectionDiff),
-    resourceCommands: trace.resource_commands.map(normalizeResourceCommand),
-    outputFrames: trace.output_frames.map(normalizeOutputFrame),
-    scopeEvents: (trace.scope_events ?? []).map(normalizeScopeEvent),
+    collectionDiffs: trace.collection_diffs.map((diff) => normalizeCollectionDiff(diff, labels)),
+    resourceCommands: trace.resource_commands.map((command) => normalizeResourceCommand(command, labels)),
+    outputFrames: trace.output_frames.map((frame) => normalizeOutputFrame(frame, labels)),
+    scopeEvents: (trace.scope_events ?? []).map((event) => normalizeScopeEvent(event, labels)),
     auditLog: trace.audit_log ?? [],
     phaseTrace: trace.phase_trace.map(String),
     invariantResults: trace.invariant_results.map(normalizeInvariant),
   };
 }
 
-function normalizeCollectionDiff(diff) {
+function normalizeCollectionDiff(diff, labels) {
+  const node = diff.node ?? diff.collection ?? "unknown";
   return {
-    node: String(diff.node ?? diff.collection ?? "unknown"),
+    node: nodeLabel(labels, node),
     kind: diff.kind ?? "Collection",
     added: countOrList(diff.added),
     removed: countOrList(diff.removed),
@@ -143,23 +157,31 @@ function normalizeCollectionDiff(diff) {
   };
 }
 
-function normalizeResourceCommand(command) {
+function normalizeResourceCommand(command, labels) {
+  const key = command.key ?? command.output_key ?? "unknown";
+  const scope = command.scope ?? "unknown";
   return {
     kind: command.kind ?? command.op ?? "Unknown",
     transitionPolicy: command.transition_policy ?? "Unknown",
-    key: command.key ?? command.output_key ?? "unknown",
-    scope: String(command.scope ?? "unknown"),
+    key: resourceLabel(labels, key),
+    rawKey: key,
+    scope: scopeLabel(labels, scope),
+    rawScope: scope,
     revision: command.command_revision ?? command.revision ?? null,
     cause: command.cause ?? null,
     raw: command,
   };
 }
 
-function normalizeOutputFrame(frame) {
+function normalizeOutputFrame(frame, labels) {
+  const key = frame.output_key ?? frame.outputKey ?? "unknown";
+  const scope = frame.scope ?? "unknown";
   return {
     kind: frame.kind ?? "OutputFrame",
-    key: frame.output_key ?? frame.outputKey ?? "unknown",
-    scope: String(frame.scope ?? "unknown"),
+    key: outputLabel(labels, key),
+    rawKey: key,
+    scope: scopeLabel(labels, scope),
+    rawScope: scope,
     revision: frame.revision ?? null,
     filePath: frame.file_path ?? frame.filePath ?? null,
     diagnostics: frame.diagnostics ?? [],
@@ -171,10 +193,12 @@ function normalizeOutputFrame(frame) {
   };
 }
 
-function normalizeScopeEvent(event) {
+function normalizeScopeEvent(event, labels) {
+  const scope = event.scope ?? "unknown";
   return {
     kind: event.kind ?? event.op ?? "ScopeEvent",
-    scope: String(event.scope ?? "unknown"),
+    scope: scopeLabel(labels, scope),
+    rawScope: scope,
     reason: event.reason ?? "",
     raw: event,
   };
