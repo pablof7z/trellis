@@ -116,6 +116,25 @@ steps. Each step contains the payload-neutral `TransactionTrace`, host-status
 metadata, resource commands, output frames, scope events, audit receipts,
 phase trace, and a full-recompute invariant result.
 
+## CollabCanvas Document Lifecycle
+
+File: `crates/trellis-examples/src/collab_canvas/`
+
+```sh
+cargo run -p trellis-examples --example collab_canvas -- --script document-lifecycle
+```
+
+CollabCanvas is a secondary showcase for dynamic dependencies discovered from
+document content. An open document derives embedded subdocument rooms, comment
+threads, presence rooms, visible attachment hydration jobs, and materialized
+editor output. Two document scopes can share a subdocument room; closing one
+document does not close the shared room until the last owner leaves.
+
+The script shows attachment visibility opening and closing hydration, embedded
+documents opening and closing subdocument rooms, document close clearing editor
+output, and full-recompute oracle checks on every step. The example also exposes
+a seeded capsule for stale attachment hydration/output invalidation.
+
 ## Trellis Observatory Showcase Lab
 
 File: `examples/codebase-observatory/`

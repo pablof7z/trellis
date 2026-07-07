@@ -28,6 +28,9 @@ pub mod telemetry_dashboard;
 /// FleetPulse telemetry dashboard flagship showcase.
 pub mod fleetpulse;
 
+/// CollabCanvas document lifecycle secondary showcase.
+pub mod collab_canvas;
+
 /// Wrapper-friendly protocol subscription proof shape.
 pub mod protocol_subscription;
 
