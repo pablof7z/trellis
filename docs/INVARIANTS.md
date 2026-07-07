@@ -131,6 +131,7 @@ default, or fallback resources unless an explicit fallback node models that.
 Evidence:
 
 - `crates/trellis-core/tests/resource_plans.rs::empty_collection_produces_no_open_commands`
+- `crates/trellis-examples/src/workspace_sync_board/tests.rs::empty_workspace_opens_no_windows`
 - `crates/trellis-examples/src/workspace_sync.rs::empty_workspace_opens_no_windows`
 - `crates/trellis-examples/src/telemetry_dashboard.rs::filter_shrink_unsubscribes_removed_topics`
 
@@ -221,6 +222,9 @@ Evidence:
 - `crates/trellis-core/tests/derived.rs::full_recompute_matches_incremental_state`
 - `crates/trellis-core/tests/collections.rs::full_recompute_includes_collections`
 - `crates/trellis-core/tests/oracle_model.rs::full_recompute_includes_resources_and_outputs`
+- `crates/trellis-examples/src/workspace_sync_board/tests.rs::workspace_switch_closes_old_windows_opens_new_and_rebaselines`
+- `crates/trellis-examples/src/workspace_sync_board/tests.rs::permission_revoke_withdraws_windows_and_clears_rows`
+- `crates/trellis-examples/src/workspace_sync_board/tests.rs::column_filter_change_emits_rebaseline`
 - `crates/trellis-examples/src/workspace_sync.rs`
 - `crates/trellis-examples/src/mini_language_server.rs`
 - `crates/trellis-examples/src/telemetry_dashboard.rs`

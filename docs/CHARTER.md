@@ -265,29 +265,32 @@ Domain-specific applications may define their own command payloads and output pa
 
 These examples are normative design pressure. They are not required as fully implemented examples in the first PR, but the semantics in this PR must be able to describe them without adding new core concepts.
 
-### Example 1: workspace-driven sync
+### Example 1: Workspace Sync Board
 
-A local-first application syncs only the data required for the active workspace and visible projects.
+A local-first application syncs only the data required for the selected
+workspace or personal assigned-to-me view.
 
 ```text
-active workspace
- -> accessible project set
- -> sync window set
+active user and selected board view
+ -> permission set
+ -> visible project set
+ -> project/comment/profile sync windows
  -> resource plan
- -> materialized issue board
+ -> materialized issue board frames
 ```
 
 Canonical inputs:
 
 - active workspace id;
+- selected organization/workspace or personal view;
 - user permission state;
 - local cache facts;
-- route or visible screen state.
+- visible board columns.
 
 Derived nodes:
 
 - accessible projects;
-- visible issue query shapes;
+- visible issue rows;
 - desired sync windows;
 - materialized board rows.
 
@@ -301,6 +304,7 @@ Output frames:
 
 - issue board baseline;
 - issue row deltas;
+- requested board rebaselines for column/filter changes;
 - clear frames when a workspace closes or becomes unauthorized;
 - status frames for loading, stale, or offline states.
 
