@@ -101,12 +101,14 @@ from changing application state:
   background jobs;
 - plugin hosts.
 
-Aspirational shapes — normative design pressure, not yet well served by the
-current implementation:
+Aspirational shapes — normative design pressure, with some product examples
+still maturing beyond the core semantics:
 
-- language servers and analysis tools with per-entity outputs (constrained
-  today by the single output payload type per graph, tracked in
-  [#121](https://github.com/pablof7z/trellis/issues/121));
+- language servers and analysis tools with per-entity outputs. The core now
+  supports per-output payload types in one graph; richer flagship/showcase
+  coverage remains tracked by
+  [#87](https://github.com/pablof7z/trellis/issues/87) and
+  [#88](https://github.com/pablof7z/trellis/issues/88);
 - collaborative document kernels and market-data terminals (constrained by
   the per-transaction cost model; see docs/PERFORMANCE.md).
 
@@ -152,11 +154,13 @@ Closing a scope must deterministically remove that scope's ownership and produce
 
 A resource with no owning scope is a bug.
 
-Honesty note: the contract above is fully implemented for resources and
-outputs. For nodes, the current implementation detaches them on scope close
-but does not reclaim them — detached nodes retain values and keep
-recomputing. The charter intent is full reclamation; the gap is tracked in
-[#126](https://github.com/pablof7z/trellis/issues/126).
+Honesty note: the contract above is implemented for resources, outputs, and
+nodes. Closing a scope emits the required terminal resource/output effects,
+records transaction audit events, and then reclaims owned node metadata,
+values, specs, diffs, planners, closed scope metadata, and scope-tree indexes.
+Post-close history lives in transaction results, audit events, traces, or
+host-owned ledgers rather than in live closed-scope tombstones; see
+[ADR 0005](ADRS/0005-scope-close-reclaims-owned-nodes.md).
 
 ### Effects are data
 
@@ -309,10 +313,12 @@ Required invariants:
 
 ### Example 2: mini language server
 
-Status: normative pressure, proven only in miniature. The example crate
-demonstrates this shape with all diagnostics collapsed into a single output;
-true per-file output lifecycle awaits
-[#121](https://github.com/pablof7z/trellis/issues/121).
+Status: normative pressure, proven in miniature. The core output model now
+allows separate diagnostic, semantic-token, index, or test-projection payload
+types in one graph. The example crate still uses a compact diagnostics output;
+richer flagship/showcase coverage remains part of
+[#87](https://github.com/pablof7z/trellis/issues/87) and
+[#88](https://github.com/pablof7z/trellis/issues/88).
 
 A language server maintains diagnostics and editor-facing output as files and project configuration change.
 
