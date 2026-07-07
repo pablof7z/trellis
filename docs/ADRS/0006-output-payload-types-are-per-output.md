@@ -34,6 +34,24 @@ The testing output ledger also stores erased output payloads and provides typed
 assertions per output key. It must not reintroduce a single graph- or
 harness-wide output payload type.
 
+## Projection-frame pattern
+
+Materialized outputs are the right boundary for projection intents: Trellis
+decides that a consumer-facing projection should change, returns a revisioned
+frame, and the host applies that frame to SQLite, relay state, UI state, an
+outbox, or another external surface after the transaction commits.
+
+Projection frames should be small and single-purpose. Use one
+`MaterializedOutput<T>` per projection family instead of a fat enum that mixes
+unrelated domains. Name outputs after the surface and entity they project, and
+attach them to the scope whose lifecycle should clear that projection.
+
+Trellis should not own database I/O, relay I/O, large payload storage, or
+historical projection tables. Store bulk data in host-owned systems and carry
+stable handles, summaries, revisions, or compact intent payloads through output
+frames. Split graphs when output families have different authority boundaries,
+lifetimes, release cadence, or graph-wide command payload types.
+
 ## Consequences
 
 Applications can emit multiple unrelated output payload types from one graph

@@ -227,6 +227,26 @@ then fails if an effect site or recorded effect sits outside the declared
 executors. Keep this check separate from graph conformance: a failure means the
 host boundary is unsafe even if Trellis graph invariants are green.
 
+## Projection-Frame Tests
+
+For host projections, validate the Trellis side and the host side separately.
+Use `OutputLedger` to apply returned frames and assert revision monotonicity,
+clear/rebaseline coherence, closed-scope terminal frames, and typed current
+state per output key. The ledger verifies that Trellis emitted coherent frames;
+it does not prove that a database write, relay publish, or UI bridge consumed
+those frames correctly.
+
+Application tests should add a small host-owned projection ledger for the
+external surface. Feed it the same frames the production executor receives, then
+assert that the host projection matches the expected rows, outbox entries,
+cursor state, or UI model. Keep that assertion at the host boundary instead of
+moving database or relay I/O into Trellis.
+
+Prefer separate `MaterializedOutput<T>` handles for unrelated projection
+families. Because output payloads are typed per output, tests can call
+`OutputSnapshot::state_as::<T>()` or `OutputFrame::payload_for(&output)` for the
+specific surface under test instead of matching one graph-wide output enum.
+
 The crate is not a mocking framework, async runtime, domain fixture library,
 snapshot framework, property-testing framework, UI harness, database harness, or
 network simulator.

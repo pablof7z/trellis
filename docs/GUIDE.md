@@ -53,6 +53,34 @@ structured `ResourceKey` segments.
 
 The host applies returned commands outside graph propagation.
 
+## Use Projection Frames
+
+Use materialized outputs when Trellis should decide that a host projection must
+change, while the host still owns applying that change to SQLite, a relay, a UI,
+an outbox, or another external surface. The output frame is an intent or small
+view payload, not an instruction for Trellis to perform I/O.
+
+Prefer one `MaterializedOutput<T>` per projection family. The output debug name
+should name the consumer surface and entity, such as
+`hook-context/session/<id>`, `cursor/session/<id>`, or `outbox/publish-intent`.
+Attach the output to the same scope that owns the facts it projects; scope close
+will then emit the terminal clear frame for that projection.
+
+Do not create a fat enum just to carry unrelated output families. Output payload
+typing is per output, so one graph can emit a hook-context frame, cursor frame,
+and outbox frame with different payload types. Split graphs when the families
+have different authority boundaries, lifetimes, release cadence, or resource
+command payload types. Command payload `C` is still graph-wide, so unrelated
+resource command families should either use a deliberate command enum or live in
+separate graphs.
+
+Keep bulk state out of output frames. Store large rows, files, relay messages,
+or historical projection tables in host-owned storage and put stable handles,
+small summaries, revisions, or intent payloads in Trellis. Most projections
+should stop at authoritative output frames: Trellis decides the desired
+projection and the host applies it. Make a projection fully projection-owned
+only when it is small, single-typed, and drift from Trellis state is a bug.
+
 ## Scope Lifetimes
 
 Attach resource planners and outputs to scopes. Closing a scope produces
