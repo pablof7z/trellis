@@ -332,6 +332,8 @@ Start here:
 - [Shadow-mode adoption](docs/SHADOW_MODE.md): adopting Trellis beside an
   existing reconciliation path, with exit criteria.
 - [Examples](docs/EXAMPLES.md): proof example descriptions.
+- [Showcase API boundary](docs/SHOWCASE_API_BOUNDARY.md): app-owned wrappers
+  that keep Trellis private while exposing domain APIs.
 - [Performance model](docs/PERFORMANCE.md): the honest cost model and its
   rationale.
 - [Non-goals](docs/NON_GOALS.md): what Trellis deliberately excludes.

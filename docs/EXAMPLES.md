@@ -4,6 +4,10 @@ Examples live outside `trellis-core` in `crates/trellis-examples`.
 
 They are normative design pressure: if an example requires domain vocabulary in
 the core crate, the abstraction is wrong or the example belongs outside Trellis.
+Product-facing showcase APIs should also follow the
+[Showcase API Boundary](SHOWCASE_API_BOUNDARY.md): Trellis remains private to
+an app-owned wrapper, while hosts send domain events and receive typed domain
+effects and frames.
 
 ## Workspace Sync
 
@@ -87,6 +91,8 @@ session params
 The public wrapper API exposes `ArticleFeedHandle`, `ArticleFeedParams`,
 `SubscriptionEffect`, and `ArticleFeedFrame`. Trellis graph identities,
 resource plans, and output frames remain internal to the example.
+This is the current reference implementation of the
+[Showcase API Boundary](SHOWCASE_API_BOUNDARY.md).
 
 Covered behavior:
 
