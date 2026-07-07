@@ -6,16 +6,17 @@ import { ProjectExplorer } from "./ProjectExplorer";
 import { RuntimePanel } from "./RuntimePanel";
 import { ObservatoryPanel } from "./ObservatoryPanel";
 import { TraceViewer } from "./TraceViewer";
+import { ShowcaseLab } from "./ShowcaseLab";
 
 const showcaseStepIndex = 1;
-type AppView = "runtime" | "traces";
+type AppView = "runtime" | "showcases" | "traces";
 
 export default function App() {
   const [engine, setEngine] = useState<EngineApi | null>(null);
   const [state, setState] = useState<AppState | null>(null);
   const [scenarioIndex, setScenarioIndex] = useState(showcaseStepIndex);
   const [faultsOpen, setFaultsOpen] = useState(false);
-  const [view, setView] = useState<AppView>("traces");
+  const [view, setView] = useState<AppView>("showcases");
 
   useEffect(() => {
     loadEngine().then((api) => {
@@ -59,6 +60,15 @@ export default function App() {
   const trace = latestTrace(state);
   const diagnostics = flattenDiagnostics(state);
   const scenarioText = scenarioStatus(scenarioIndex);
+
+  if (view === "showcases") {
+    return (
+      <main className="app-shell showcase-app">
+        <Topbar state={state} trace={trace} failures={failures.length} view={view} setView={setView} />
+        <ShowcaseLab />
+      </main>
+    );
+  }
 
   if (view === "traces") {
     return (
@@ -144,6 +154,9 @@ function Topbar({
         </p>
       </div>
       <div className="topbar-actions">
+        <button className={view === "showcases" ? "active" : ""} aria-pressed={view === "showcases"} onClick={() => setView("showcases")}>
+          Showcase lab
+        </button>
         <button className={view === "traces" ? "active" : ""} aria-pressed={view === "traces"} onClick={() => setView("traces")}>
           Trace viewer
         </button>
