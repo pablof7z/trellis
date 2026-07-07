@@ -41,6 +41,7 @@ Available optional features:
 - `OutputLedger` for revisioned frame and rebaseline assertions.
 - `FakeHost` and host status helpers for success, failure, duplicate, stale,
   future, and late status classification.
+- `HostConformanceLedger` for preview-to-commit-to-host-effect evidence.
 - Audit assertions for explaining resource commands and output frames.
 - Conformance support levels for downstream application graph tests.
 - Full-recompute oracle assertion helpers.

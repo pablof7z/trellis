@@ -16,6 +16,7 @@ mod conformance;
 mod harness;
 mod harness_step;
 mod host;
+mod host_conformance;
 mod host_status;
 mod oracle;
 mod output_ledger;
@@ -41,6 +42,9 @@ pub use conformance::{
 pub use harness::{ScenarioTarget, TrellisHarness};
 pub use harness_step::HarnessStep;
 pub use host::{FakeHost, FakeHostEvent};
+pub use host_conformance::{
+    HostConformanceError, HostConformanceLedger, HostEffectRecord, HostPlanRecord,
+};
 pub use host_status::{HostStatusClass, HostStatusEvent, HostStatusRecord};
 pub use oracle::{
     FullRecomputeOracle, OracleCheck, OracleMismatch, assert_incremental_equals_full,

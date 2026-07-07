@@ -22,17 +22,20 @@ pub enum ConformanceLevel {
     GeneratedModelSequences = 5,
     /// Performance/allocation smoke checks.
     PerformanceSmoke = 6,
+    /// Host-seam evidence: previewed plan, committed plan, and applied effect.
+    HostSeam = 7,
 }
 
 impl ConformanceLevel {
     /// All currently defined conformance levels in ascending order.
-    pub const ALL: [Self; 6] = [
+    pub const ALL: [Self; 7] = [
         Self::DeterministicTrace,
         Self::ScopeResourceLifecycle,
         Self::MaterializedOutput,
         Self::FullRecomputeOracle,
         Self::GeneratedModelSequences,
         Self::PerformanceSmoke,
+        Self::HostSeam,
     ];
 }
 
