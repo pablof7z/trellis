@@ -280,6 +280,15 @@ Serialization support for structural trace data is optional and gated by the
 `TransactionResult` can carry application output payloads and is not the stable
 serialized replay boundary.
 
+A structural trace file is a receipt, not an executable script. Loading a
+`SerializedScenario` can reconstruct the recorded trace sequence for
+inspection, redaction, fixture comparison, and golden-trace drift checks. It
+cannot re-run an application graph by itself because core traces intentionally
+exclude application operations, command payloads, output payloads, and the
+host-owned graph builder. Cross-process re-execution starts from an
+app-defined `DataTransactionScript`, the app's operation decoder, and the same
+app-owned graph construction code that produced the original scenario.
+
 ## Equality and propagation
 
 Nodes MAY use equality gating to avoid downstream propagation when the computed value is unchanged.
@@ -574,8 +583,8 @@ The M10 implementation provides `full_recompute()`,
 graph shapes. The check recomputes derived scalar values and collections from
 canonical inputs, rebuilds desired resource ownership from current collection
 state, and rematerializes active output state. M10 also exposes deterministic
-payload-free transaction traces and generated model scripts for replay and
-property-style invariant tests.
+payload-free transaction traces for structural comparison and generated model
+scripts for app-bound replay and property-style invariant tests.
 
 If a feature makes full recompute impossible, it MUST be rejected or require a new ADR explaining why the feature belongs in the core despite that cost.
 

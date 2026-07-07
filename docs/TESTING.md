@@ -198,6 +198,14 @@ The crate is not a mocking framework, async runtime, domain fixture library,
 snapshot framework, property-testing framework, UI harness, database harness, or
 network simulator.
 
+The serialized artifacts have different replay boundaries. A
+`SerializedScenario` is a structural trace receipt: tests can deserialize it,
+inspect it, redact it, reconstruct a recorded `Scenario`, and compare it with a
+freshly recorded scenario. It does not contain enough data to execute the app
+again. Re-execution across process boundaries starts from
+`DataTransactionScript`, an app-defined operation enum, an app-owned decoder,
+and an app-owned graph builder.
+
 ## Feature Flags
 
 `trellis-testing` has no default optional integrations. Enable only the gate
@@ -264,6 +272,14 @@ graph shape is supported by the current oracle.
 Use `TransactionTrace` and `assert_transaction_traces_match` when a change
 touches phase order, audit ordering, diff ordering, resource command ordering,
 or output frame ordering.
+
+The current golden-trace CI gate is
+`cargo test -p trellis-testing --features serde`. It round-trips the
+`serialized_trace_v2.json` fixture and validates the bundled Flight Recorder
+trace files against the current `TRACE_FORMAT_VERSION`. A future standalone CLI
+must preserve the same boundary: a trace-only command can validate, inspect, and
+compare structural receipts, while graph re-execution requires an app-provided
+data script and graph builder.
 
 ## Compile-Fail Tests
 

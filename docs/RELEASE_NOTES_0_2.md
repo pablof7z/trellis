@@ -21,8 +21,8 @@ was better than carrying compatibility shims.
 - Audit history is transaction-local. Graphs keep bounded latest explanation
   indexes, and dependency-path explanations are explicit transaction options.
 - Host resource status classification moved into `trellis-core`.
-- Serializable scripts and traces make replay artifacts portable across
-  processes.
+- Serializable scripts and structural traces make app-owned replay scripts and
+  golden trace receipts portable across processes.
 - Proptest and fuzz smoke checks now run in CI.
 
 ## API Notes
@@ -41,7 +41,8 @@ was better than carrying compatibility shims.
 
 ## Demos And Docs
 
-- Added browser-facing launch demos for trace replay and leak comparison.
+- Added browser-facing launch demos for structural trace inspection and leak
+  comparison.
 - Relaunched the minimal Trellis website and linked the current semantic ADRs.
 - Added ADRs for output payload typing, structured resource keys, and
   transaction-local audit history.
