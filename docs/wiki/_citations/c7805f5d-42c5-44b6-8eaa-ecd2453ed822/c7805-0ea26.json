@@ -1,0 +1,6 @@
+{
+  "id": "c7805-0ea26",
+  "ts": "2026-07-03T08:38:11Z",
+  "session": "c7805f5d-42c5-44b6-8eaa-ecd2453ed822",
+  "text": "**5. [Should-fix — Phase A] \"Compiled out of release builds\" needs a mechanical definition and CI enforcement.** `cfg(debug_assertions)` is the wrong tool (release-with-debug builds exist; per-platform build configs differ). Suggested wording: nmp-devtools is a separate crate behind an off-by-default cargo feature; CI asserts each platform's release artifact dependency graph (`cargo tree`) and/or symbol table contains no nmp-devtools; the ratchet rule is dependency-graph-based — an allowlist file of crates permitted to depend on `trellis-*` (existing private adapters + nmp-devtools), where adding a line is the ratchet violation. [...] 2. **X-Ray (the critical-path decision gate):** *\"Work Phase A of NMP epic #2858: draft the ADR-0075 amendment for #2809 — define the diagnostic surface, decide the Phase D transport (dev-only declared projection vs side devtools channel) and record it in the ADR, and implement the doctrine-lint allowlist ratchet (crates permitted to depend on `trellis-*`) plus the string-leak snapshot test.\"* Everything else in that epic queues behind this ADR."
+}

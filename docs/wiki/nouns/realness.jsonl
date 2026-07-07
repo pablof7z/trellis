@@ -1,0 +1,15 @@
+{"canonical":"another claude","name":"Another Claude","signed":56,"status":"real"}
+{"canonical":"insert wire sub","name":"insert_wire_sub","signed":1,"status":"provisional"}
+{"canonical":"interest ids","name":"InterestIds The","signed":1,"status":"provisional"}
+{"canonical":"join trellis","name":"Join Trellis","signed":10,"status":"real"}
+{"canonical":"kind 10019","name":"kind:10019","signed":1,"status":"provisional"}
+{"canonical":"land nmp","name":"Land NMP","signed":10,"status":"real"}
+{"canonical":"nmp owned x ray","name":"NMP-owned X-Ray","signed":10,"status":"real"}
+{"canonical":"originating interest","name":"originating_interests","signed":1,"status":"provisional"}
+{"canonical":"resource plan resource key graph","name":"ResourcePlan ResourceKey Graph","signed":10,"status":"real"}
+{"canonical":"trellis resource plan","name":"Trellis ResourcePlan","signed":10,"status":"real"}
+{"canonical":"wire id","name":"wire_id","signed":1,"status":"provisional"}
+{"canonical":"wire sub","name":"WireSub","signed":1,"status":"provisional"}
+{"canonical":"wire sub id","name":"WireSub.id","signed":1,"status":"provisional"}
+{"canonical":"wire subscription diagnostic snapshot","name":"WireSubscriptionDiagnosticSnapshot","signed":1,"status":"provisional"}
+{"canonical":"xray wire subscription snapshot","name":"XrayWireSubscriptionSnapshot","signed":1,"status":"provisional"}

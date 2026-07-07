@@ -1,0 +1,6 @@
+{
+  "id": "06529-6d8ce",
+  "ts": "2026-07-03T10:57:44Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "| [#206](https://github.com/pablof7z/tenex-edge/issues/206) | 30315 status as derived node + frame | collapses 5 triggers/2 timers; emit only on change | [...] | [#206](https://github.com/pablof7z/tenex-edge/issues/206) | 30315 status as derived node + frame | Collapses 5 triggers / 2 timers; publish only on change |"
+}

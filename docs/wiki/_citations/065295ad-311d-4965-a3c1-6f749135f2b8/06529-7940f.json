@@ -1,0 +1,6 @@
+{
+  "id": "06529-7940f",
+  "ts": "2026-07-03T10:06:07Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "- `rpc_session_start` (`session_start.rs:86-455`) is the extreme case: it alternates DB writes and network/effects throughout a single 370-line function — `resolve_or_mint_session_id` `:217` → alias/root writes `:228` → `cancel_stale_sessions_on_restart` (cancels tasks) `:258` → `upsert_session_row` `:313` → tmux `set_pane_session_id` `:323` / `ring_doorbells` `:329` → `ensure_start_channel_ready` (relay round-trip) `:357` → `admit_ordinal_signer` (relay) `:381`, with `abort_session_start` rollback `:382` → `outbox_notify` `:389` → `ensure_subscription` (relay REQ) `:403` → `replay_channel_chat` `:416` → `spawn_session` `:431` → `emit_tail` `:443`. No plan/commit/effect separation; ordering is hand-managed and commented as load-bearing (\"Ordering matters twice over\", `:269`). [...] - **`rpc_session_start`** (370 lines of interleaved DB writes / relay round-trips / spawns / tmux / inline rollback) is real surgery, not shadow mode. Do it last, or never — Trellis earns its keep on subscriptions/status/presence regardless."
+}

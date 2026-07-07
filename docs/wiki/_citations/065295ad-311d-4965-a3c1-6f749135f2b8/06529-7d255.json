@@ -1,0 +1,6 @@
+{
+  "id": "06529-7d255",
+  "ts": "2026-07-03T10:05:48Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "**Ordering nondeterminism**: member pubkeys are gathered into a `BTreeSet<String>` (`people.rs:14-24`) and iterated in that order — i.e., **sorted lexicographically by raw hex pubkey, not by slug/name/join-time**. Presence rows come from SQL `ORDER BY updated_at DESC` (most-recently-changed-first). Channels list is `channels.sort(); channels.dedup()` on the channel hash string (`build.rs:21-22`) — again hash-lexicographic, not name order."
+}

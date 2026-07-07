@@ -1,0 +1,6 @@
+{
+  "id": "06529-f8227",
+  "ts": "2026-07-04T12:47:48Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "### 3.8 Counterfactual diff — `tenex-edge probe diff <capsule> --mutate <step>.<field>=<value>`\n\n*\"What if this input had been different?\"* — the interaction that is uniquely cheap because plans are data, and the one no log-based system can offer. Run two `TrellisHarness` replays of the same capsule: verbatim, and with one drive-arg mutated (a channel added to a `CoverageSnapshot`, `working=true` flipped, a presence row removed, the cursor zeroed). Diff the two scenarios step-by-step: commands emitted/suppressed, frames Baseline/Delta/Unchanged, receipt deltas — rendered as a per-step `±` table, `--json` for agents. Uses `Scenario::assert_step_resource_commands`-style comparison, inverted to *report* rather than assert. This is both a debugging tool (\"would the leak have happened if the session had left cleanly?\") and a value demonstration (\"here is the exact minimal decision-diff for a one-fact change — try producing that from your logs\")."
+}

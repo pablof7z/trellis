@@ -1,0 +1,6 @@
+{
+  "id": "f940b-a2a56",
+  "ts": "2026-07-03T10:40:44Z",
+  "session": "f940bd78-c4e8-413d-82a8-53aa459f690c",
+  "text": "Assistant: There's no `channels read` — reading is done via `chat`, which reads/writes the currently active channel's chat.\n\nAssistant: Use **`tenex-edge chat read`** instead — it reads chat for your current active channel (x-ray). Want me to run it?"
+}

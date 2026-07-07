@@ -1,0 +1,6 @@
+{
+  "id": "c7805-975cf",
+  "ts": "2026-07-03T07:42:57Z",
+  "session": "c7805f5d-42c5-44b6-8eaa-ecd2453ed822",
+  "text": "  2. Add an NMP-owned X-Ray projection or nmp-devtools stream. It should expose ordered open/replace/refresh/close events, scope/projection owner, reason/provenance, transaction/\n     revision, shared-owner/refcount state, and teardown cascade. [...]   3. Join Trellis reconciliation events to NMP kernel outcomes. NMP already applies Trellis ResourcePlan as ApplyDependentInterestDelta; now it needs to retain/export bounded diagnostic\n     records instead of test-only traces. [...]   4. Reuse existing relay diagnostics for the relay/socket side: wire subscriptions, relay rows, consumer counts, and event counts already exist. X-Ray needs to correlate those with the\n     reconciliation command stream. [...] - **Phase B — nmp-devtools stream**: ordered open/replace/refresh/close events with owner/provenance/revision/refcount/teardown data; join Trellis `ResourcePlan` → `ApplyDependentInterestDelta` outcomes into bounded retained records (today they're test-only traces); correlate with the existing relay diagnostics; and define the **NMP-owned receipt shape** so Chirp never sees `ResourcePlan`/`ResourceKey`/`Graph`."
+}

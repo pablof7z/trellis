@@ -1,0 +1,6 @@
+{
+  "id": "06529-2eb76",
+  "ts": "2026-07-03T08:08:55Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "- The runtime never publishes status directly. `enqueue_status` (`runtime.rs:140`) signs and **parks JSON on `outbox`** (`enqueue_outbox`, `:165`). `spawn_outbox_drainer` (`status_publish.rs:125`) later drains: `peek_outbox` → `publish_event_checked` → `mark_published` on relay ACK, `mark_failed` (with retry count) otherwise (`:132-159`). This is durable, has a receipt (`published`/`failed`/`retries`), and is woken by `outbox_notify` or a 2s poll. This is the model closest to what you're evaluating — and it exists only for status, not for chat/subscriptions/spawns."
+}

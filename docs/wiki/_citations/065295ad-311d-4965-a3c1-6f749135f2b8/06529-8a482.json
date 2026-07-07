@@ -1,0 +1,6 @@
+{
+  "id": "06529-8a482",
+  "ts": "2026-07-03T10:05:54Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "- **`relay_status` DB rows themselves are never purged** — `state/retention.rs:20-51` prunes `relay_events`, `inbox`, `outbox` only. Unbounded row growth over time (storage leak, not a correctness leak)."
+}

@@ -1,0 +1,6 @@
+{
+  "id": "06529-42267",
+  "ts": "2026-07-03T08:09:06Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "And `crates/trellis-examples/src/protocol_subscription.rs` is a structural twin of your daemon: *\"typed session handles, subscription effects, and feed frames while Trellis remains a private reconciliation engine.\"*"
+}

@@ -1,0 +1,6 @@
+{
+  "id": "06529-596a6",
+  "ts": "2026-07-04T12:47:31Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "The through-line: **you may not promote a surface's mode until its conformance instruments are green.** Promotion gate = `oracle green ∧ replay-asserts ∧ acid-confirmed on seeded cases ∧ bypass-ratchet green ∧ host-seam-coverage 100% for that surface`."
+}

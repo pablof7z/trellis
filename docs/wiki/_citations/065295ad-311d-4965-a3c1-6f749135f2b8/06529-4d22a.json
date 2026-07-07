@@ -1,0 +1,6 @@
+{
+  "id": "06529-4d22a",
+  "ts": "2026-07-04T12:47:38Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "Six inputs — `cursor: i64`, `now: i64`, and the four canonical store sources modelled as distinct nodes (`channel-meta`, `members`, `presence`, `messages`) → one derived `fabric-view` node → one `hook-context-snapshot` materialized output. Captures are **now/cursor-independent supersets** (all statuses regardless of NIP-40 expiration; all chat since 0), so the `expiration >= now` liveness window, the `created_at > since` chat window, the full-vs-delta **shape** decision, and every `relative_time` string are pure functions of the `cursor`/`now` inputs inside `assemble_view` — not ambient reads. Because the derive reads only declared inputs (an undeclared read is a Trellis error), the old awareness/render scope mismatch is impossible by construction."
+}

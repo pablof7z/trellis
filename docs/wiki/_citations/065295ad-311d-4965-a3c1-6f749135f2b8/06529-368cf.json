@@ -1,0 +1,6 @@
+{
+  "id": "06529-368cf",
+  "ts": "2026-07-03T10:27:25Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "   - First distill: due when `now - turn_started_at >= turn_first` (default 30s, `TENEX_EDGE_TURN_FIRST_S`).\n   - After a successful distill this turn: due again only if `turn_repeat > 0` (default **0 = disabled**, `engine_lifecycle.rs:266-269`) and `now - last_distill_at >= turn_repeat`.\n   - After a *failed* attempt: retried when `now - last_distill_attempt >= turn_first`.\n   - **This is purely time-based** — no check of whether the transcript actually grew since the last distill.\n4. Transcript is re-read fresh each time: `transcript::read_recent(path, 14, 2500)` (`transcript.rs:84-139`, tails last 96KB, last 14 user/assistant messages, capped 2500 chars) — `runtime.rs:352-358`.\n5. Distill spawned as a background `tokio::spawn` with a 20s timeout (`runtime.rs:365-375`) calling `distill::distill_session(transcript, current_title, session_id)`."
+}

@@ -1,0 +1,6 @@
+{
+  "id": "c7805-035f7",
+  "ts": "2026-07-03T09:28:44Z",
+  "session": "c7805f5d-42c5-44b6-8eaa-ecd2453ed822",
+  "text": "- **Filed [NMP #2870](https://github.com/pablof7z/nostr-multi-platform/issues/2870)** with all 6 findings, each with verdict, file:line, failure scenario, and suggested fix — plus a \"verified non-issues\" section (serde compat, deleted-trait consumers, ownership collisions, the nostr pin, mechanical gates) so nobody re-litigates what the review already cleared."
+}

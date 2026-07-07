@@ -1,0 +1,6 @@
+{
+  "id": "06529-b7c77",
+  "ts": "2026-07-03T10:17:30Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "- **Time-relative strings**: `relative_time()` (util, ~line 68) buckets into `\"just now\"` (<60s), `\"N min ago\"` (<1h), `\"N hour(s) ago\"` (<24h), `\"yesterday\"` (<48h), `\"N days ago\"`. Re-rendering the same underlying state a few seconds later can silently change `\"just now\"` → `\"1 min ago\"`, or flip a message from included to `omitted` as the 4h window slides. **Not diffable/replayable without embedding wall-clock `now`.**\n- **Shape flip on cursor state**: the single most consequential nondeterminism — whether `<members>`/`<subchannels>` vs. `<recent-presence>` render at all is gated by `cursor == 0`, and `cursor` is mutated by the very act of rendering (`set_seen_cursor`) and by a **compare-and-swap race** across concurrent `PostToolUse` hooks (`turns.rs:135-145`, \"only the first of any concurrent PostToolUse hooks wins the CAS; the rest get `delta_since=None` and emit nothing\"). Two parallel tool calls in the same turn can nondeterministically produce different injected context depending on which hook process wins the race."
+}

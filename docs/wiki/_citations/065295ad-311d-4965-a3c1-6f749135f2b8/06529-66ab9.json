@@ -1,0 +1,6 @@
+{
+  "id": "06529-66ab9",
+  "ts": "2026-07-03T11:38:38Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "`on_channels_changed` is fed each observe tick → the derived h-tag set corrects join/leave (fixes stale-h-tags). `mark_dead`/session-end teardown calls `on_session_ended` **before** `mark_dead`, ordered, publishing a final expiring 30315. Nothing publishes directly; the durable outbox is the single executor. [...] test reconcile::status::tests::channel_leave_corrects_h_tags ... ok"
+}

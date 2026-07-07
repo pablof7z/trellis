@@ -1,0 +1,6 @@
+{
+  "id": "06529-9c2d0",
+  "ts": "2026-07-03T10:27:16Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "- **Double-publishing / redundant heartbeats.** Two independent, uncoordinated ~30s timers both publish a fresh kind:30315 for the same session: the per-engine heartbeat via the outbox (`runtime.rs:276-289`, `TENEX_EDGE_HEARTBEAT_MS`, default 30s) and the daemon-wide `spawn_status_heartbeat_publisher` (`status_publish.rs:76-118`, `HEARTBEAT_SECS`=30s, `domain.rs:17`) which calls `set_status` directly, bypassing the outbox. Neither is aware of the other; a session can get two near-simultaneous, slightly different (different `now`/`expires_at`) 30315 events per ~30s window."
+}

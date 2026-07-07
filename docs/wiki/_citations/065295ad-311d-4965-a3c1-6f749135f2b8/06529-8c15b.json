@@ -1,0 +1,6 @@
+{
+  "id": "06529-8c15b",
+  "ts": "2026-07-04T12:47:31Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "The **turn-lifecycle → session-row projection** is the *one* place I'd exercise `projection-owned` (small, single-typed row; drift is a real bug) — proving that mode on a bounded case, not spreading it."
+}

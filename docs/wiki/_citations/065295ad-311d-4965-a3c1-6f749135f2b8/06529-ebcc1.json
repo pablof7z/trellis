@@ -1,0 +1,6 @@
+{
+  "id": "06529-ebcc1",
+  "ts": "2026-07-03T10:57:53Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "- **`trellis-adapter` skipped** — the `protocol_subscription` example applies plans by hand (matching on `ResourceCommand` from `result.resource_plan.commands()`), so the adapter is not needed for the spine. Path-dep resolution worked first try (trellis-core's `edition.workspace = true` resolved via its own workspace root; Cargo added trellis-core 0.2.1 + trellis-testing 0.2.1 to the lock)."
+}

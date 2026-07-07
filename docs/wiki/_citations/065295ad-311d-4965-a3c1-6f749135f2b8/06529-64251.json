@@ -1,0 +1,6 @@
+{
+  "id": "06529-64251",
+  "ts": "2026-07-03T10:17:30Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "**Message window/truncation** (`messages.rs`): `WINDOW_SECS = 4*60*60` (4h) is the floor for a first/full render (`cursor==0`); `CHAT_CAP = 10_000` rows fetched; on a full render, `recent_cluster()` (`messages.rs:65-81`) keeps only the most recent contiguous burst — up to `MAX_CLUSTER_ROWS = 30`, breaking the run wherever a gap > `MAX_CLUSTER_GAP_SECS` (20 min) occurs — and reports the rest as `omitted` count (rendered as `<omitted count=\"N\" window=\"last 4h\" />`, `render.rs:411-416`). Non-full (delta) renders show everything since `cursor`, uncapped by the cluster logic. Message bodies are word-truncated via `truncate_words(..., CHAT_RENDER_WORD_LIMIT)` with a `[message truncated; run ...]` marker."
+}

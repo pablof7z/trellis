@@ -1,0 +1,6 @@
+{
+  "id": "06529-57803",
+  "ts": "2026-07-03T10:17:30Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "**Members vs. presence — a hard on/off switch, not independent lists.** In `build.rs:67-71`:\n```rust\nmembers: if full { member_rows(store, &channel, &input) } else { Vec::new() },\n...\nsubchannels: if full { subchannel_rows(store, &channel) } else { Vec::new() },\n```\nwhere `full = input.cursor == 0` (`build.rs:51`). `presence_rows` is the mirror image (`people.rs:58`): `if input.cursor == 0 { return Vec::new(); }`. So:\n- **Full `<members>` + `<subchannels>` render only when `cursor == 0`** — practically only on the very first turn of a session, since `cursor` is the session's `seen_cursor`, advanced to `now` right after every `turn_start` (`src/turn_context/start.rs:206-215`) and via CAS in `turn_check` (`src/daemon/server/turns.rs:135-145`).\n- **`<recent-presence>` only appears on later turns**, and only for entries whose live status changed since the last cursor: `people.rs:65` `.filter(|s| s.updated_at > input.cursor)`, excluding self (`people.rs:66`).\n"
+}

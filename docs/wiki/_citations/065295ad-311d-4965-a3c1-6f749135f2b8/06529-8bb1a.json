@@ -1,0 +1,6 @@
+{
+  "id": "06529-8bb1a",
+  "ts": "2026-07-04T12:47:31Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "**Refinement of the critique on \"durable input journal as first writer\":** the critique wants the journal as first writer *everywhere*. I disagree — make it first writer only on **high-value, promotion-target seams** (turn lifecycle, cursor, outbox loop), not on every store mutation. The journal earns its cost where the surface is being promoted and where split-brain is a real risk; forcing every incidental DB write through a fact is charter-violating ceremony (bulk payloads, clone cost) with no leadership payoff. Capsules give reproduce-ability on the surfaces that matter; the seam map is honest about the rest being uncovered."
+}

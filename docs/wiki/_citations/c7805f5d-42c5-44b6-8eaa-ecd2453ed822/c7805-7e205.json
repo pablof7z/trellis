@@ -1,0 +1,6 @@
+{
+  "id": "c7805-7e205",
+  "ts": "2026-07-03T07:47:50Z",
+  "session": "c7805f5d-42c5-44b6-8eaa-ecd2453ed822",
+  "text": "  5. For Chirp, expose this as a dev-build-only declared projection or devtools channel, then Chirp can render the pane. Chirp should not parse Trellis keys or receive ResourcePlan,\n     ResourceKey, Graph, etc. [...] - **Phase D — Chirp X-Ray pane** (chirp#30 v1): dev-build-only declared projection/devtools channel; Chirp renders, never parses. [...] - **Phase B — nmp-devtools stream**: ordered open/replace/refresh/close events with owner/provenance/revision/refcount/teardown data; join Trellis `ResourcePlan` → `ApplyDependentInterestDelta` outcomes into bounded retained records (today they're test-only traces); correlate with the existing relay diagnostics; and define the **NMP-owned receipt shape** so Chirp never sees `ResourcePlan`/`ResourceKey`/`Graph`. [...] **14. [Consider — Phase D/E] State that the pane scrubs *translated* receipts, not raw capsules.** In Phase E the X-Ray pane scrubs capsules; if it parses Trellis trace JSON directly, the epic's own invariant (\"Chirp never parses Trellis keys\") breaks. Add one sentence: capsule scrubbing in the pane goes through the same NMP receipt translation as the live stream."
+}

@@ -1,0 +1,6 @@
+{
+  "id": "06529-52de2",
+  "ts": "2026-07-03T10:17:55Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "Structural pattern to copy for surfaces: keep a private `Graph<C>` + `InputNode` handles inside a host-shaped wrapper struct, expose typed methods that stage a tx and return typed effects/frames (never Trellis types) — exactly how `protocol_subscription/engine.rs` hides Trellis behind `ArticleFeedApp`."
+}

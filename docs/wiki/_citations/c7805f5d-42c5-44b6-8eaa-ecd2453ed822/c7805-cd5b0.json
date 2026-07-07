@@ -1,0 +1,6 @@
+{
+  "id": "c7805-cd5b0",
+  "ts": "2026-07-03T09:11:42Z",
+  "session": "c7805f5d-42c5-44b6-8eaa-ecd2453ed822",
+  "text": "Note: #114 (\"Serializable scripts and traces: replay is currently within-process only\") is **CLOSED** — implemented by PR #141, merged as `6b37a82`. Does not appear in the open list. [...] **trellis#114** — **CLOSED**. Labels: enhancement, quality-gate, core. Originally: scripts/traces were only replayable within-process (boxed closures, not data), blocking cross-process replay, golden-trace CI, and the wasm showcase from embedding real trellis-core. Comment thread: (1) note that NMP doesn't strictly need this since Trellis types never cross its FFI boundary, so not consumer-blocking for NMP's core work; (2) follow-up noting downstream demand materialized via #2809's nmp-devtools proposal, naming #114 as a hard gate; (3) resolution — PR #141 delivered serde-gated `DataTransactionScript`, `SerializedScenario`, versioned format-mismatch errors, a golden v1 trace fixture, and CI coverage; merged as `6b37a82`. Remaining scope (standalone CLI/file replay command) left for other issues (e.g. #134)."
+}

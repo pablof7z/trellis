@@ -1,0 +1,6 @@
+{
+  "id": "06529-8276b",
+  "ts": "2026-07-03T08:08:52Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "6. `distill_session()` (`src/distill.rs:333-422`): resolution order is `$TENEX_EDGE_DISTILL_CMD` override → `edge-distillation` role from `llms.json`/`providers.json` via `llmconfig::resolve_role` (`distill.rs:373`), dispatched to `claude-cli` binary (`complete_via_claude_cli`, `distill.rs:239-297`) or native `rig` (`openrouter`/`ollama`, `complete_via_rig`, `distill.rs:168-233`) → nudge-to-keep fallback (keep current title, blank activity, `distill.rs:409-421`). One model call yields both `TITLE:` (stable objective, nudged-to-keep) and `NOW:` (regenerated every call) via `SESSION_SYSTEM_PROMPT` (`distill.rs:113`), parsed by `parse_labels` (`distill.rs:144-163`)."
+}

@@ -1,0 +1,6 @@
+{
+  "id": "06529-3bdcb",
+  "ts": "2026-07-03T08:09:06Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "| [#203](https://github.com/pablof7z/tenex-edge/issues/203) | Audit & map surfaces to Trellis primitives | `refactor:audit` — the input-set map, no behavior change | [...] | [#204](https://github.com/pablof7z/tenex-edge/issues/204) | Shadow-mode the subscription planner | the beachhead: plan-vs-`ensure_subscription` diff on live traffic | [...] | [#205](https://github.com/pablof7z/tenex-edge/issues/205) | Resurrect subscription teardown | fixes the documented tens-of-GB leak; kills the dead `close_subs`/`compact` | [...] | [#206](https://github.com/pablof7z/tenex-edge/issues/206) | 30315 status as derived node + frame | collapses 5 triggers/2 timers; emit only on change | [...] | [#207](https://github.com/pablof7z/tenex-edge/issues/207) | Deterministic status teardown | status outliving dead sessions + stale `h`-tags | [...] | [#208](https://github.com/pablof7z/tenex-edge/issues/208) | Hook snapshot as derived node | replaces the divergent hand-rolled `turn_start_audit` | [...] | [#209](https://github.com/pablof7z/tenex-edge/issues/209) | Equivalence oracle & characterization harness | `assert_incremental_equals_full` as a CI gate |"
+}

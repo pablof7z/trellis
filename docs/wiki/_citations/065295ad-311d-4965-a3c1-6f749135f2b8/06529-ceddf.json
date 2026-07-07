@@ -1,0 +1,6 @@
+{
+  "id": "06529-ceddf",
+  "ts": "2026-07-03T10:17:30Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "Two Claude Code hook events feed two different assembly functions, both funneling through the same renderer:\n\n| Hook event | Daemon RPC | Assembly fn | Cursor semantics |\n|---|---|---|---|\n| `SessionStart` | `session_start` | registers session only, no fabric text | — |\n| `UserPromptSubmit` | `turn_start` | `assemble_turn_start_context` (`src/turn_context/start.rs:23`) | `cursor = rec.seen_cursor` (0 on first turn → full render); advances `seen_cursor` to `now` after rendering |\n| `PostToolUse` | `turn_check` | `assemble_turn_check_context` (`src/turn_context/check.rs:7`) | `cursor = delta_since` from a CAS-advanced `seen_cursor`; `None` (→ nothing rendered) if the CAS lost a race |\n\nHook → RPC mapping is registered in `src/cli/install/config.rs:87-93` (`claude_hook_entries`) and dispatched in `src/cli/hooks.rs:277-424` (`hook_dispatch`). Output is emitted as plain text on stdout for `UserPromptSubmit` and as a `hookSpecificOutput.additionalContext` JSON envelope for `PostToolUse` (`src/cli/turn.rs:129-146`, `src/cli/hooks.rs:183-195`)."
+}

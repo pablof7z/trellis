@@ -1,0 +1,6 @@
+{
+  "id": "06529-0510d",
+  "ts": "2026-07-03T08:09:10Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "| [#210](https://github.com/pablof7z/tenex-edge/issues/210) | **Retrospective instrumentation** | `tenex-edge explain <handle>` + an `llm_calls` ledger — your \"what was fed to the LLM?\" question |\n\n**#210** is the one that directly answers your motivating use case: a `tenex-edge explain <handle>` verb over artifact handles (`event:`, `hook:`, `llm:`, `txn:`, `session:@ts`), backed by a persisted `txn_receipts` table and an `llm_calls` ledger that captures the exact transcript slice + system prompt + model + raw response behind every distilled \"current activity\" — plus `replay` via trace-matching and a redaction policy for the user content in prompts."
+}

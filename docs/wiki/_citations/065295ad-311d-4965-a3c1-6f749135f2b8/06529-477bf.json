@@ -1,0 +1,6 @@
+{
+  "id": "06529-477bf",
+  "ts": "2026-07-03T10:17:55Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "The test drives 4 transactions, calls `assert_incremental_equals_full()` (the oracle) after each, asserts the emitted `Open`/`Close` commands, queries `why_resource_command`, and cross-checks with `trellis_testing::ResourceLedger` (`assert_resource_not_open`, `assert_all_resources_have_owner`). [...] - `graph.assert_incremental_equals_full()? -> FullRecomputeCheck` — the oracle; call after every meaningful tx in tests."
+}

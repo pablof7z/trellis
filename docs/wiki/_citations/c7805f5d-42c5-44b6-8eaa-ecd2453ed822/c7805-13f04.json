@@ -1,0 +1,6 @@
+{
+  "id": "c7805-13f04",
+  "ts": "2026-07-03T08:38:03Z",
+  "session": "c7805f5d-42c5-44b6-8eaa-ecd2453ed822",
+  "text": "- **[NMP #2865](https://github.com/pablof7z/nostr-multi-platform/issues/2865)** — Phase 0 subissue: bring `nmp-nip60` into workspace/CI, capability-gate the false `pay_invoice` stubs, demote the legacy `kind:17375` relay-tag authority."
+}

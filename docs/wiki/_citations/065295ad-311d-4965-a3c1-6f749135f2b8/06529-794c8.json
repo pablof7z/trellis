@@ -1,0 +1,6 @@
+{
+  "id": "06529-794c8",
+  "ts": "2026-07-03T10:17:42Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "2. **Presence / \"who is online\"** — derived **on read**, never a stored boolean. Liveness = NIP-40 `expiration >= now` over `relay_status` (`materializer.rs:112` \"Liveness is computed on READ\"; `who_snapshot.rs:170` `live_status_for_channel`; local freshness `now - last_seen <= STATUS_TTL_SECS`, `who_snapshot.rs:318`). `remote` is computed by comparing peer host label to daemon host (`who_snapshot.rs:358`)."
+}

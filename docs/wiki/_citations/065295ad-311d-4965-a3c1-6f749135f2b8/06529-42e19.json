@@ -1,0 +1,6 @@
+{
+  "id": "06529-42e19",
+  "ts": "2026-07-03T10:27:16Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "**Wire encoding** — `src/fabric/nip29/wire.rs:150-187` (`Nip29WireCodec::encode_event`, `DomainEvent::Status` arm):\n```\nKIND_STATUS = 30315\ntags: [\"d\", session_id], [\"title\", title], [\"status\", \"busy\"|\"idle\"], [\"host\", host]\n      + repeated [\"h\", channel] for each channel in status.channels\n      + optional [\"slug\", agent.slug], [\"rel-cwd\", rel_cwd], [\"expiration\", ts] (NIP-40)\ncontent = activity (the live \"doing X\" text; empty when idle)\n``` [...] - **Status (kind:30315) is never actively deleted** — no NIP-09 kind:5 anywhere in `src/`. `session_end.rs:30`: *\"Mark the canonical session dead ... Its final published kind:30315 ages off via NIP-40 expiration.\"* TTL constants: `STATUS_TTL_SECS = 90`, `HEARTBEAT_SECS = 30` (`src/domain.rs:14,17`)."
+}

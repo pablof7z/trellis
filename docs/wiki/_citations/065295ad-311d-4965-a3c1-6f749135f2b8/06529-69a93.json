@@ -1,0 +1,6 @@
+{
+  "id": "06529-69a93",
+  "ts": "2026-07-03T10:17:32Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "3. **The outbox is the existing proof-of-concept** for effect-plan + receipt (durable queue, checked verdict, `mark_published`/`mark_failed`/`retries`, `status_publish.rs:125`). It is scoped to status only; chat, subscriptions, tmux spawns, and membership admission bypass it and fire inline."
+}

@@ -1,0 +1,6 @@
+{
+  "id": "06529-5b974",
+  "ts": "2026-07-03T11:38:38Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "- **Turn edges/channel/distill are observed, not pushed from the RPC handlers.** `rpc_turn_start`/`rpc_turn_end` still only mutate the store; the per-session runtime loop observes `working`/channels each obs tick (5s) and drives the reconciler. This keeps a single driver (no split-brain) and matches the old cadence, but adds up to one obs-interval of latency for the busy publish (still far better than the old ~30s heartbeat-only busy publish). Deliberate — routing RPC handlers through the shared reconciler too would re-introduce two drivers."
+}

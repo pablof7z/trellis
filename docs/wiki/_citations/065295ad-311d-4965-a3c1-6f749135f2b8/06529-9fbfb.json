@@ -1,0 +1,6 @@
+{
+  "id": "06529-9fbfb",
+  "ts": "2026-07-03T08:09:06Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "- **LLM distill must stay a non-deterministic *input*** to the graph, never a derived node. [...] - **Wall-clock `now`** (\"just now\", 90s TTL, NIP-40 expirations) must be modeled as an input — good for replay, but a pervasive mechanical change. [...] - **Keep bulk out of the graph** (transcripts, raw event JSON, chat bodies → store hashes/summaries), and note presence-row storage growth is a pruner problem Trellis doesn't touch."
+}

@@ -1,0 +1,6 @@
+{
+  "id": "06529-d9eaf",
+  "ts": "2026-07-03T10:05:50Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "**Separated (the one \"effect plan + receipt\" seam) — the outbox:**\n- The runtime never publishes status directly. `enqueue_status` (`runtime.rs:140`) signs and **parks JSON on `outbox`** (`enqueue_outbox`, `:165`). `spawn_outbox_drainer` (`status_publish.rs:125`) later drains: `peek_outbox` → `publish_event_checked` → `mark_published` on relay ACK, `mark_failed` (with retry count) otherwise (`:132-159`). This is durable, has a receipt (`published`/`failed`/`retries`), and is woken by `outbox_notify` or a 2s poll. This is the model closest to what you're evaluating — and it exists only for status, not for chat/subscriptions/spawns. [...] 3. **The outbox is the existing proof-of-concept** for effect-plan + receipt (durable queue, checked verdict, `mark_published`/`mark_failed`/`retries`, `status_publish.rs:125`). It is scoped to status only; chat, subscriptions, tmux spawns, and membership admission bypass it and fire inline."
+}

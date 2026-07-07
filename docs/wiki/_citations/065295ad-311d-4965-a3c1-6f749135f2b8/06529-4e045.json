@@ -1,0 +1,6 @@
+{
+  "id": "06529-4e045",
+  "ts": "2026-07-04T12:47:31Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "**F4 — \"projection frames\" exist as an idiom but \"Trellis leads DB state\" is a partial overreach.** Output frames (Baseline/Delta/Clear/Rebaseline) are the materialized-output channel; hook_context already uses `materialized_output` (`hook_context/mod.rs:264`). A projection frame carrying a *small intent* payload needs no new frame kind. But two hard limits bite: the charter's **keep-bulk-payloads-out** rule + the per-commit `graph.clone()` cost (F1), and **#121: one output payload type per graph** (`CHARTER.md:108`). So Trellis can lead DB *projections* only as summarized intents, and a single graph cannot emit many distinct row-type projections. This is why §2 keeps `projection` a *bounded* frontier mode, not the destination for all of tenex-edge's store."
+}

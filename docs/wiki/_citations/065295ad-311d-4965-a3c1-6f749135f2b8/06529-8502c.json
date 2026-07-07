@@ -1,0 +1,6 @@
+{
+  "id": "06529-8502c",
+  "ts": "2026-07-03T10:17:30Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "`build_view` assembles a `FabricView` (`src/fabric_context/model.rs`) from four data sources, all read live from SQLite (`Store`, no cache layer):\n\n- **Project/channel metadata** (`relay_channels`, materialized from kind:39000): `channel_summary()` at `build.rs:182`, `subchannel_rows()` at `build.rs:119`, `unjoined_channels()` at `build.rs:136`.\n- **Members** (`relay_status` ∪ `relay_channel_members`): `member_rows()` in `src/fabric_context/people.rs:8`.\n- **Presence/status deltas** (`relay_status`, kind:30315): `presence_rows()` in `people.rs:53`.\n- **Chat/mentions** (`relay_events` + inbox ledger): `message_rows()` in `src/fabric_context/messages.rs:13`.\n- **Invitable agents**: `agents()` at `build.rs:160`, from `crate::identity::list_invitable_agents`. [...] **Not cached — recomputed every hook call** from live SQLite reads (`store.lock()` each time in `start.rs`/`check.rs`/`turns.rs`). What *is* stateful is the `seen_cursor` high-water mark, which mutates the *shape* of the next render (full snapshot vs. delta) — so two identical-state renders back to back will differ if the cursor advanced between them."
+}

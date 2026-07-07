@@ -1,0 +1,6 @@
+{
+  "id": "06529-d2c94",
+  "ts": "2026-07-04T12:47:38Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "**Files changed**: `fabric_context.rs` (+`render_view_text`, re-exports), `fabric_context/model.rs` (`FabricView` → `Clone`+`PartialEq`+`pub(crate)`, `is_empty()`), `messages.rs` (pure `mentions_pubkey(tags_json,…)`), `turn_context.rs` / `start.rs` / `check.rs` (`TurnContext`, reconciler-driven), `daemon/server/turns.rs` (receipt as audit), `reconcile/mod.rs` (exports). **Deleted**: `src/turn_context/audit.rs` (−241). [...] `assemble_turn_start` / `assemble_turn_check` keep their membership-warning / inbox-drain / cursor-advance logic but now `capture_inputs()` → `render_context()`; the injected text comes from the output frame's `FabricView` fed to the existing `render.rs` stringifier (byte-identical). The receipt — sourced from `why_output_frame`/`why_changed`, **not a re-derivation** — replaces `turn_start_audit`/`turn_check_audit` and is emitted as the RPC `audit` (`kind` preserved for the debug loader). Text-only `*_context` shims (`#[cfg(test)]`) keep the ~15 hook-parity test call-sites unchanged."
+}

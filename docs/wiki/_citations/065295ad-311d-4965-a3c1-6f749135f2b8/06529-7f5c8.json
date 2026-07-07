@@ -1,0 +1,6 @@
+{
+  "id": "06529-7f5c8",
+  "ts": "2026-07-03T08:09:06Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "- `why_resource_command(key)` — why a specific effect (e.g. *publish 30315 status*, *open subscription*) was emitted\n- `why_changed(node)` — why a derived value (e.g. the status text, the snapshot) recomputed\n- `why_output_frame(key)` — why a materialized output (e.g. the hook snapshot frame) emitted\n- `dependency_path(from, to)` — the shortest causal chain from an input to an effect"
+}

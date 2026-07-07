@@ -1,0 +1,6 @@
+{
+  "id": "06529-0af1e",
+  "ts": "2026-07-03T10:57:53Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "`LlmCallRow`/`NewLlmCall` (llm_calls.rs): `id: i64`, `session_id: String`, `window_hash: String`, `provider: String`, `model: String`, `system_prompt: String`, `transcript_slice: String`, `raw_response: String`, `parsed_title: Option<String>`, `parsed_activity: Option<String>`, `created_at: i64` (passed in, never clock-read).\n\n`ReceiptRow`/`NewReceipt` (receipts.rs): `id: i64`, `surface: String` (\"subscriptions\"|\"status\"|\"hook_context\"), `transaction_id: i64`, `revision: i64`, `changed_summary: String` (JSON), `commands: String` (JSON array of `{kind,key,reason}`), `artifact_ref: Option<String>`, `created_at: i64`."
+}

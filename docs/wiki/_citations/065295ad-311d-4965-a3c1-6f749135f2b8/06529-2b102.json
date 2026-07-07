@@ -1,0 +1,6 @@
+{
+  "id": "06529-2b102",
+  "ts": "2026-07-03T08:09:10Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "1. **`turn_start_audit()` / `turn_check_audit()`** (`src/turn_context/audit.rs:6,45`) — build a structured JSON describing cursors before/after, `joined_channels`, `evaluated.ambient_chat`, and `evaluated.awareness` (candidate channels, raw `Status` rows including `busy`/`activity`/`title`/`last_seen`/`updated_at`/`expiration` — `status_json` at `audit.rs:212-224`), plus the exact `output.text` that was emitted. Returned alongside `context` from the `turn_start`/`turn_check` RPCs (`src/daemon/server/turns.rs:112-122, 153-165`).\n2. **`HookCallLog`** (`src/cli/hooks/hook_forensics.rs:10`) — every hook invocation appends JSONL to `<edge_home>/sessions/<session_id>/hook-calls.jsonl` (or `TENEX_EDGE_HOOK_CALL_LOG` override), recording raw stdin, process/parent-chain snapshot, redacted env, and via `context_audit()` (`hook_forensics.rs:67-97`) both the audit JSON above *and* a verbatim `context-injection` note with the exact injected text."
+}

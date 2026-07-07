@@ -1,0 +1,6 @@
+{
+  "id": "06529-9f828",
+  "ts": "2026-07-03T11:38:38Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "Per session: a scope + five per-field **inputs** (`working`, `title`, `activity`, `channels`, `arm`) → a derived **`StatusContent`** node (ports `status_for`/`status_from_session` exactly: `busy=working`, idle clears the live activity, title always survives, archived-excluded h-tags) → a single-entry **`map_collection<session_id, StatusValue>`** (`{content, static info, arm}`) → a **`map_resource_planner`** over `ResourceKey::from_segments([\"status\", session_id])`:\n- added → `Open` (`Publish{Opened}`)\n- content changed → `Replace` (`Publish{Changed}`)\n- **only `arm` advanced** → `Refresh` (`Publish{Refreshed}`) — the distinct TTL-refresh reason\n- scope close → `Close` → host builds the final `Expire`"
+}

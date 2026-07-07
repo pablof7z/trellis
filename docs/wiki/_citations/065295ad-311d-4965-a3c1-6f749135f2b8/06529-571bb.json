@@ -1,0 +1,6 @@
+{
+  "id": "06529-571bb",
+  "ts": "2026-07-04T12:47:59Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "`on_channels_changed` is fed each observe tick → the derived h-tag set corrects join/leave (fixes stale-h-tags). `mark_dead`/session-end teardown calls `on_session_ended` **before** `mark_dead`, ordered, publishing a final expiring 30315. Nothing publishes directly; the durable outbox is the single executor. [...] `session_end_emits_expire` — `on_session_ended` emits exactly one `Expire` with `expires_at == Some(now)`, `busy=false`, `activity==\"\"`, last-known h-tags retained; `why_command(\"s1\").kind == Close` with `cause == ScopeClosed`; `ledger.assert_resource_not_open` + `assert_no_duplicate_close`. `tick_rearms_without_content_change_and_is_the_single_path` proves a bucket-crossing tick emits `Refresh` (re-armed to `now+ttl`) while an in-bucket tick is a no-op. All 7 tests call `assert_oracle()` (`assert_incremental_equals_full`) after each tx and use `ResourceLedger`."
+}

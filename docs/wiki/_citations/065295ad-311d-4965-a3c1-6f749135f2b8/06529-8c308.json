@@ -1,0 +1,6 @@
+{
+  "id": "06529-8c308",
+  "ts": "2026-07-04T12:47:31Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "Use this definition:\n\n> Trellis leads a surface when every state-changing operation first becomes a canonical fact or command intent, Trellis derives the desired projection/effect intent, and the host may only execute that returned intent.\n"
+}

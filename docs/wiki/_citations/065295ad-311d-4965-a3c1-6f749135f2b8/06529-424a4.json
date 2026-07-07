@@ -1,0 +1,6 @@
+{
+  "id": "06529-424a4",
+  "ts": "2026-07-03T10:17:30Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "**Who counts as a member** (`people.rs:14-24`): the union of (a) formal NIP-29 channel membership (`store.list_channel_members`), (b) anyone with a *live* status row for that channel (`live_status_for_channel`, i.e., someone can appear as a \"member\" purely by presence even without formal membership), and (c) self. Backends are filtered out: `people.rs:26` `.filter(|pk| !is_backend(store, pk))`, backed by the `relay_profiles.is_backend` flag."
+}

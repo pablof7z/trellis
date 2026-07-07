@@ -1,0 +1,6 @@
+{
+  "id": "06529-d5db4",
+  "ts": "2026-07-03T10:27:25Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "Hook → RPC mapping is registered in `src/cli/install/config.rs:87-93` (`claude_hook_entries`) and dispatched in `src/cli/hooks.rs:277-424` (`hook_dispatch`). Output is emitted as plain text on stdout for `UserPromptSubmit` and as a `hookSpecificOutput.additionalContext` JSON envelope for `PostToolUse` (`src/cli/turn.rs:129-146`, `src/cli/hooks.rs:183-195`)."
+}

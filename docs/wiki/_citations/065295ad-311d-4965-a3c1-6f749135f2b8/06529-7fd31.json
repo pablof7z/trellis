@@ -1,0 +1,6 @@
+{
+  "id": "06529-7fd31",
+  "ts": "2026-07-03T10:05:48Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "**\"Not joined\" channels** (`build.rs:136-158`, `unjoined_channels`): all channels whose `parent == root` and not in the session's joined set, filtered to non-empty `human_name()`, ordered by `list_channels()`'s SQL `ORDER BY updated_at DESC` (`src/state/channels.rs:75-79` — most-recently-*metadata*-updated first, not most-recently-chatted), truncated with `.take(12)` — **silently**, with no \"+N more\" indicator. `last_active` is `relative_time(c.updated_at, now)`."
+}

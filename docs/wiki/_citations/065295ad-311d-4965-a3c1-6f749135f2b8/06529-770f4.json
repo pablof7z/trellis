@@ -1,0 +1,6 @@
+{
+  "id": "06529-770f4",
+  "ts": "2026-07-03T10:27:16Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "7. On completion (`runtime.rs:295-320`): result written to `sessions.title/activity` via `set_session_distill`, then **unconditionally** `enqueue_status()` republishes — no diff against the previous title/activity before publishing."
+}

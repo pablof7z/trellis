@@ -1,0 +1,6 @@
+{
+  "id": "c7805-92d47",
+  "ts": "2026-07-03T08:50:19Z",
+  "session": "c7805f5d-42c5-44b6-8eaa-ecd2453ed822",
+  "text": "**The big finding that reshapes the plan:** every single upstream prerequisite is already closed. Trellis #114 (serializable traces, via PR #141), #122 (typed keys), #125 (bounded audit retention), #126 (scope reclamation) — all done. And NMP #2808 (shadow → authority promotion) merged *today* via PR #2832. Two consequences:\n\n1. **Chirp #30's v0 \"Shadow X-Ray\" is obsolete** — there's no shadow plan to visualize anymore. Skip straight to v1 authority receipts.\n2. **Nothing blocks NMP #2809 except the ADR decision itself.** The remaining work is entirely NMP + Chirp; Trellis needs nothing new. [...] - **Phase D — Chirp X-Ray pane** (chirp#30 v1): dev-build-only declared projection/devtools channel; Chirp renders, never parses."
+}

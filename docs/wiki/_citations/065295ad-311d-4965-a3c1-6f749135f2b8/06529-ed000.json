@@ -1,0 +1,6 @@
+{
+  "id": "06529-ed000",
+  "ts": "2026-07-04T12:47:31Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "\n1. **Diagnosis metric.** An off-the-shelf model, given *only* the serialized commit/trace stream around a **seeded** lifecycle bug (a subscription that fails to close; a status that republishes when it shouldn't), identifies root cause with ≥90% accuracy — versus its baseline from tenex-edge's raw `tracing` logs of the same incident. The delta is the publishable Story-3 result. [...] **Experiment A — the diagnosis metric (Story 3).** Seed a lifecycle bug (revert the refcount so a shared channel closes on first-owner departure, or disable status dedup). Run the incident twice: give a model (a) the serialized commit/trace stream + labels, (b) the raw `tracing` logs. Measure root-cause accuracy. Target ≥90% from receipts vs the log baseline; the delta is the publishable result and the literal demonstration of \"diagnosis becomes lookup, not abduction.\""
+}

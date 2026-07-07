@@ -1,0 +1,6 @@
+{
+  "id": "06529-57af4",
+  "ts": "2026-07-03T11:38:38Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "Expiration is deliberately **outside** `StatusContent` (TTL tracked by a bucketed `arm = now / refresh_secs`), so an idle heartbeat is never mistaken for a content change — that is what makes dedup real. The host stamps `expires_at` at apply time; the graph never reads a clock during propagation."
+}

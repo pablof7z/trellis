@@ -1,0 +1,6 @@
+{
+  "id": "06529-b7e0d",
+  "ts": "2026-07-03T10:17:55Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "### `InputFact` variants (each doc-comments the real writer it will replace)\n- `SessionStarted{session_id, channel_h, agent_pubkey, pid, at}` → replaces `state::sessions::Store::register_session`/`upsert_session_row`\n- `TurnStarted{session_id, at}` → replaces `set_working(id, working=true, turn_started_at)`\n- `TranscriptWindowCaptured{session_id, window_hash, at}` → replaces `set_session_transcript` (carries hash, not text)\n- `DistillCompleted{session_id, window_hash, title, activity, at}` → replaces `set_session_distill(id, title, activity, last_distill_at)`\n- `TurnEnded{session_id, at}` → replaces `set_working(id, working=false, ..)`\n- `RelayEventObserved{event_id, kind, channel_h, pubkey, at}` → replaces `state::events::Store::insert_event` (header fields only)\n- `RelayPublishAccepted{local_id, event_id, accepted, at}` → replaces `outbox::Store::mark_published`/`mark_failed`\n- `ProcessExited{session_id, pid, at}` → replaces the `runtime` `pid_alive` watcher calling `mark_dead`\n- `ClockTick{at}` → replaces ad-hoc `now`/heartbeat reads in the runtime loop\n\nDerives `Clone, Debug, PartialEq, Eq, Serialize, Deserialize`. Bulky payloads stay out — transcripts enter as `window_hash`, distillations as `title`/`activity`."
+}

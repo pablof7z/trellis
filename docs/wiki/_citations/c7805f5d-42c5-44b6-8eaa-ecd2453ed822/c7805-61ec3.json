@@ -1,0 +1,6 @@
+{
+  "id": "c7805-61ec3",
+  "ts": "2026-07-03T08:38:03Z",
+  "session": "c7805f5d-42c5-44b6-8eaa-ecd2453ed822",
+  "text": "- **[NMP #2864](https://github.com/pablof7z/nostr-multi-platform/issues/2864)** — Epic: NIP-60/61 wallet milestone. Six phases straight from the design doc: reactivate `nmp-nip60` → `nmp-wallet` composition crate (WalletBackend seam + operation journal) → NWC consolidation behind the seam → NIP-60 Cashu wallet → NIP-61 nutzap send/receive → Chirp UX. Plus the doc's invariants (fail-closed, no secrets in projections, thin shells) and its full test-gate list."
+}

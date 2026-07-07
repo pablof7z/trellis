@@ -1,0 +1,6 @@
+{
+  "id": "c7805-9b551",
+  "ts": "2026-07-03T07:42:57Z",
+  "session": "c7805f5d-42c5-44b6-8eaa-ecd2453ed822",
+  "text": "- **Trellis trace-tooling cluster (very active right now):** #141 (versioned data scripts/trace files — closed #114), #83 (\"Add transaction trace scenario replay\"), #142 (\"Build Flight Recorder trace replay demo\"), **#160** (\"Rebuild Flight Recorder as a trace workstation,\" merged today) — turned Flight Recorder into a full evidence workstation: provenance, transaction timeline, phase ladder, receipt inspector, replay/raw-trace tabs; explicit about `[BUNDLED FIXTURE]` vs `[LIVE UNAVAILABLE]` (no live WASM engine wired yet). This is functionally a time-travel/trace-replay UI already shipping under epic #87, distinct from and not yet connected to NMP's proposed nmp-devtools MCP surface (#2809) or chirp's X-Ray pane (#30). Closest existing artifact to \"time-travel tooling.\""
+}

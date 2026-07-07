@@ -1,0 +1,6 @@
+{
+  "id": "06529-2c245",
+  "ts": "2026-07-04T12:47:38Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "**Hook context is Trellis-derived, but not live-graph authoritative in the same sense.** The reconciler correctly models the fabric snapshot as declared inputs → derived `FabricView` → materialized output frame, with cursor and `now` explicit.  But the actual turn-start and turn-check paths instantiate `HookContextReconciler::new()` inside each assembly function.   That means there is no long-lived hook-context graph in the daemon to inspect the way there is for status/subscriptions.\n [...] Bonus confirmation of the critique's sharpest point: the hook_context reconciler is instantiated fresh per render (`turn_context/start.rs:221`, `check.rs:94`) and discarded. There is no live hook graph to inspect. The critique is right; `probe why hook` against \"the live graph\" is currently impossible."
+}

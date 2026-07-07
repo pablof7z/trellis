@@ -1,0 +1,6 @@
+{
+  "id": "06529-05b95",
+  "ts": "2026-07-04T12:47:31Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "2. **Safety invariant.** On any surface at `authoritative` or above, **no host effect executes without a Trellis plan/frame having been produced first** — enforced structurally by the bypass ratchet (§4.5), not by convention. This is the operational form of \"never gamble.\"\n [...] \n1. **Safety invariant enforcement.** Every authoritative seam's executor is refactored so the *only* way to produce an effect is: stage facts → `preview()` → inspect the returned plan → then `commit()` and apply. The bypass ratchet (§4.5) asserts no effect call site exists outside that pattern. \"No agent effect without a machine-reviewable plan first\" becomes a structural property of the seam, verified by F1's guarantee that preview and commit run identical pipelines."
+}

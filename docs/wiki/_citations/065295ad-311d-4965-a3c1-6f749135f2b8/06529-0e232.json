@@ -1,0 +1,6 @@
+{
+  "id": "06529-0e232",
+  "ts": "2026-07-04T17:59:41Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "2. **Safety invariant.** On any surface at `authoritative` or above, **no host effect executes without a Trellis plan/frame having been produced first** — enforced structurally by the bypass ratchet (§4.5), not by convention. This is the operational form of \"never gamble.\"\n [...] \n**Experiment B — the safety invariant (Story 1).** Show, via the bypass ratchet + `probe simulate`, that on authoritative surfaces every effect was preceded by a previewed plan — \"no effect without a machine-reviewable plan first,\" enforced structurally.\n"
+}

@@ -1,0 +1,6 @@
+{
+  "id": "06529-9e083",
+  "ts": "2026-07-04T12:47:59Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "2. per-session heartbeat `enqueue_status` → `on_tick` (TTL re-arm)\n3. **`spawn_status_heartbeat_publisher`** (the second ~30s timer / direct `set_status`) → **DELETED** (function, its `set_status`/`cache_status`/`status_from_session` helpers, the import in `server.rs`, and the `lifecycle.rs` spawn call). Its TTL-refresh role folded into the per-session `on_tick`. `set_status` itself deleted from the provider — there is no direct-publish seam left."
+}

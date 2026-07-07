@@ -1,0 +1,6 @@
+{
+  "id": "06529-78f81",
+  "ts": "2026-07-03T10:17:55Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "Biggest friction for adoption: **effects are imperatively interleaved with state mutation and hand-ordered**, most acutely in `rpc_session_start` (`session_start.rs:86`) and `handle_incoming` (`demux.rs:43`), where DB writes, relay round-trips, task cancels/spawns, tmux calls, and tail emits alternate within one function with load-bearing ordering and inline rollback (`abort_session_start`). Extracting a `state → effect plan → execute → receipt` boundary would require pulling these effects out of the mutation path — the subscription planner and the outbox show the shape already works where it's been applied. [...] - **The PostToolUse CAS race isn't fully solved**: those are separate OS processes racing on SQLite. Trellis only helps if cursor advancement moves into the daemon's single graph and hooks become read-only frame consumers — a decision Trellis motivates but doesn't make for you."
+}

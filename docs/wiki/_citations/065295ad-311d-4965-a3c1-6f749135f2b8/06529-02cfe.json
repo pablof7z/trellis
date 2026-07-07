@@ -1,0 +1,6 @@
+{
+  "id": "06529-02cfe",
+  "ts": "2026-07-04T12:47:59Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "### Every publish path collapsed → one change-only path\nThe five uncoordinated triggers + both timers now route through `StatusReconciler` + the outbox executor:\n1. startup `enqueue_status` → `on_session_started`\n2. per-session heartbeat `enqueue_status` → `on_tick` (TTL re-arm)\n3. **`spawn_status_heartbeat_publisher`** (the second ~30s timer / direct `set_status`) → **DELETED** (function, its `set_status`/`cache_status`/`status_from_session` helpers, the import in `server.rs`, and the `lifecycle.rs` spawn call). Its TTL-refresh role folded into the per-session `on_tick`. `set_status` itself deleted from the provider — there is no direct-publish seam left.\n4. distill completion `enqueue_status` → `on_distill` (LLM output enters as the `activity`/`title` input)\n5. turn-end falling-edge `enqueue_status` → `on_turn_end` (both edges now drive `on_turn_start`/`on_turn_end`)\n\n`on_channels_changed` is fed each observe tick → the derived h-tag set corrects join/leave (fixes stale-h-tags). `mark_dead`/session-end teardown calls `on_session_ended` **before** `mark_dead`, ordered, publishing a final expiring 30315. Nothing publishes directly; the durable outbox is the single executor."
+}

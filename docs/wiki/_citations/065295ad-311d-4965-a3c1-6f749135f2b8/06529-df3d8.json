@@ -1,0 +1,6 @@
+{
+  "id": "06529-df3d8",
+  "ts": "2026-07-04T12:47:48Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "Meanwhile the build track kept moving: **`probe oracle / simulate / why / state` all landed green** (456 lib tests, +20). The essay's boldest line — *\"the check that proves the engine honest ships inside the engine… so I can point it at the running system\"* — is now literally true: `probe oracle` runs the full-recompute oracle against the live daemon graphs, and `probe simulate` dry-runs a fact via `tx.preview()` with a test proving the graph is untouched. Next I'll have a Fable agent stress-test whether the whole surface is genuinely useful/complete/real before I call the essay done."
+}

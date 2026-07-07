@@ -1,0 +1,6 @@
+{
+  "id": "06529-152ed",
+  "ts": "2026-07-03T11:38:38Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "`identical_state_commit_is_deduped` — commits the same `on_distill(\"T\",\"reading\")` twice at the same tick bucket; asserts `second.effects.is_empty()` (\"identical re-commit must not publish\"). Also `distill_change_publishes_and_attributes_to_activity`: exactly one `Publish{Changed}` and `why_command(\"s1\").input_causes.contains(activity_node)` — the \"why did it publish this\" receipt attributes it to the `activity` input (commits run at `AuditExplanationLevel::DependencyPaths`). [...] Every method returns `StatusOutcome { effects, result: TransactionResult<StatusCommand> }` — the raw receipt is handed back untouched. `why_command(id)` exposes the `ResourceCommandExplanation` (kind + cause + `input_causes`), and `activity_input(id)` exposes the node id for correlation. When the daemon later persists receipts it can call `receipts::record(...)` off `outcome.result` / the emitted `StatusEffect`'s event id at the `drive()` seam in `runtime.rs`. No CLI built here."
+}

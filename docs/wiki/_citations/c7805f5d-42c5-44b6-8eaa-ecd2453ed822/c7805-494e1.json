@@ -1,0 +1,6 @@
+{
+  "id": "c7805-494e1",
+  "ts": "2026-07-03T07:42:57Z",
+  "session": "c7805f5d-42c5-44b6-8eaa-ecd2453ed822",
+  "text": "1. Land NMP #2809: amend ADR-0075 so “diagnostic surface” is explicitly allowed while app/native surfaces still cannot expose Trellis types. [...] - **Phase A — ADR-0075 amendment** (#2809): define \"diagnostic surface\" vs \"app surface,\" and update doctrine-lint plus the Trellis public-API leak ratchet (#2642) so the exemption is enforced mechanically, not case-by-case."
+}

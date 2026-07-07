@@ -1,0 +1,6 @@
+{
+  "id": "06529-a6e48",
+  "ts": "2026-07-03T10:17:55Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "- **LLM distill must stay a non-deterministic *input*** to the graph, never a derived node. [...] - **Wall-clock `now`** (\"just now\", 90s TTL, NIP-40 expirations) must be modeled as an input — good for replay, but a pervasive mechanical change. [...] - **Architectural boundary & end-state** — *Trellis owns decisions; the host owns observations and effects.* The world's facts (`ProcessExited`, `DistillCompleted`, `RelayPublishAccepted`, `ClockTick`) enter as a single input journal; Trellis derives sessions/status/who/context/outbox/subscriptions; SQLite becomes a durable log + projection store. Raw transcripts/event bodies stay out — pointers and hashes only."
+}

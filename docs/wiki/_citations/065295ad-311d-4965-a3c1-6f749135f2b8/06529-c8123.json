@@ -1,0 +1,6 @@
+{
+  "id": "06529-c8123",
+  "ts": "2026-07-03T10:17:42Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "- **Postmortem** `docs/wiki/episodes/2026-06-29-2-daemon-cleanup-lock-file-deletion-caused.md`: lock-file deletion on shutdown caused two daemons to race and fight over `state.db` — fixed, now `lifecycle.rs:238-244`: *\"Do NOT remove the lock file here — deleting it while the flock is still held lets a racing spawner open a new file (different inode) and acquire an independent lock, causing two daemons to overlap.\"*"
+}

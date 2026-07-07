@@ -1,0 +1,6 @@
+{
+  "id": "06529-1c4ba",
+  "ts": "2026-07-03T10:17:55Z",
+  "session": "065295ad-311d-4965-a3c1-6f749135f2b8",
+  "text": "Assistant: I've got a firm read on the Trellis side. The key finding: Trellis's audit API is a near-exact match for your two \"why\" questions —\n\n- `why_resource_command(key)` — why a specific effect (e.g. *publish 30315 status*, *open subscription*) was emitted\n- `why_changed(node)` — why a derived value (e.g. the status text, the snapshot) recomputed\n- `why_output_frame(key)` — why a materialized output (e.g. the hook snapshot frame) emitted\n- `dependency_path(from, to)` — the shortest causal chain from an input to an effect [...] - `graph.why_resource_command(&ResourceKey) -> Option<&ResourceCommandExplanation>` (fields: `key, scope, kind: ResourceCommandKind, cause: ResourceCommandCause, collection_diffs, changed_nodes, input_causes, dependency_paths`).\n- `graph.why_changed(node) -> Option<&NodeChangeExplanation>`; `graph.dependency_path(from: NodeId, to: NodeId) -> Option<Vec<NodeId>>`; `graph.why_output_frame(OutputKey)`; `graph.scope_resource_inventory(scope)`.\n- Note: `input_causes`/`dependency_paths` are only populated when the tx opts into path explanations via `begin_transaction_with_options` (`AuditExplanationLevel::DependencyPaths`); the default level still fills `why_resource_command`'s kind/cause/changed_nodes."
+}

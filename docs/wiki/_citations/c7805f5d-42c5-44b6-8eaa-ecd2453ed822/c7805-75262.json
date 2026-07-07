@@ -1,0 +1,6 @@
+{
+  "id": "c7805-75262",
+  "ts": "2026-07-03T07:42:57Z",
+  "session": "c7805f5d-42c5-44b6-8eaa-ecd2453ed822",
+  "text": "as part of your plan, setup an epic gh issue (or do we already have one? maybe send a sonnet agent to give you an idea of what's on gh issues rn in the background) to track all the work that needs to happen -- I'd like chirp to proove this diagnostic with a tui or repl or some type of cli so that agents can iterate/debug [...] - **Phase C — agent-first prover (your CLI/REPL/TUI ask)**: the MCP server (`why_subscription_open`, `why_view_stale`, `what_closed_this_relay`, `list_scope_inventory`, `replay_session`) plus a headless CLI that drives a real Chirp session against real relays and also loads/scrubs exported capsules. Exit criterion baked into the epic: *an agent can answer \"why is my feed empty?\" from receipts alone.* This lands **before** the pane, so agents can iterate on the diagnostic itself."
+}

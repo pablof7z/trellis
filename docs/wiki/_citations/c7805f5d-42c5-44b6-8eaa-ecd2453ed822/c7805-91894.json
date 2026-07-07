@@ -1,0 +1,6 @@
+{
+  "id": "c7805-91894",
+  "ts": "2026-07-03T07:47:50Z",
+  "session": "c7805f5d-42c5-44b6-8eaa-ecd2453ed822",
+  "text": "- #30 X-Ray Feed: developer overlay showing live relay-subscription reconciliation with causes — the Chirp-side diagnostics pane; open, no epic label [...] **chirp#30** — OPEN. Labels: enhancement. Proposes an \"X-Ray Feed\" developer overlay showing live relay-subscription reconciliation with causal chains, staged in three phases: v0 \"Shadow X-Ray\" (buildable now, visualizes NMP's discarded shadow ResourcePlan next to legacy behavior — now stale since #2808 already promoted shadow to authority), v1 \"Authority X-Ray\" (real applied commands with causal chains, gated on #2808 — now closed/done), v2 \"Time travel\" (record + scrub a session trace, gated on trellis#114 — now closed/done — and NMP#2809). Explicitly out of scope: metrics/dashboards/log views, receipts only. No comments. [...] 1. **Chirp #30's v0 \"Shadow X-Ray\" is obsolete** — there's no shadow plan to visualize anymore. Skip straight to v1 authority receipts. [...] **17. [Consider — hygiene] Update chirp#30 to strike v0.** The epic declares shadow X-Ray obsolete post-#2808, but chirp#30 still stages it as \"buildable now.\" Edit the driving issue so the two documents agree on the starting point."
+}
