@@ -301,7 +301,7 @@ impl<'graph, C> Transaction<'graph, C> {
         self.working.next_output_key = self.graph.next_output_key;
 
         phase_trace.push(TransactionPhase::ReturnTransactionResult);
-        let result = TransactionResult {
+        let mut result = TransactionResult {
             transaction_id: self.id,
             revision: next_revision,
             staged_input_changes,
@@ -317,10 +317,12 @@ impl<'graph, C> Transaction<'graph, C> {
             output_frames,
             scope_events,
             audit_log,
+            audit_explanations: Default::default(),
             phase_trace,
             invariant_results: Vec::new(),
         };
-        self.working
+        result.audit_explanations = self
+            .working
             .record_transaction_audit(&result, self.options.audit_explanations);
         Ok((result, closed_scopes))
     }

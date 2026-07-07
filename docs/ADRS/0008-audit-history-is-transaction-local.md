@@ -16,7 +16,8 @@ host only needed the transaction result or latest summary metadata.
 
 ## Decision
 
-Audit history belongs to `TransactionResult`, not to `Graph`.
+Audit history belongs to `TransactionResult` and host-retained receipt history,
+not to `Graph`.
 
 `Graph` keeps only bounded latest explanation indexes for nodes, resources, and
 outputs. The amount of retained explanation detail is selected per transaction
@@ -35,14 +36,15 @@ search so returned paths are shortest in edge count and stable by node id.
 
 Long-running graphs do not retain an ever-growing audit log.
 
-Hosts that need durable history must keep the `TransactionResult` records they
-care about.
+Hosts that need durable history must keep the `TransactionResult` explanation
+receipts they care about, or copy them into `AuditHistory`.
 
 Path-level explanations are explicit, so production commits do not pay for path
 search unless the caller requests it.
 
 `why_changed`, `why_resource_command`, and `why_output_frame` report latest
-graph-retained explanations only. They are not historical queries.
+graph-retained explanations only. Historical queries use retained
+`TransactionResult.audit_explanations` data through `AuditHistory`.
 
 ## Alternatives considered
 

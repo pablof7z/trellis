@@ -19,7 +19,9 @@ was better than carrying compatibility shims.
 - `ResourceKey` is now structured identity data. Hosts recover close identity
   from key segments instead of parsing flattened strings.
 - Audit history is transaction-local. Graphs keep bounded latest explanation
-  indexes, and dependency-path explanations are explicit transaction options.
+  indexes, transaction receipts retain the requested explanation records for
+  host-owned historical `AuditHistory` queries, and dependency-path
+  explanations are explicit transaction options.
 - Host resource status classification moved into `trellis-core`.
 - Serializable scripts and structural traces make app-owned replay scripts and
   golden trace receipts portable across processes.
@@ -33,7 +35,9 @@ was better than carrying compatibility shims.
   `ResourceKey::as_str()` is diagnostic output, not an application parser
   boundary.
 - `Graph::audit_log()` was removed. Use `TransactionResult.audit_log` for
-  durable history and `Graph::why_*` methods for latest retained explanations.
+  durable events, `TransactionResult.audit_explanations`/`AuditHistory` for
+  historical explanation queries, and `Graph::why_*` methods for latest
+  retained explanations.
 - `TransactionOptions::audit_explanations` controls graph-retained explanation
   depth: `Disabled`, `Summary`, or `DependencyPaths`.
 - Path-level audit assertions in `trellis-testing` use path-enabled

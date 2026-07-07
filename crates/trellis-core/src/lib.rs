@@ -19,6 +19,7 @@
 #![deny(missing_docs)]
 
 mod audit;
+mod audit_history;
 mod audit_types;
 mod collection;
 mod collection_build;
@@ -58,10 +59,11 @@ mod transaction_build;
 mod transaction_trace_build;
 mod transaction_types;
 
+pub use audit_history::{AuditHistory, AuditHistoryError};
 pub(crate) use audit_types::AuditState;
 pub use audit_types::{
-    NodeChangeExplanation, OutputFrameExplanation, ResourceCoalescedTrace, ResourceCommandCause,
-    ResourceCommandExplanation, ScopeResourceInventory,
+    AuditExplanations, NodeChangeExplanation, OutputFrameExplanation, ResourceCoalescedTrace,
+    ResourceCommandCause, ResourceCommandExplanation, ScopeResourceInventory,
 };
 pub use collection::CollectionContext;
 pub use collection_diff::{Added, MapDiff, Removed, SetDiff, Unchanged, Updated};

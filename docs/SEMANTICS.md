@@ -648,7 +648,10 @@ The graph SHOULD produce deterministic audit information sufficient to answer:
 If a resource command cannot be explained by graph state, it should not exist.
 
 The implementation returns deterministic audit entries on each
-`TransactionResult`. Graphs do not retain full audit history.
+`TransactionResult`. Transaction results also retain the explanation records
+selected by `TransactionOptions::audit_explanations`, so hosts that need
+historical `why_at(revision, ...)` queries can keep those receipts or copy them
+into `AuditHistory`. Graphs do not retain full audit history.
 
 The graph retains only bounded latest explanation indexes according to
 `TransactionOptions::audit_explanations` and exposes `why_changed()`,
@@ -658,6 +661,12 @@ revisions, scopes, changed nodes, collection diffs where present, and
 frame/command kinds without inspecting host command or output payload
 semantics. Dependency path explanations are opt-in and use stable shortest
 paths from changed inputs.
+
+`AuditHistory` is host-retained, payload-neutral receipt storage. Its historical
+query methods (`why_at`, `why_resource_command_at`, `why_output_frame_at`, and
+`dependency_path_at`) report explicit miss reasons when a revision was not
+retained, explanations were disabled, dependency paths were not retained, or the
+requested artifact/path was not present in the retained receipt.
 
 ## Prohibited behavior
 

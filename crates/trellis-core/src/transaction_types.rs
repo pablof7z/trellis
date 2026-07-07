@@ -1,6 +1,6 @@
 use crate::{
-    NodeId, OutputFrame, ResourceCoalescedTrace, ResourceKey, ResourcePlan, Revision, ScopeId,
-    TransactionId,
+    AuditExplanations, NodeId, OutputFrame, ResourceCoalescedTrace, ResourceKey, ResourcePlan,
+    Revision, ScopeId, TransactionId,
 };
 
 /// Configuration for committing input changes.
@@ -235,6 +235,8 @@ pub struct TransactionResult<C = ()> {
     pub scope_events: Vec<ScopeLifecycleTrace>,
     /// Deterministic audit entries for this transaction.
     pub audit_log: Vec<AuditEntry>,
+    /// Retained explanation records for historical audit queries.
+    pub audit_explanations: AuditExplanations,
     /// Deterministic transaction phase trace.
     pub phase_trace: Vec<TransactionPhase>,
     /// Optional invariant results layered by test support.
