@@ -152,14 +152,13 @@ graph.assert_incremental_equals_full()?;</code></pre>
       <div class="container cost-section">
         <div class="section-head">
           <span class="section-no">06</span>
-          <h2>Per-transaction cost is O(total graph state).</h2>
+          <h2>O(total graph state), measured in microseconds.</h2>
         </div>
-        <p class="section-intro">That is the deliberate price of structural rollback, deterministic traces, replayable transactions, and a full-recompute oracle. Trellis is a control plane, not a data plane. Keep bulk payloads outside the graph, and the cost model is stated in the open with its own tracked issues.</p>
+        <p class="section-intro">Per-transaction work scales with total graph state, not change size. On an Apple M2 smoke run: no-op 2.4µs, input change with recompute 4.2µs, 64-deep propagation 170µs, and closing a scope with 512 resources 1.84ms. Your effects cost milliseconds; the reconciler costs microseconds. Keep bulk payloads outside the graph.</p>
         <div class="cost-list">
           <a href="https://github.com/pablof7z/trellis/blob/master/docs/PERFORMANCE.md">Performance model</a>
-          <a href="https://github.com/pablof7z/trellis/issues/115">#115 clone economy</a>
+          <a href="https://github.com/pablof7z/trellis/blob/master/crates/trellis-bench/benches/performance_smoke.rs">Benchmark harness</a>
           <a href="https://github.com/pablof7z/trellis/issues/116">#116 dependency reachability</a>
-          <a href="https://github.com/pablof7z/trellis/issues/125">#125 audit retention</a>
         </div>
       </div>
     </section>
