@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Trellis is a deterministic reconciler for Rust: state changes in, resource commands, output frames, and auditable receipts out.">
+  <meta name="description" content="Trellis is a deterministic reconciler for Rust: state changes in, resource commands, output frames, and auditable receipts out. It kills the resource-lifecycle leak class no unit test can catch.">
   <title>Trellis - Deterministic Reconciliation for Rust</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/site.css">
@@ -25,55 +25,59 @@
   <main class="landing">
     <section class="container landing-hero">
       <div class="hero-copy">
-        <span class="eyebrow">pre-1.0 / semantics first, names second</span>
-        <h1>trellis</h1>
-        <p class="hero-claim">A deterministic reconciler for Rust.</p>
-        <p class="lead">State changes in; resource commands, output frames, and an auditable receipt out. When application state decides which subscriptions, watchers, and sync windows should exist, Trellis computes exactly what should open and close.</p>
+        <p class="hero-kicker"><span class="wordmark">trellis</span><span class="muted">pre-1.0 &middot; semantics first, names second</span></p>
+        <h1>A deterministic reconciler for Rust.</h1>
+        <p class="lead">State changes go in. Resource commands, output frames, and an auditable receipt come out. Your app's state decides which subscriptions, watchers, and sync windows should exist; Trellis computes exactly what to open and what to close.</p>
         <div class="button-row">
-          <a class="button primary" href="/demos/leak-duel">Run the demo</a>
-          <a class="button" href="https://github.com/pablof7z/trellis/blob/master/docs/SHADOW_MODE.md">Read why you should not trust it</a>
+          <a class="button primary" href="/demos/leak-duel">Run the leak duel</a>
+          <a class="button" href="https://github.com/pablof7z/trellis/tree/master/docs">Read the docs</a>
         </div>
       </div>
-      <div class="receipt-block hero-receipt" aria-label="Workspace switch transaction receipt">
+      <figure class="receipt-block hero-receipt" aria-label="Workspace switch transaction receipt">
         <div class="receipt-head">
           <span>tx <b data-receipt-tx>0412</b></span>
           <span class="revision-chip" data-receipt-rev>rev 87</span>
         </div>
         <div class="receipt-row">
-          <div class="receipt-line"><b>input</b><code>active-workspace</code><span>one → two</span></div>
+          <div class="receipt-line"><b>input</b><code>active-workspace</code><span>one &rarr; two</span></div>
           <div class="receipt-line"><b>derived</b><code>project-set</code><span>recomputed, changed</span></div>
-          <div class="receipt-line"><b>diff</b><code>sync-window-set</code><span><span class="kind-added">+1</span> <span class="kind-removed">−2</span></span></div>
-          <div class="receipt-line command-line"><span class="kind-badge kind-close">[CLOSE]</span><code>sync/a</code><span class="cause-chain">← project removed</span></div>
-          <div class="receipt-line command-line"><span class="kind-badge kind-close">[CLOSE]</span><code>sync/b</code><span class="cause-chain">← project removed</span></div>
-          <div class="receipt-line command-line"><span class="kind-badge kind-open">[OPEN]</span><code>sync/c</code><span class="cause-chain">← project added</span></div>
-          <div class="receipt-line"><b class="oracle-line">✓</b><code>incremental == full recompute</code><span>checked</span></div>
+          <div class="receipt-line"><b>diff</b><code>sync-window-set</code><span><span class="kind-added">+1</span> <span class="kind-removed">&minus;2</span></span></div>
+          <div class="receipt-line command-line"><span class="kind-badge kind-close">[CLOSE]</span><code>sync/a</code><span class="cause-chain">&larr; project removed</span></div>
+          <div class="receipt-line command-line"><span class="kind-badge kind-close">[CLOSE]</span><code>sync/b</code><span class="cause-chain">&larr; project removed</span></div>
+          <div class="receipt-line command-line"><span class="kind-badge kind-open">[OPEN]</span><code>sync/c</code><span class="cause-chain">&larr; project added</span></div>
+          <div class="receipt-line"><b class="oracle-line">&check;</b><code>incremental == full recompute</code><span>checked</span></div>
         </div>
         <button class="receipt-replay" data-receipt-replay type="button">[REPLAY]</button>
-      </div>
+      </figure>
     </section>
 
     <section class="section" id="bug">
       <div class="container">
-        <span class="eyebrow">The bug you cannot test for</span>
-        <h2>Your follow list changed; somewhere a subscription did not close.</h2>
-        <p class="section-intro">The state looks correct. The UI looks correct. The old resource is still alive because a callback missed the one transition where the source set shrank.</p>
+        <div class="section-head">
+          <span class="section-no">01</span>
+          <h2>The bug you cannot test for.</h2>
+        </div>
+        <p class="section-intro">Your follow list changes, and somewhere a subscription never closes. The state looks correct. The UI looks correct. The old resource is still alive because a callback missed the one transition where the source set shrank.</p>
         <div class="bug-copy">
-          <p>A scope closes while a request is in flight. A permission change removes a market stream. A workspace switch leaves an old sync window open. This class of bug lives between state and resource ownership.</p>
-          <p>Trellis turns the transition into data: a diff, a plan, and a receipt.</p>
+          <p>A scope closes while a request is in flight. A permission change should drop a market stream. A workspace switch leaves an old sync window open. This class of bug lives in the gap between state and resource ownership, and no unit test reaches it.</p>
+          <p>Trellis turns each transition into data: a diff, a plan, and a receipt. Watch it happen against a real graph.</p>
         </div>
-        <div class="demo-frame">
+        <figure class="demo-frame">
+          <figcaption class="demo-caption"><span>live &middot; leak-duel</span><a href="/demos/leak-duel">open full demo &rarr;</a></figcaption>
           <iframe src="/demos/leak-duel" title="Leak Duel live Trellis demo" loading="lazy"></iframe>
-        </div>
+        </figure>
       </div>
     </section>
 
     <section class="section" id="receipt">
       <div class="container receipt-layout">
-        <div>
-          <span class="eyebrow">What a transaction returns</span>
-          <h2>The receipt is the product surface.</h2>
-          <p class="section-intro">Every committed transaction returns the facts a reviewer needs: changed inputs, recomputed nodes, structural diffs, resource commands, output frames, scope events, and the phase trace.</p>
-          <p><a href="https://github.com/pablof7z/trellis/blob/master/crates/trellis-core/src/transaction_types.rs">TransactionResult source</a> <span class="muted">/</span> <a href="/demos/flight-recorder">Open Flight Recorder</a></p>
+        <div class="receipt-lede">
+          <div class="section-head">
+            <span class="section-no">02</span>
+            <h2>The receipt is the product surface.</h2>
+          </div>
+          <p class="section-intro">Every committed transaction returns the facts a reviewer needs: changed inputs, recomputed nodes, structural diffs, resource commands, output frames, scope events, and the full phase trace. It is data, not a log line.</p>
+          <p class="section-links"><a href="https://github.com/pablof7z/trellis/blob/master/crates/trellis-core/src/transaction_types.rs">TransactionResult source</a> <span class="muted">/</span> <a href="/demos/flight-recorder">Open Flight Recorder</a></p>
         </div>
         <pre class="receipt-code"><code>{
   "formatVersion": 2,
@@ -96,36 +100,41 @@
 
     <section class="section" id="oracle">
       <div class="container narrow">
-        <span class="eyebrow">It checks itself</span>
-        <h2>Incremental state is presumed guilty.</h2>
-        <p class="section-intro">The core crate can rebuild derived state, collections, resource ownership, and outputs from canonical inputs, then compare that full recompute against the incremental graph.</p>
+        <div class="section-head">
+          <span class="section-no">03</span>
+          <h2>It checks itself against a full recompute.</h2>
+        </div>
+        <p class="section-intro">Incremental state is presumed guilty. The core crate rebuilds derived state, collections, resource ownership, and outputs from canonical inputs, then asserts that the full recompute equals the incremental graph. The engine ships its own oracle.</p>
         <pre><code>let result = tx.commit()?;
 for command in result.resource_plan.commands() {
     host.apply(command);
 }
 graph.assert_incremental_equals_full()?;</code></pre>
-        <p><a href="https://github.com/pablof7z/trellis/blob/master/crates/trellis-core/src/oracle.rs">Oracle source</a> <span class="muted">/</span> <a href="https://github.com/pablof7z/trellis/blob/master/docs/TESTING.md">Testing docs</a></p>
+        <p class="section-links"><a href="https://github.com/pablof7z/trellis/blob/master/crates/trellis-core/src/oracle.rs">Oracle source</a> <span class="muted">/</span> <a href="https://github.com/pablof7z/trellis/blob/master/docs/TESTING.md">Testing docs</a></p>
       </div>
     </section>
 
-    <section class="section" id="shadow">
+    <section class="section" id="adopt">
       <div class="container split-section">
-        <div>
-          <span class="eyebrow">Do not trust it - shadow it</span>
-          <h2>Run it beside your code.</h2>
+        <div class="section-head">
+          <span class="section-no">04</span>
+          <h2>Adopt it beside your code, not instead of it.</h2>
         </div>
         <div>
-          <p class="section-intro">Trellis returns inert data, so it can run next to the reconciliation path you already trust. Feed both paths the same inputs, compare desired resource state, adjudicate every divergence, and delete the old path last.</p>
-          <p>The first production consumer is a Nostr client framework running this equivalence pattern in shadow mode.</p>
-          <p><a href="https://github.com/pablof7z/trellis/blob/master/docs/SHADOW_MODE.md">Shadow-mode adoption</a> <span class="muted">/</span> <a href="https://github.com/pablof7z/nostr-multi-platform">nostr-multi-platform</a></p>
+          <p class="section-intro">Trellis returns inert data, so it runs next to the reconciliation path you already trust. Feed both the same inputs, compare desired resource state, adjudicate every divergence, and delete the old path last. Shadowing is the adoption method, not a leap of faith.</p>
+          <p>The first production consumer is a Nostr client framework running exactly this equivalence pattern.</p>
+          <p class="section-links"><a href="https://github.com/pablof7z/trellis/blob/master/docs/SHADOW_MODE.md">Shadow-mode adoption</a> <span class="muted">/</span> <a href="https://github.com/pablof7z/nostr-multi-platform">nostr-multi-platform</a></p>
         </div>
       </div>
     </section>
 
     <section class="section" id="where">
       <div class="container">
-        <span class="eyebrow">Where it sits</span>
-        <h2>A reconciler, not a signal library.</h2>
+        <div class="section-head">
+          <span class="section-no">05</span>
+          <h2>A reconciler, not a signal library.</h2>
+        </div>
+        <p class="section-intro">The relatives are the plan phase and the reconcile loop, not observables and query caches. Trellis decides what should happen and hands you the evidence; your host performs the effects.</p>
         <div class="genre-table" role="table" aria-label="Trellis genre table">
           <div role="row"><strong role="cell">Terraform plan</strong><span role="cell">Desired changes as reviewable data before anything executes.</span></div>
           <div role="row"><strong role="cell">Kubernetes reconcile</strong><span role="cell">Ownership, teardown, and convergence, in-process and deterministic.</span></div>
@@ -137,9 +146,11 @@ graph.assert_incremental_equals_full()?;</code></pre>
 
     <section class="section" id="costs">
       <div class="container cost-section">
-        <span class="eyebrow">The honest costs</span>
-        <h2>Per-transaction cost is O(total graph state).</h2>
-        <p class="section-intro">That is the price of structural rollback correctness, deterministic traces, replayable transactions, and a full-recompute oracle. Trellis is a control plane, not a data plane: keep bulk payloads outside the graph.</p>
+        <div class="section-head">
+          <span class="section-no">06</span>
+          <h2>Per-transaction cost is O(total graph state).</h2>
+        </div>
+        <p class="section-intro">That is the deliberate price of structural rollback, deterministic traces, replayable transactions, and a full-recompute oracle. Trellis is a control plane, not a data plane. Keep bulk payloads outside the graph, and the cost model is stated in the open with its own tracked issues.</p>
         <div class="cost-list">
           <a href="https://github.com/pablof7z/trellis/blob/master/docs/PERFORMANCE.md">Performance model</a>
           <a href="https://github.com/pablof7z/trellis/issues/115">#115 clone economy</a>
@@ -151,13 +162,13 @@ graph.assert_incremental_equals_full()?;</code></pre>
 
     <section class="section" id="agents">
       <div class="container split-section">
-        <div>
-          <span class="eyebrow">For your agents</span>
-          <h2>Receipts beat logs.</h2>
+        <div class="section-head">
+          <span class="section-no">07</span>
+          <h2>Receipts beat logs for your agents.</h2>
         </div>
         <div>
-          <p class="section-intro">The agent-facing story is still in development. The direction is narrow: give agents transaction receipts, trace files, and replayable demos instead of asking them to infer resource ownership from logs.</p>
-          <p><a href="https://github.com/pablof7z/trellis/issues/133">Tracked in the launch epic</a></p>
+          <p class="section-intro">Still in development, and the direction is deliberately narrow: hand software agents transaction receipts, trace files, and replayable demos instead of asking them to infer resource ownership from logs. No claim ships here ahead of its demo.</p>
+          <p class="section-links"><a href="https://github.com/pablof7z/trellis/issues/133">Tracked in the launch epic</a></p>
         </div>
       </div>
     </section>

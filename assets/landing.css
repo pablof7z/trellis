@@ -1,9 +1,17 @@
+/* ------------------------------------------------------------------ *
+ * Landing page - THE LEDGER
+ * Elevated execution of the receipt-as-aesthetic identity.
+ * Depends on tokens + primitives from site.css (base/layout/components).
+ * ------------------------------------------------------------------ */
+
+/* ---- Hero ---------------------------------------------------------- */
+
 .landing-hero {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(23rem, 1.1fr);
-  gap: 2rem;
-  align-items: start;
-  padding: 3rem 0 2.5rem;
+  grid-template-columns: minmax(0, 1.02fr) minmax(24rem, 0.98fr);
+  gap: 3rem;
+  align-items: center;
+  padding: 4.5rem 0 3.5rem;
 }
 
 .hero-copy,
@@ -11,31 +19,79 @@
   min-width: 0;
 }
 
-.landing-hero h1 {
-  max-width: 16ch;
+.hero-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+
+.hero-kicker .wordmark {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.hero-kicker .muted {
+  color: var(--ink-muted);
   text-transform: lowercase;
 }
 
-.landing-hero .lead {
-  max-width: 58ch;
+.landing-hero h1 {
+  margin: 1.15rem 0 0;
+  max-width: 22ch;
+  font-family: var(--font-mono);
+  font-size: clamp(2.2rem, 4.4vw, 2.9rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  text-transform: none;
 }
 
+.landing-hero .lead {
+  margin: 1.35rem 0 0;
+  max-width: 54ch;
+  font-size: 1.12rem;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.landing-hero .button-row {
+  margin-top: 1.9rem;
+}
+
+/* ---- Receipt block (the one hero visual) --------------------------- */
+
 .hero-receipt {
-  margin-top: 0.35rem;
+  margin: 0;
+  box-shadow: 0 0 0 1px var(--rule);
+}
+
+.hero-receipt .receipt-head {
+  letter-spacing: 0.1em;
+}
+
+.hero-receipt .receipt-line {
+  padding: 0.12rem 0.1rem;
 }
 
 .receipt-replay {
-  justify-self: start;
+  display: block;
+  width: 100%;
   margin: 0;
   border: 0;
   border-top: 1px solid var(--rule);
-  padding: 0.62rem 0.8rem;
+  padding: 0.7rem 0.8rem;
   background: var(--paper-high);
   color: var(--stamp);
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-align: left;
+  cursor: pointer;
 }
 
 .receipt-replay:hover {
@@ -48,97 +104,197 @@
 }
 
 @keyframes receiptStep {
-  from {
-    background: var(--paper-high);
-  }
-  to {
-    background: var(--paper);
-  }
+  from { background: var(--paper-high); }
+  to   { background: transparent; }
 }
 
-.bug-copy,
-.split-section,
-.receipt-layout,
-.footer-grid {
+/* ---- Section heads: the ledger line-number device ------------------ */
+/* Replaces the uppercase eyebrow-on-every-section rhythm.
+   The number is a ledger marker, consistent and non-templated. */
+
+.section-head {
   display: grid;
-  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-  gap: 2rem;
-  align-items: start;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
 }
+
+.section-no {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--stamp);
+  font-variant-numeric: tabular-nums;
+}
+
+.section-head h2 {
+  font-size: clamp(1.3rem, 2.4vw, 1.62rem);
+  line-height: 1.16;
+  letter-spacing: -0.005em;
+}
+
+.section-intro {
+  margin: 0 0 1.4rem;
+  max-width: 66ch;
+  font-size: 1.06rem;
+}
+
+/* Indent body content to align under the headline, not the number. */
+.section .section-intro,
+.section .bug-copy,
+.section .genre-table,
+.section .cost-list,
+.section .section-links {
+  margin-left: 3.6rem;
+}
+
+.section-links {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.section-links a { text-decoration: none; }
+.section-links a:hover { text-decoration: underline; }
+
+/* ---- Bug section --------------------------------------------------- */
 
 .bug-copy {
-  margin-bottom: 1.2rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+  margin-bottom: 1.6rem;
+  max-width: 62rem;
 }
 
-.bug-copy p,
-.split-section p {
-  margin-top: 0;
+.bug-copy p {
+  margin: 0;
   color: var(--ink-muted);
 }
 
 .demo-frame {
+  margin: 1.6rem 0 0 3.6rem;
   border: 1px solid var(--rule);
   border-radius: 2px;
   overflow: hidden;
   background: var(--paper-high);
 }
 
+.demo-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.demo-caption a { color: var(--stamp); text-decoration: none; }
+.demo-caption a:hover { text-decoration: underline; }
+
 .demo-frame iframe {
   display: block;
   width: 100%;
-  min-height: 760px;
+  min-height: 720px;
   border: 0;
+  background: var(--paper);
 }
 
+/* ---- Receipt (data-surface) section -------------------------------- */
+
 .receipt-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
+  gap: 2.5rem;
   align-items: start;
 }
+
+.receipt-lede .section-intro,
+.receipt-lede .section-links { margin-left: 3.6rem; }
 
 .receipt-code {
   margin: 0;
   max-height: 540px;
 }
 
-.narrow {
-  max-width: 840px;
+/* ---- Oracle section ------------------------------------------------ */
+
+.narrow { max-width: 60rem; }
+
+.narrow > pre {
+  margin-left: 3.6rem;
+  max-width: calc(66ch + 2rem);
 }
 
+/* ---- Adoption / genre split ---------------------------------------- */
+
+.split-section {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.split-section .section-head { margin-bottom: 0; }
+
+.split-section p {
+  margin: 0 0 0.85rem;
+  color: var(--ink-muted);
+}
+
+.split-section .section-intro { margin-left: 0; color: var(--ink); }
+.split-section .section-links { margin-left: 0; }
+
+/* ---- Genre table --------------------------------------------------- */
+
 .genre-table {
-  margin-top: 1.4rem;
+  margin-top: 1.3rem;
+  max-width: 62rem;
 }
 
 .genre-table > div {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  gap: 1rem;
-  padding: 1rem;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 1.2rem;
+  padding: 1rem 1.1rem;
   background: var(--paper-high);
+  transition: none;
 }
+
+.genre-table > div:hover { background: var(--paper); }
 
 .genre-table strong {
   font-family: var(--font-mono);
   font-weight: 500;
+  color: var(--ink);
 }
 
-.genre-table span {
-  color: var(--ink-muted);
-}
+.genre-table span { color: var(--ink-muted); }
+
+/* ---- Cost section -------------------------------------------------- */
 
 .cost-section {
-  padding: 2rem;
+  padding: 2.2rem;
   border: 1px solid var(--rule);
+  border-radius: 2px;
   background: var(--paper-high);
 }
 
-.cost-section .eyebrow {
-  border-color: var(--stamp);
-}
+.cost-section .section-head { margin-bottom: 1rem; }
+.cost-section .section-intro { margin-left: 3.6rem; }
 
 .cost-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 1.2rem;
+  margin-top: 1.3rem;
   font-family: var(--font-mono);
   font-size: 0.78rem;
 }
@@ -148,19 +304,21 @@
   text-decoration: none;
 }
 
-.footer-strip pre {
-  margin: 0.7rem 0 0;
-}
+.cost-list a:hover { border-color: var(--stamp); }
 
-.footer-strip p {
-  margin: 0 0 0.7rem;
-}
+/* ---- Footer -------------------------------------------------------- */
+
+.footer-strip { margin-top: 1rem; }
+.footer-strip pre { margin: 0.7rem 0 0; }
+.footer-strip p { margin: 0 0 0.7rem; }
+
+/* ---- Motion preferences -------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
-  .receipt-line.stepped {
-    animation: none;
-  }
+  .receipt-line.stepped { animation: none; }
 }
+
+/* ---- Responsive ---------------------------------------------------- */
 
 @media (max-width: 900px) {
   .landing-hero,
@@ -173,23 +331,45 @@
   }
 
   .landing-hero {
-    gap: 1rem;
-    padding: 0.9rem 0 0.75rem;
+    gap: 1.6rem;
+    padding: 2.4rem 0 1.5rem;
   }
 
   .landing-hero h1 {
-    margin-top: 0.65rem;
-    font-size: 2rem;
+    margin-top: 0.8rem;
+    font-size: clamp(2rem, 8vw, 2.5rem);
   }
 
   .landing-hero .lead {
-    margin-top: 0.75rem;
-    font-size: 0.92rem;
-    line-height: 1.55;
+    margin-top: 0.9rem;
+    font-size: 1rem;
   }
 
-  .hero-claim {
-    font-size: 1.05rem;
+  /* Keep body content aligned to the page edge on mobile. */
+  .section-head {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .section-no { color: var(--stamp); }
+
+  .section .section-intro,
+  .section .bug-copy,
+  .section .genre-table,
+  .section .cost-list,
+  .section .section-links,
+  .receipt-lede .section-intro,
+  .receipt-lede .section-links,
+  .cost-section .section-intro,
+  .narrow > pre,
+  .demo-frame {
+    margin-left: 0;
+  }
+
+  .genre-table > div {
+    gap: 0.3rem;
+    padding: 0.85rem 0.9rem;
   }
 
   .hero-receipt .receipt-line:nth-child(2),
@@ -199,22 +379,10 @@
   }
 
   .hero-receipt .receipt-line {
-    padding: 0.35rem 0.45rem;
-    font-size: 0.68rem;
-    line-height: 1.35;
+    padding: 0.3rem 0.4rem;
+    font-size: 0.72rem;
+    line-height: 1.4;
   }
 
-  .hero-receipt .receipt-head,
-  .receipt-replay {
-    font-size: 0.65rem;
-    padding: 0.45rem 0.55rem;
-  }
-
-  .hero-receipt .receipt-replay {
-    display: none;
-  }
-
-  .demo-frame iframe {
-    min-height: 720px;
-  }
+  .demo-frame iframe { min-height: 640px; }
 }
