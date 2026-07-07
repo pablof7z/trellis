@@ -31,6 +31,9 @@ pub mod fleetpulse;
 /// CollabCanvas document lifecycle secondary showcase.
 pub mod collab_canvas;
 
+/// PluginHost capability lifecycle secondary showcase.
+pub mod plugin_host;
+
 /// Wrapper-friendly protocol subscription proof shape.
 pub mod protocol_subscription;
 
