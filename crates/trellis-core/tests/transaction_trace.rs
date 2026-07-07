@@ -1,8 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use trellis_core::{
-    AuditEvent, CollectionDiffKind, DependencyList, Graph, OutputFrameKindTrace,
-    ResourceCommandKind, ResourceKey, ResourcePlan, ResourceTransitionPolicy, StagedInputOutcome,
+    AuditEvent, AuditExplanationLevel, CollectionDiffKind, DependencyList, Graph,
+    OutputFrameKindTrace, ResourceCommandKind, ResourceKey, ResourcePlan, ResourceTransitionPolicy,
+    StagedInputOutcome, TransactionOptions,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -17,6 +18,10 @@ fn members(values: &[&str]) -> BTreeSet<String> {
 
 fn key(value: &str) -> ResourceKey {
     ResourceKey::new(format!("resource:{value}"))
+}
+
+fn path_options() -> TransactionOptions {
+    TransactionOptions::default().with_audit_explanations(AuditExplanationLevel::DependencyPaths)
 }
 
 #[test]
@@ -198,4 +203,74 @@ fn transaction_trace_records_transition_policy_separately_from_operation() {
         command.transition_policy,
         ResourceTransitionPolicy::ReplaceAtomically
     );
+}
+
+#[test]
+fn transaction_trace_carries_audit_explanations() {
+    let mut graph = Graph::<Command>::new_with_command_type();
+    let mut tx = graph
+        .begin_transaction_with_options(path_options())
+        .unwrap();
+    let scope = tx.create_scope("scope").unwrap();
+    let source = tx.input::<BTreeSet<String>>("source").unwrap();
+    tx.set_input(source, members(&["a"])).unwrap();
+    let collection = tx
+        .set_collection(
+            "demand",
+            DependencyList::new([source.id()]).unwrap(),
+            move |ctx| Ok(ctx.input(source)?.clone()),
+        )
+        .unwrap();
+    tx.set_resource_planner(collection, scope, move |ctx| {
+        let mut plan = ResourcePlan::new();
+        for added in &ctx.diff().added {
+            plan.open(
+                key(&added.value),
+                ctx.scope(),
+                Command::Open(added.value.clone()),
+            );
+        }
+        Ok(plan)
+    })
+    .unwrap();
+    let output = tx
+        .materialized_output(
+            "output",
+            scope,
+            DependencyList::new([collection.id()]).unwrap(),
+            move |ctx| Ok(ctx.set_collection(collection)?.clone()),
+        )
+        .unwrap();
+    let result = tx.commit().unwrap();
+    drop(tx);
+
+    let trace = result.trace();
+    assert_eq!(
+        trace.audit_explanations.level,
+        AuditExplanationLevel::DependencyPaths
+    );
+    assert!(
+        trace
+            .audit_explanations
+            .node_changes
+            .iter()
+            .any(|explanation| {
+                explanation.node == collection.id()
+                    && explanation.input_causes == vec![source.id()]
+                    && explanation.dependency_paths == vec![vec![source.id(), collection.id()]]
+            })
+    );
+    assert!(
+        trace
+            .audit_explanations
+            .resource_commands
+            .iter()
+            .any(|explanation| explanation.key == key("a")
+                && explanation.input_causes == vec![source.id()])
+    );
+    assert!(trace.audit_explanations.output_frames.iter().any(
+        |explanation| explanation.output_key == output.key()
+            && explanation.changed_dependencies == vec![collection.id()]
+            && explanation.dependency_paths == vec![vec![source.id(), collection.id()]]
+    ));
 }

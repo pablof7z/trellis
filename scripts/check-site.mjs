@@ -51,7 +51,7 @@ function routePath(route) {
 
 const htmlFiles = walk(root).filter((path) => extname(path) === ".html");
 const errors = [];
-const traceFormatVersion = 3;
+const traceFormatVersion = 4;
 const flightRecorderTraces = [
   ["normal-session.json", { closeCommand: true }],
   ["seeded-leak.json", { failingInvariant: true, missingCloseOnRemovedDiff: true }],
@@ -132,6 +132,7 @@ function validateFlightRecorderTrace(file, expectations) {
     for (const field of ["resource_commands", "collection_diffs", "phase_trace", "invariant_results"]) {
       if (!Array.isArray(trace[field])) errors.push(`${prefix} trace.${field} must be an array`);
     }
+    validateAuditExplanations(prefix, trace.audit_explanations);
 
     const commands = Array.isArray(trace.resource_commands) ? trace.resource_commands : [];
     const diffs = Array.isArray(trace.collection_diffs) ? trace.collection_diffs : [];
@@ -163,6 +164,21 @@ function validateFlightRecorderTrace(file, expectations) {
   }
   if (expectations.childBeforeParentClose && !hasChildBeforeParentClose) {
     errors.push(`${file} must close child scope resources before parent scope resources`);
+  }
+}
+
+function validateAuditExplanations(prefix, explanations) {
+  if (!explanations || typeof explanations !== "object" || Array.isArray(explanations)) {
+    errors.push(`${prefix} trace.audit_explanations must be an object`);
+    return;
+  }
+  for (const field of ["node_changes", "resource_commands", "output_frames"]) {
+    if (!Array.isArray(explanations[field])) {
+      errors.push(`${prefix} trace.audit_explanations.${field} must be an array`);
+    }
+  }
+  if (typeof explanations.level !== "string") {
+    errors.push(`${prefix} trace.audit_explanations.level must be a string`);
   }
 }
 

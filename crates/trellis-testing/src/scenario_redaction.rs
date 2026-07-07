@@ -16,6 +16,9 @@ pub(crate) fn redact_trace(
     for entry in &mut trace.audit_log {
         redact_audit_event(&mut entry.event, redactor);
     }
+    for explanation in &mut trace.audit_explanations.resource_commands {
+        explanation.key = redactor.resource_key(&explanation.key);
+    }
     for result in &mut trace.invariant_results {
         result.name = redactor.invariant_name(&result.name);
     }

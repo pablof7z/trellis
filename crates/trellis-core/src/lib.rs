@@ -36,6 +36,7 @@ mod graph_support;
 mod host_status;
 mod ids;
 mod input;
+mod label_audit;
 mod labels;
 mod model;
 mod node;
@@ -62,8 +63,9 @@ mod transaction_types;
 pub use audit_history::{AuditHistory, AuditHistoryError};
 pub(crate) use audit_types::AuditState;
 pub use audit_types::{
-    AuditExplanations, NodeChangeExplanation, OutputFrameExplanation, ResourceCoalescedTrace,
-    ResourceCommandCause, ResourceCommandExplanation, ScopeResourceInventory,
+    AuditExplanations, AuditExplanationsTrace, NodeChangeExplanation, OutputFrameExplanation,
+    ResourceCoalescedTrace, ResourceCommandCause, ResourceCommandExplanation,
+    ScopeResourceInventory,
 };
 pub use collection::CollectionContext;
 pub use collection_diff::{Added, MapDiff, Removed, SetDiff, Unchanged, Updated};

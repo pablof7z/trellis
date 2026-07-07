@@ -360,7 +360,7 @@ or output frame ordering.
 
 The current golden-trace CI gate is
 `cargo test -p trellis-testing --features serde`. It round-trips the
-`serialized_trace_v3.json` fixture and validates the bundled Flight Recorder
+`serialized_trace_v4.json` fixture and validates the bundled Flight Recorder
 trace files against the current `TRACE_FORMAT_VERSION`. A future standalone CLI
 must preserve the same boundary: a trace-only command can validate, inspect, and
 compare structural receipts, while graph re-execution requires an app-provided
@@ -369,9 +369,11 @@ data script and graph builder.
 When serialized traces are intended for offline diagnostics, pass
 `graph.label_registry()` to `SerializedScenario::from_scenario_with_labels`.
 The serializer preserves supplied labels and fills in fallback labels for ids
-referenced by the trace but missing from the final graph snapshot. Redaction and
-symbolication policy remain host-owned: labels help readers avoid interpreting
-bare numeric ids, but they are not graph identity.
+referenced by the trace but missing from the final graph snapshot. Serialized
+transaction traces also carry payload-neutral audit explanation receipts so
+offline readers can inspect input causes and dependency paths without the live
+graph. Redaction and symbolication policy remain host-owned: labels help readers
+avoid interpreting bare numeric ids, but they are not graph identity.
 
 ## Compile-Fail Tests
 

@@ -1,5 +1,5 @@
 {
-  "formatVersion": 3,
+  "formatVersion": 4,
   "provenance": {
     "sourceType": "bundledFixture",
     "generator": "unknown",
@@ -72,6 +72,105 @@
             }
           }
         ],
+        "audit_explanations": {
+          "transaction_id": 1,
+          "revision": 1,
+          "level": "DependencyPaths",
+          "node_changes": [
+            {
+              "node": 1,
+              "transaction_id": 1,
+              "revision": 1,
+              "event": {
+                "InputChanged": 1
+              },
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1
+                ]
+              ]
+            },
+            {
+              "node": 2,
+              "transaction_id": 1,
+              "revision": 1,
+              "event": {
+                "CollectionChanged": 2
+              },
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          ],
+          "resource_commands": [
+            {
+              "key": "relay:wss://market.example/quotes?symbol=AAPL",
+              "scope": 4,
+              "transaction_id": 1,
+              "revision": 1,
+              "kind": "Open",
+              "cause": {
+                "Planner": {
+                  "collection": 2
+                }
+              },
+              "collection_diffs": [
+                2
+              ],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            },
+            {
+              "key": "relay:wss://market.example/quotes?symbol=MSFT",
+              "scope": 4,
+              "transaction_id": 1,
+              "revision": 1,
+              "kind": "Open",
+              "cause": {
+                "Planner": {
+                  "collection": 2
+                }
+              },
+              "collection_diffs": [
+                2
+              ],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          ],
+          "output_frames": []
+        },
         "phase_trace": [
           "StageOperations",
           "ValidateTransaction",
@@ -145,6 +244,65 @@
             }
           }
         ],
+        "audit_explanations": {
+          "transaction_id": 2,
+          "revision": 2,
+          "level": "DependencyPaths",
+          "node_changes": [
+            {
+              "node": 5,
+              "transaction_id": 2,
+              "revision": 2,
+              "event": {
+                "InputChanged": 5
+              },
+              "input_causes": [
+                5
+              ],
+              "dependency_paths": [
+                [
+                  5
+                ]
+              ]
+            },
+            {
+              "node": 6,
+              "transaction_id": 2,
+              "revision": 2,
+              "event": {
+                "DerivedChanged": 6
+              },
+              "input_causes": [
+                5
+              ],
+              "dependency_paths": [
+                [
+                  5,
+                  6
+                ]
+              ]
+            },
+            {
+              "node": 2,
+              "transaction_id": 2,
+              "revision": 2,
+              "event": {
+                "CollectionChanged": 2
+              },
+              "input_causes": [
+                5
+              ],
+              "dependency_paths": [
+                [
+                  5,
+                  2
+                ]
+              ]
+            }
+          ],
+          "resource_commands": [],
+          "output_frames": []
+        },
         "phase_trace": [
           "StageOperations",
           "ValidateTransaction",
@@ -221,6 +379,77 @@
             }
           }
         ],
+        "audit_explanations": {
+          "transaction_id": 3,
+          "revision": 3,
+          "level": "DependencyPaths",
+          "node_changes": [
+            {
+              "node": 1,
+              "transaction_id": 3,
+              "revision": 3,
+              "event": {
+                "InputChanged": 1
+              },
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1
+                ]
+              ]
+            },
+            {
+              "node": 2,
+              "transaction_id": 3,
+              "revision": 3,
+              "event": {
+                "CollectionChanged": 2
+              },
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          ],
+          "resource_commands": [
+            {
+              "key": "relay:wss://market.example/quotes?symbol=MSFT",
+              "scope": 4,
+              "transaction_id": 3,
+              "revision": 3,
+              "kind": "Close",
+              "cause": {
+                "Planner": {
+                  "collection": 2
+                }
+              },
+              "collection_diffs": [
+                2
+              ],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          ],
+          "output_frames": []
+        },
         "phase_trace": [
           "StageOperations",
           "ValidateTransaction",

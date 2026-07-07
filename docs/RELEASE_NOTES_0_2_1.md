@@ -22,6 +22,8 @@ authority-promotion consumer.
   command payloads.
 - `TransactionResult` and `TransactionTrace` include
   `resource_coalescences`.
+- Serialized trace artifacts are format v4 and include payload-neutral
+  `audit_explanations` for offline diagnosis.
 - `AuditEvent` is no longer `Copy` because resource coalescing audit entries
   carry a `ResourceKey`.
 

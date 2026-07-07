@@ -1,5 +1,5 @@
 {
-  "formatVersion": 3,
+  "formatVersion": 4,
   "provenance": {
     "sourceType": "bundledFixture",
     "generator": "unknown",
@@ -72,6 +72,105 @@
             }
           }
         ],
+        "audit_explanations": {
+          "transaction_id": 1,
+          "revision": 1,
+          "level": "DependencyPaths",
+          "node_changes": [
+            {
+              "node": 1,
+              "transaction_id": 1,
+              "revision": 1,
+              "event": {
+                "InputChanged": 1
+              },
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1
+                ]
+              ]
+            },
+            {
+              "node": 2,
+              "transaction_id": 1,
+              "revision": 1,
+              "event": {
+                "CollectionChanged": 2
+              },
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          ],
+          "resource_commands": [
+            {
+              "key": "relay:wss://relay.damus.io?filter=contacts",
+              "scope": 1,
+              "transaction_id": 1,
+              "revision": 1,
+              "kind": "Open",
+              "cause": {
+                "Planner": {
+                  "collection": 2
+                }
+              },
+              "collection_diffs": [
+                2
+              ],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            },
+            {
+              "key": "relay:wss://nos.lol?filter=contacts",
+              "scope": 1,
+              "transaction_id": 1,
+              "revision": 1,
+              "kind": "Open",
+              "cause": {
+                "Planner": {
+                  "collection": 2
+                }
+              },
+              "collection_diffs": [
+                2
+              ],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          ],
+          "output_frames": []
+        },
         "phase_trace": [
           "StageOperations",
           "ValidateTransaction",
@@ -154,6 +253,105 @@
             }
           }
         ],
+        "audit_explanations": {
+          "transaction_id": 2,
+          "revision": 2,
+          "level": "DependencyPaths",
+          "node_changes": [
+            {
+              "node": 1,
+              "transaction_id": 2,
+              "revision": 2,
+              "event": {
+                "InputChanged": 1
+              },
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1
+                ]
+              ]
+            },
+            {
+              "node": 2,
+              "transaction_id": 2,
+              "revision": 2,
+              "event": {
+                "CollectionChanged": 2
+              },
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          ],
+          "resource_commands": [
+            {
+              "key": "relay:wss://relay.damus.io?filter=contacts",
+              "scope": 1,
+              "transaction_id": 2,
+              "revision": 2,
+              "kind": "Close",
+              "cause": {
+                "Planner": {
+                  "collection": 2
+                }
+              },
+              "collection_diffs": [
+                2
+              ],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            },
+            {
+              "key": "relay:wss://relay.primal.net?filter=follows",
+              "scope": 1,
+              "transaction_id": 2,
+              "revision": 2,
+              "kind": "Open",
+              "cause": {
+                "Planner": {
+                  "collection": 2
+                }
+              },
+              "collection_diffs": [
+                2
+              ],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          ],
+          "output_frames": []
+        },
         "phase_trace": [
           "StageOperations",
           "ValidateTransaction",
@@ -241,6 +439,87 @@
             }
           }
         ],
+        "audit_explanations": {
+          "transaction_id": 3,
+          "revision": 3,
+          "level": "DependencyPaths",
+          "node_changes": [
+            {
+              "node": 3,
+              "transaction_id": 3,
+              "revision": 3,
+              "event": {
+                "InputChanged": 3
+              },
+              "input_causes": [
+                3
+              ],
+              "dependency_paths": [
+                [
+                  3
+                ]
+              ]
+            },
+            {
+              "node": 2,
+              "transaction_id": 3,
+              "revision": 3,
+              "event": {
+                "CollectionChanged": 2
+              },
+              "input_causes": [
+                3
+              ],
+              "dependency_paths": [
+                [
+                  3,
+                  2
+                ]
+              ]
+            }
+          ],
+          "resource_commands": [
+            {
+              "key": "relay:wss://nos.lol?filter=contacts",
+              "scope": 1,
+              "transaction_id": 3,
+              "revision": 3,
+              "kind": "Close",
+              "cause": {
+                "ScopeClosed": {
+                  "scope": 1
+                }
+              },
+              "collection_diffs": [],
+              "changed_nodes": [
+                3,
+                2
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            },
+            {
+              "key": "relay:wss://relay.primal.net?filter=follows",
+              "scope": 1,
+              "transaction_id": 3,
+              "revision": 3,
+              "kind": "Close",
+              "cause": {
+                "ScopeClosed": {
+                  "scope": 1
+                }
+              },
+              "collection_diffs": [],
+              "changed_nodes": [
+                3,
+                2
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ],
+          "output_frames": []
+        },
         "phase_trace": [
           "StageOperations",
           "ValidateTransaction",

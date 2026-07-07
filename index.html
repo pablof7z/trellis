@@ -76,11 +76,11 @@
             <span class="section-no">02</span>
             <h2>The receipt is the product surface.</h2>
           </div>
-          <p class="section-intro">Every committed transaction returns the facts a reviewer needs: changed inputs, recomputed nodes, structural diffs, resource commands, output frames, scope events, and the full phase trace. It is data, not a log line.</p>
+          <p class="section-intro">Every committed transaction returns the facts a reviewer needs: changed inputs, recomputed nodes, structural diffs, resource commands, output frames, audit explanations, scope events, and the full phase trace. It is data, not a log line.</p>
           <p class="section-links"><a href="https://github.com/pablof7z/trellis/blob/master/crates/trellis-core/src/transaction_types.rs">TransactionResult source</a> <span class="muted">/</span> <a href="/demos/flight-recorder">Open Flight Recorder</a></p>
         </div>
         <pre class="receipt-code"><code>{
-  "formatVersion": 2,
+  "formatVersion": 4,
   "trace": {
     "transaction_id": 2,
     "revision": 2,
@@ -92,6 +92,10 @@
       {"kind": "Close", "transition_policy": "Close", "key": "relay:wss://relay.damus.io?filter=contacts"},
       {"kind": "Open", "transition_policy": "Open", "key": "relay:wss://relay.primal.net?filter=follows"}
     ],
+    "audit_explanations": {
+      "level": "DependencyPaths",
+      "resource_commands": [{"input_causes": [1], "dependency_paths": [[1, 2]]}]
+    },
     "phase_trace": ["StageOperations", "...", "ReturnTransactionResult"]
   }
 }</code></pre>

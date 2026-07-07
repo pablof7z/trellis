@@ -1,5 +1,5 @@
 {
-  "formatVersion": 3,
+  "formatVersion": 4,
   "provenance": {
     "sourceType": "bundledFixture",
     "generator": "unknown",
@@ -87,6 +87,133 @@
             }
           }
         ],
+        "audit_explanations": {
+          "transaction_id": 1,
+          "revision": 1,
+          "level": "DependencyPaths",
+          "node_changes": [
+            {
+              "node": 1,
+              "transaction_id": 1,
+              "revision": 1,
+              "event": {
+                "InputChanged": 1
+              },
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1
+                ]
+              ]
+            },
+            {
+              "node": 2,
+              "transaction_id": 1,
+              "revision": 1,
+              "event": {
+                "CollectionChanged": 2
+              },
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          ],
+          "resource_commands": [
+            {
+              "key": "relay:wss://chat.example/workspace/alpha",
+              "scope": 8,
+              "transaction_id": 1,
+              "revision": 1,
+              "kind": "Open",
+              "cause": {
+                "Planner": {
+                  "collection": 2
+                }
+              },
+              "collection_diffs": [
+                2
+              ],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            },
+            {
+              "key": "watcher:file:///alpha/config.toml",
+              "scope": 9,
+              "transaction_id": 1,
+              "revision": 1,
+              "kind": "Open",
+              "cause": {
+                "Planner": {
+                  "collection": 2
+                }
+              },
+              "collection_diffs": [
+                2
+              ],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            },
+            {
+              "key": "job:analysis:alpha",
+              "scope": 9,
+              "transaction_id": 1,
+              "revision": 1,
+              "kind": "Open",
+              "cause": {
+                "Planner": {
+                  "collection": 2
+                }
+              },
+              "collection_diffs": [
+                2
+              ],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          ],
+          "output_frames": []
+        },
         "phase_trace": [
           "StageOperations",
           "ValidateTransaction",
@@ -191,6 +318,106 @@
             }
           }
         ],
+        "audit_explanations": {
+          "transaction_id": 2,
+          "revision": 2,
+          "level": "DependencyPaths",
+          "node_changes": [
+            {
+              "node": 1,
+              "transaction_id": 2,
+              "revision": 2,
+              "event": {
+                "InputChanged": 1
+              },
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1
+                ]
+              ]
+            },
+            {
+              "node": 2,
+              "transaction_id": 2,
+              "revision": 2,
+              "event": {
+                "CollectionChanged": 2
+              },
+              "input_causes": [
+                1
+              ],
+              "dependency_paths": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          ],
+          "resource_commands": [
+            {
+              "key": "job:analysis:alpha",
+              "scope": 9,
+              "transaction_id": 2,
+              "revision": 2,
+              "kind": "Close",
+              "cause": {
+                "ScopeClosed": {
+                  "scope": 9
+                }
+              },
+              "collection_diffs": [],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            },
+            {
+              "key": "watcher:file:///alpha/config.toml",
+              "scope": 9,
+              "transaction_id": 2,
+              "revision": 2,
+              "kind": "Close",
+              "cause": {
+                "ScopeClosed": {
+                  "scope": 9
+                }
+              },
+              "collection_diffs": [],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            },
+            {
+              "key": "relay:wss://chat.example/workspace/alpha",
+              "scope": 8,
+              "transaction_id": 2,
+              "revision": 2,
+              "kind": "Close",
+              "cause": {
+                "ScopeClosed": {
+                  "scope": 8
+                }
+              },
+              "collection_diffs": [],
+              "changed_nodes": [
+                1,
+                2
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ],
+          "output_frames": []
+        },
         "phase_trace": [
           "StageOperations",
           "ValidateTransaction",

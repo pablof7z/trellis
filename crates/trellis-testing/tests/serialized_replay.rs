@@ -14,7 +14,7 @@ use trellis_testing::{
 };
 
 const GOLDEN_SCRIPT: &str = r#"{
-  "formatVersion": 3,
+  "formatVersion": 4,
   "steps": [
     {
       "name": "open",
@@ -37,7 +37,7 @@ const GOLDEN_SCRIPT: &str = r#"{
   ]
 }"#;
 
-const GOLDEN_TRACE: &str = include_str!("fixtures/serialized_trace_v3.json");
+const GOLDEN_TRACE: &str = include_str!("fixtures/serialized_trace_v4.json");
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Command {
@@ -188,7 +188,7 @@ fn resource_key_json_accepts_legacy_strings_and_structured_segments() {
 
 #[test]
 fn unsupported_script_version_is_a_graceful_replay_error() {
-    let json = GOLDEN_SCRIPT.replace("\"formatVersion\": 3", "\"formatVersion\": 99");
+    let json = GOLDEN_SCRIPT.replace("\"formatVersion\": 4", "\"formatVersion\": 99");
     let script = DataTransactionScript::<Operation>::from_json(&json).unwrap();
     let error = match replay(&script) {
         Ok(_) => panic!("unsupported script version replayed"),
@@ -211,7 +211,7 @@ fn unsupported_trace_file_version_is_a_graceful_error() {
     let json = SerializedScenario::from_scenario(first.scenario())
         .to_json()
         .unwrap()
-        .replace("\"formatVersion\": 3", "\"formatVersion\": 99");
+        .replace("\"formatVersion\": 4", "\"formatVersion\": 99");
     let trace_file = SerializedScenario::from_json(&json).unwrap();
     let error = match trace_file.into_scenario() {
         Ok(_) => panic!("unsupported trace version loaded"),

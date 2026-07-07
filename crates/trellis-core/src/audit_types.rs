@@ -69,8 +69,53 @@ impl AuditExplanations {
     }
 }
 
+/// Serializable explanation records retained by a transaction trace.
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct AuditExplanationsTrace {
+    /// Transaction that produced these explanations.
+    pub transaction_id: TransactionId,
+    /// Graph revision after the transaction committed.
+    pub revision: Revision,
+    /// Explanation depth requested for the transaction.
+    pub level: AuditExplanationLevel,
+    /// Node-change explanations in stable node-id order.
+    pub node_changes: Vec<NodeChangeExplanation>,
+    /// Resource-command explanations in stable resource-key order.
+    pub resource_commands: Vec<ResourceCommandExplanation>,
+    /// Output-frame explanations in stable output-key order.
+    pub output_frames: Vec<OutputFrameExplanation>,
+}
+
+impl Default for AuditExplanationsTrace {
+    fn default() -> Self {
+        Self {
+            transaction_id: TransactionId::default(),
+            revision: Revision::default(),
+            level: AuditExplanationLevel::Disabled,
+            node_changes: Vec::new(),
+            resource_commands: Vec::new(),
+            output_frames: Vec::new(),
+        }
+    }
+}
+
+impl From<&AuditExplanations> for AuditExplanationsTrace {
+    fn from(explanations: &AuditExplanations) -> Self {
+        Self {
+            transaction_id: explanations.transaction_id,
+            revision: explanations.revision,
+            level: explanations.level,
+            node_changes: explanations.node_changes.values().cloned().collect(),
+            resource_commands: explanations.resource_commands.values().cloned().collect(),
+            output_frames: explanations.output_frames.values().cloned().collect(),
+        }
+    }
+}
+
 /// Explanation for why a node last changed.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NodeChangeExplanation {
     /// Node that changed.
     pub node: NodeId,
@@ -88,6 +133,7 @@ pub struct NodeChangeExplanation {
 
 /// Explanation for the latest command emitted for a resource key.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ResourceCommandExplanation {
     /// Resource key.
     pub key: ResourceKey,
@@ -113,6 +159,7 @@ pub struct ResourceCommandExplanation {
 
 /// Graph-visible cause for an emitted resource command.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ResourceCommandCause {
     /// A resource planner ran because a collection diff was available.
     Planner {
@@ -140,6 +187,7 @@ pub struct ResourceCoalescedTrace {
 
 /// Explanation for the latest frame emitted for an output key.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OutputFrameExplanation {
     /// Output key.
     pub output_key: OutputKey,
