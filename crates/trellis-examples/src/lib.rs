@@ -22,6 +22,9 @@ pub mod mini_language_server;
 /// Telemetry dashboard proof shape.
 pub mod telemetry_dashboard;
 
+/// FleetPulse telemetry dashboard flagship showcase.
+pub mod fleetpulse;
+
 /// Wrapper-friendly protocol subscription proof shape.
 pub mod protocol_subscription;
 
