@@ -116,18 +116,23 @@ steps. Each step contains the payload-neutral `TransactionTrace`, host-status
 metadata, resource commands, output frames, scope events, audit receipts,
 phase trace, and a full-recompute invariant result.
 
-## Trellis Observatory Trace Viewer
+## Trellis Observatory Showcase Lab
 
 File: `examples/codebase-observatory/`
 
-The browser Observatory opens on a trace-contract viewer backed by committed
-fixtures generated from the three headless scripts above. It can switch between
-Workspace Sync Board, Mini Language Server, and FleetPulse traces, then inspect
-transactions, graph activity, collection diffs, resource plans, output frames,
-scope events, host statuses, full-recompute oracle results, replay metadata,
-conformance status, and structural cost counts. Clicking a command, frame,
-scope event, or host status shows the available structural cause: transaction
-id, revision, scope, identity, and the input/diff context from the same trace.
+The browser Observatory opens on an interactive showcase lab backed by committed
+fixtures generated from the three headless scripts above. The lab exposes each
+script step as a user action and derives its board/workbench/dashboard panels
+from resource commands, output frames, collection diffs, host statuses, replay
+metadata, and invariant results in the same trace.
+
+The `Trace viewer` switch opens the structural inspector for the same fixtures.
+It can inspect transactions, graph activity, collection diffs, resource plans,
+output frames, scope events, host statuses, full-recompute oracle results,
+replay metadata, conformance status, and structural cost counts. Clicking a
+command, frame, scope event, or host status shows the available structural
+cause: transaction id, revision, scope, identity, and the input/diff context
+from the same trace.
 
 ## Protocol Subscription Wrapper
 
