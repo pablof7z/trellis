@@ -10,6 +10,9 @@
 /// Workspace-driven sync proof shape.
 pub mod workspace_sync;
 
+/// Workspace Sync Board flagship showcase.
+pub mod workspace_sync_board;
+
 /// Shared headless showcase trace contract.
 pub mod showcase_trace;
 

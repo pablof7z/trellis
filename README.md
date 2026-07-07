@@ -297,7 +297,7 @@ compared against a full recompute. If the engine ever lies, you can catch it.
   fake host status helpers, audit assertions, and conformance support.
 - `trellis-adapter`: runtime-neutral boundary for applying returned plans and
   emitting returned frames outside graph propagation.
-- `trellis-examples`: proof examples — workspace-driven sync, a mini language
+- `trellis-examples`: proof examples — Workspace Sync Board, a mini language
   server, a telemetry dashboard, and a wrapper-friendly protocol subscription
   engine.
 - `trellis-bench`: benchmark smoke coverage for propagation, diffs, teardown,
@@ -308,7 +308,7 @@ compared against a full recompute. If the engine ever lies, you can catch it.
 The examples live outside the core crate so domain vocabulary does not leak
 into the runtime:
 
-- workspace-driven sync;
+- Workspace Sync Board;
 - mini language server diagnostics;
 - telemetry dashboard subscriptions;
 - wrapper-friendly protocol subscription API (dynamic per-session scopes,

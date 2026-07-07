@@ -9,18 +9,25 @@ Product-facing showcase APIs should also follow the
 an app-owned wrapper, while hosts send domain events and receive typed domain
 effects and frames.
 
-## Workspace Sync
+## Workspace Sync Board
 
-File: `crates/trellis-examples/src/workspace_sync.rs`
+File: `crates/trellis-examples/src/workspace_sync_board/`
+
+This is the flagship local-first showcase and supersedes the compact
+`workspace_sync.rs` proof module for product-facing API decisions. It exposes
+`WorkspaceBoardApp` with `open_workspace_board`, `apply_user_event`,
+`drain_sync_effects`, `drain_output`, and `close`; Trellis graph handles,
+resource commands, scopes, and output keys remain private.
 
 Shape:
 
 ```text
-active workspace
- -> permitted project set
- -> sync window collection
- -> resource plan
- -> issue board output
+active user
+ -> selected org/workspace or personal view
+ -> permission set
+ -> visible project set
+ -> project/comment/profile sync windows
+ -> materialized issue board frames
 ```
 
 Covered behavior:
@@ -28,7 +35,12 @@ Covered behavior:
 - workspace switch closes old sync windows;
 - permission revoke clears forbidden rows;
 - empty workspace opens no windows;
+- assigned-to-me view derives projects from cached issue assignees;
+- visible-column filter changes emit a board rebaseline;
 - incremental result is checked against full recompute.
+
+Compact proof: `crates/trellis-examples/src/workspace_sync.rs` keeps the
+smallest graph shape for invariant tests.
 
 ## Mini Language Server
 
