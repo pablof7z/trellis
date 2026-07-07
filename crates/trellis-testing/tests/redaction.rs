@@ -1,7 +1,8 @@
 #![cfg(feature = "serde")]
 
 use trellis_core::{
-    AuditEntry, AuditEvent, Graph, ResourceCoalescedTrace, ResourceCommandKind,
+    AuditEntry, AuditEvent, AuditExplanationLevel, AuditExplanationsTrace, Graph,
+    ResourceCoalescedTrace, ResourceCommandCause, ResourceCommandExplanation, ResourceCommandKind,
     ResourceCommandTrace, ResourceKey, ResourceTransitionPolicy, Revision, ScopeId, TransactionId,
     TransactionTrace,
 };
@@ -21,8 +22,21 @@ fn redacted_trace_json_removes_resource_keys_from_audit_log() {
     let command_key = ResourceKey::new("secret-command-key-issue-161");
     let coalesced_key = ResourceKey::new("secret-coalesced-trace-key-issue-161");
     let audit_key = ResourceKey::new("secret-audit-log-key-issue-161");
+    let explanation_key = ResourceKey::new("secret-explanation-key-issue-165");
     let transaction_id = TransactionId::new(161);
     let revision = Revision::new(9);
+    let resource_explanations = vec![ResourceCommandExplanation {
+        key: explanation_key.clone(),
+        scope,
+        transaction_id,
+        revision,
+        kind: ResourceCommandKind::Open,
+        cause: ResourceCommandCause::ScopeClosed { scope },
+        collection_diffs: Vec::new(),
+        changed_nodes: Vec::new(),
+        input_causes: Vec::new(),
+        dependency_paths: Vec::new(),
+    }];
     let trace = TransactionTrace {
         transaction_id,
         revision,
@@ -56,6 +70,14 @@ fn redacted_trace_json_removes_resource_keys_from_audit_log() {
                 existing_owner_count: 2,
             },
         }],
+        audit_explanations: AuditExplanationsTrace {
+            transaction_id,
+            revision,
+            level: AuditExplanationLevel::Summary,
+            node_changes: Vec::new(),
+            resource_commands: resource_explanations,
+            output_frames: Vec::new(),
+        },
         phase_trace: Vec::new(),
         invariant_results: Vec::new(),
     };
@@ -75,6 +97,7 @@ fn redacted_trace_json_removes_resource_keys_from_audit_log() {
         command_key.as_str(),
         coalesced_key.as_str(),
         audit_key.as_str(),
+        explanation_key.as_str(),
     ] {
         assert!(
             !json.contains(original),

@@ -1,7 +1,7 @@
 use crate::{
-    AuditEntry, ClearReason, CollectionDiffTrace, InvariantResultTrace, OutputFrameKind, OutputKey,
-    RebaselineReason, ResourceCommand, ResourceKey, ScopeId, ScopeLifecycleTrace,
-    StagedInputChange, TransactionId, TransactionPhase, TransactionResult,
+    AuditEntry, AuditExplanationsTrace, ClearReason, CollectionDiffTrace, InvariantResultTrace,
+    OutputFrameKind, OutputKey, RebaselineReason, ResourceCommand, ResourceKey, ScopeId,
+    ScopeLifecycleTrace, StagedInputChange, TransactionId, TransactionPhase, TransactionResult,
 };
 use crate::{NodeId, ResourceCoalescedTrace, Revision};
 
@@ -43,6 +43,8 @@ pub struct TransactionTrace {
     pub scope_events: Vec<ScopeLifecycleTrace>,
     /// Audit log emitted by the transaction.
     pub audit_log: Vec<AuditEntry>,
+    /// Payload-neutral audit explanations retained by the transaction receipt.
+    pub audit_explanations: AuditExplanationsTrace,
     /// Phase trace emitted by the transaction.
     pub phase_trace: Vec<TransactionPhase>,
     /// Optional invariant results layered by testing support.
@@ -83,6 +85,7 @@ impl TransactionTrace {
                 .collect(),
             scope_events: result.scope_events.clone(),
             audit_log: result.audit_log.clone(),
+            audit_explanations: AuditExplanationsTrace::from(&result.audit_explanations),
             phase_trace: result.phase_trace.clone(),
             invariant_results: result.invariant_results.clone(),
         }

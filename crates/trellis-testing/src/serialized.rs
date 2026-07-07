@@ -3,7 +3,7 @@ use trellis_core::{GraphLabelRegistry, TransactionTrace};
 use crate::{Scenario, ScenarioError};
 
 /// Version for serialized Trellis script and trace artifacts.
-pub const TRACE_FORMAT_VERSION: u32 = 3;
+pub const TRACE_FORMAT_VERSION: u32 = 4;
 
 /// A versioned, data-only transaction script.
 #[derive(Clone, Debug, Eq, PartialEq)]

@@ -176,6 +176,7 @@ impl GraphLabelRegistry {
         for entry in &trace.audit_log {
             self.include_audit_event_defaults(&entry.event);
         }
+        self.include_audit_explanation_defaults(&trace.audit_explanations);
     }
 
     fn include_audit_event_defaults(&mut self, event: &AuditEvent) {
@@ -201,25 +202,25 @@ impl GraphLabelRegistry {
         }
     }
 
-    fn label_node_if_absent(&mut self, id: NodeId, label: String) {
+    pub(crate) fn label_node_if_absent(&mut self, id: NodeId, label: String) {
         if !self.nodes.iter().any(|entry| entry.id == id) {
             self.label_node(id, label);
         }
     }
 
-    fn label_scope_if_absent(&mut self, id: ScopeId, label: String) {
+    pub(crate) fn label_scope_if_absent(&mut self, id: ScopeId, label: String) {
         if !self.scopes.iter().any(|entry| entry.id == id) {
             self.label_scope(id, label);
         }
     }
 
-    fn label_resource_if_absent(&mut self, key: ResourceKey, label: String) {
+    pub(crate) fn label_resource_if_absent(&mut self, key: ResourceKey, label: String) {
         if !self.resources.iter().any(|entry| entry.key == key) {
             self.label_resource(key, label);
         }
     }
 
-    fn label_output_if_absent(&mut self, key: OutputKey, label: String) {
+    pub(crate) fn label_output_if_absent(&mut self, key: OutputKey, label: String) {
         if !self.outputs.iter().any(|entry| entry.key == key) {
             self.label_output(key, label);
         }
@@ -263,14 +264,14 @@ fn upsert_by<T, K>(
     entries.sort_by_key(|entry| entry_key(entry));
 }
 
-fn node_fallback(id: NodeId) -> String {
+pub(crate) fn node_fallback(id: NodeId) -> String {
     format!("node/{}", id.get())
 }
 
-fn scope_fallback(id: ScopeId) -> String {
+pub(crate) fn scope_fallback(id: ScopeId) -> String {
     format!("scope/{}", id.get())
 }
 
-fn output_fallback(key: OutputKey) -> String {
+pub(crate) fn output_fallback(key: OutputKey) -> String {
     format!("output/{}", key.get())
 }

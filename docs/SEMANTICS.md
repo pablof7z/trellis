@@ -262,6 +262,7 @@ Core trace data includes:
 - output frame identity, scope, revision, and frame kind;
 - scope lifecycle events;
 - audit entries;
+- payload-neutral audit explanation receipts;
 - transaction phase order;
 - optional invariant results added by test support.
 
@@ -292,12 +293,13 @@ A structural trace file is a receipt, not an executable script. Loading a
 inspection, redaction, fixture comparison, and golden-trace drift checks. It
 also carries a label registry so offline readers can render stable labels for
 ids that appear in the trace, including historical resource keys no longer live
-in the final graph. It cannot re-run an application graph by itself because
-core traces intentionally exclude application operations, command payloads,
-output payloads, and the host-owned graph builder. Cross-process re-execution
-starts from an app-defined `DataTransactionScript`, the app's operation decoder,
-and the same app-owned graph construction code that produced the original
-scenario.
+in the final graph. It also carries payload-neutral audit explanations with
+input causes and dependency paths when the recorded transaction requested them.
+It cannot re-run an application graph by itself because core traces
+intentionally exclude application operations, command payloads, output payloads,
+and the host-owned graph builder. Cross-process re-execution starts from an
+app-defined `DataTransactionScript`, the app's operation decoder, and the same
+app-owned graph construction code that produced the original scenario.
 
 ## Equality and propagation
 

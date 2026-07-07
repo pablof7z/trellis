@@ -37,6 +37,7 @@ impl TransactionOptions {
 
 /// Amount of latest audit explanation state retained on the graph.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum AuditExplanationLevel {
     /// Clear graph-retained explanations and skip explanation indexing.
     Disabled,

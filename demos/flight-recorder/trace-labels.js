@@ -1,4 +1,4 @@
-export const FORMAT_VERSION = 3;
+export const FORMAT_VERSION = 4;
 
 export function validateLabelRegistry(registry, errors) {
   if (!registry || typeof registry !== "object" || Array.isArray(registry)) {

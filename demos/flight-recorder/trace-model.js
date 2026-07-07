@@ -78,6 +78,15 @@ export function validateTrace(candidate) {
     if (step.trace.revision == null) {
       errors.push(`steps[${index}].trace.revision: missing required value`);
     }
+    if (!step.trace.audit_explanations || typeof step.trace.audit_explanations !== "object" || Array.isArray(step.trace.audit_explanations)) {
+      errors.push(`steps[${index}].trace.audit_explanations: missing required object`);
+    } else {
+      for (const field of ["node_changes", "resource_commands", "output_frames"]) {
+        if (!Array.isArray(step.trace.audit_explanations[field])) {
+          errors.push(`steps[${index}].trace.audit_explanations.${field}: missing required array`);
+        }
+      }
+    }
   });
   return errors;
 }
@@ -139,6 +148,7 @@ function normalizeStep(step, index, labels) {
     outputFrames: trace.output_frames.map((frame) => normalizeOutputFrame(frame, labels)),
     scopeEvents: (trace.scope_events ?? []).map((event) => normalizeScopeEvent(event, labels)),
     auditLog: trace.audit_log ?? [],
+    auditExplanations: trace.audit_explanations,
     phaseTrace: trace.phase_trace.map(String),
     invariantResults: trace.invariant_results.map(normalizeInvariant),
   };
