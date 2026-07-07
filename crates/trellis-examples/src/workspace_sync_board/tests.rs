@@ -149,6 +149,43 @@ fn close_tears_down_scope_and_clears_output() {
     );
 }
 
+#[test]
+fn seeded_bug_capsules_are_discoverable_and_detect_failures() {
+    let capsules = available_bug_capsules();
+    assert_eq!(capsules.len(), 4);
+    assert!(capsules.iter().any(|capsule| {
+        capsule.name == "workspace-switch-closes-old-windows"
+            && capsule
+                .expected_failure_ids
+                .contains(&"old-workspace-sync-window-closed".to_owned())
+    }));
+
+    let reports = run_all_bug_capsules();
+    assert_eq!(reports.len(), 4);
+    for report in reports {
+        assert_eq!(report.status, "pass", "{report:#?}");
+        assert!(report.success_path.passed, "{report:#?}");
+        assert!(!report.seeded_bug_path.passed, "{report:#?}");
+        assert!(report.expected_failures_detected, "{report:#?}");
+        for failure in &report.seeded_bug_path.failed_checks {
+            assert!(failure.failure_text.contains(&failure.source));
+            assert!(failure.failure_text.contains(&report.lifecycle_invariant));
+        }
+    }
+}
+
+#[test]
+fn named_seeded_bug_capsule_runs_independently() {
+    let report = run_bug_capsule("workspace-revoke-clears-project-rows").unwrap();
+
+    assert_eq!(report.status, "pass");
+    assert!(report.seeded_bug_path.failed_checks.iter().any(|failure| {
+        failure.id == "revoked-project-rows-cleared"
+            && failure.failure_text.contains("OutputLedger")
+    }));
+    assert!(run_bug_capsule("missing-capsule").is_none());
+}
+
 fn assert_oracle_trace(app: &mut WorkspaceBoardApp) {
     let traces = app.drain_diagnostic_traces();
     assert!(traces.iter().any(|trace| {

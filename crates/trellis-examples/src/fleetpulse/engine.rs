@@ -188,8 +188,7 @@ impl FleetPulseApp {
         self.showcase_statuses.drain(..).collect()
     }
 
-    #[cfg(test)]
-    pub(super) fn close_panel_for_test(
+    pub(super) fn close_panel(
         &mut self,
         handle: FleetDashboardHandle,
         panel: FleetPanel,
