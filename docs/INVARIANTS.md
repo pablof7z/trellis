@@ -3,6 +3,11 @@
 These invariants are part of Trellis' specification. A change that weakens one
 must update this document and the linked tests in the same PR.
 
+For public-facing claims, pair these invariant rows with the proof-packet
+matrix in [Testing](TESTING.md#proof-packet-validation-matrix). That matrix
+states the claim boundary, executable evidence, and limitation before the claim
+appears in docs, demos, release notes, essays, or marketing copy.
+
 ## Deterministic Replay
 
 The same graph shape and same canonical input sequence must produce the same
