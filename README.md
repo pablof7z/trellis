@@ -175,13 +175,13 @@ regressions), scenario replay with trace equality, and conformance levels.
 
 ## Don't trust it — shadow it
 
-Because Trellis returns plans instead of executing effects, you can adopt it
-with zero risk: run a graph *beside* your existing bespoke reconciliation
-logic, feed it the same inputs, and compare its plan against what your code
-decided — on real production traffic, while your existing path stays
-authoritative. Two engines that perform effects would collide; two engines
-that return data just get compared. Deleting your bespoke code is the *last*
-step of adoption, not the first.
+Because Trellis returns plans instead of executing effects, shadow-only
+adoption has zero effect-collision risk: run a graph *beside* your existing
+bespoke reconciliation logic, feed both paths the same canonical inputs, and
+compare desired resource/output state on real production traffic while your
+existing path stays authoritative. Two engines that perform effects would
+collide; two engines that return data just get compared. Deleting your bespoke
+code is the *last* step of adoption, not the first.
 
 This is not hypothetical: Trellis's first production consumer, the
 [nostr-multi-platform](https://github.com/pablof7z/nostr-multi-platform)
@@ -189,8 +189,8 @@ client framework, runs Trellis in exactly this equivalence mode — every
 feed-session transaction is computed by both paths and checked for agreement
 before the bespoke path earns deletion.
 
-See [Shadow-mode adoption](docs/SHADOW_MODE.md) for the pattern, the exit
-criteria, and the failure modes.
+See [Shadow-mode adoption](docs/SHADOW_MODE.md) for the input-mirroring
+prerequisite, desired-state comparison rule, exit criteria, and failure modes.
 
 ## Where it sits
 
