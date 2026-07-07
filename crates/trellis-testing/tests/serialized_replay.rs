@@ -4,8 +4,9 @@ use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
 use trellis_core::{
-    DependencyList, Graph, GraphResult, ResourceCommandKind, ResourceCommandTrace, ResourceKey,
-    ResourcePlan, ResourceTransitionPolicy, ScopeId, Transaction,
+    DependencyList, Graph, GraphLabelRegistry, GraphResult, ResourceCommandKind,
+    ResourceCommandTrace, ResourceKey, ResourcePlan, ResourceTransitionPolicy, ScopeId,
+    Transaction,
 };
 use trellis_testing::{
     DataTransactionScript, ScenarioError, ScenarioTarget, SerializedScenario, TRACE_FORMAT_VERSION,
@@ -13,7 +14,7 @@ use trellis_testing::{
 };
 
 const GOLDEN_SCRIPT: &str = r#"{
-  "formatVersion": 2,
+  "formatVersion": 3,
   "steps": [
     {
       "name": "open",
@@ -36,7 +37,7 @@ const GOLDEN_SCRIPT: &str = r#"{
   ]
 }"#;
 
-const GOLDEN_TRACE: &str = include_str!("fixtures/serialized_trace_v2.json");
+const GOLDEN_TRACE: &str = include_str!("fixtures/serialized_trace_v3.json");
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Command {
@@ -93,17 +94,83 @@ fn golden_data_script_replays_after_json_round_trip() {
 fn versioned_trace_file_round_trips_to_scenario() {
     let script = DataTransactionScript::<Operation>::from_json(GOLDEN_SCRIPT).unwrap();
     let first = replay(&script).unwrap();
-    let trace_file = SerializedScenario::from_scenario(first.scenario());
+    let trace_file = SerializedScenario::from_scenario_with_labels(
+        first.scenario(),
+        first.target().graph.label_registry(),
+    );
     let json = trace_file.to_json().unwrap();
     assert_eq!(json, GOLDEN_TRACE.trim_end());
 
     let decoded = SerializedScenario::from_json(GOLDEN_TRACE).unwrap();
     assert_eq!(decoded.format_version(), TRACE_FORMAT_VERSION);
+    assert_eq!(
+        decoded
+            .label_registry()
+            .nodes()
+            .iter()
+            .map(|entry| (entry.id.get(), entry.label.as_str()))
+            .collect::<Vec<_>>(),
+        vec![(1, "source"), (2, "demand")]
+    );
+    assert_eq!(
+        decoded
+            .label_registry()
+            .resources()
+            .iter()
+            .map(|entry| (entry.key.as_str(), entry.label.as_str()))
+            .collect::<Vec<_>>(),
+        vec![("resource:1", "resource:1"), ("resource:2", "resource:2")]
+    );
     decoded.assert_matches_scenario(first.scenario()).unwrap();
     let scenario = decoded.into_scenario().unwrap();
 
     first.scenario().assert_replay_matches(&scenario).unwrap();
     assert!(json.contains("resource:2"));
+}
+
+#[test]
+fn trace_only_exports_receive_stable_fallback_labels() {
+    let script = DataTransactionScript::<Operation>::from_json(GOLDEN_SCRIPT).unwrap();
+    let first = replay(&script).unwrap();
+    let trace_file = SerializedScenario::from_scenario(first.scenario());
+
+    assert_eq!(
+        trace_file
+            .label_registry()
+            .nodes()
+            .iter()
+            .map(|entry| (entry.id.get(), entry.label.as_str()))
+            .collect::<Vec<_>>(),
+        vec![(1, "node/1"), (2, "node/2")]
+    );
+    assert_eq!(
+        trace_file
+            .label_registry()
+            .scopes()
+            .iter()
+            .map(|entry| (entry.id.get(), entry.label.as_str()))
+            .collect::<Vec<_>>(),
+        vec![(1, "scope/1")]
+    );
+}
+
+#[test]
+fn explicit_label_registry_is_preserved_and_augmented_from_trace() {
+    let script = DataTransactionScript::<Operation>::from_json(GOLDEN_SCRIPT).unwrap();
+    let first = replay(&script).unwrap();
+    let mut labels = GraphLabelRegistry::new();
+    labels.label_node(first.target().source.id(), "custom/source");
+    let trace_file = SerializedScenario::from_scenario_with_labels(first.scenario(), labels);
+
+    assert_eq!(
+        trace_file
+            .label_registry()
+            .nodes()
+            .iter()
+            .map(|entry| (entry.id.get(), entry.label.as_str()))
+            .collect::<Vec<_>>(),
+        vec![(1, "custom/source"), (2, "node/2")]
+    );
 }
 
 #[test]
@@ -121,7 +188,7 @@ fn resource_key_json_accepts_legacy_strings_and_structured_segments() {
 
 #[test]
 fn unsupported_script_version_is_a_graceful_replay_error() {
-    let json = GOLDEN_SCRIPT.replace("\"formatVersion\": 2", "\"formatVersion\": 99");
+    let json = GOLDEN_SCRIPT.replace("\"formatVersion\": 3", "\"formatVersion\": 99");
     let script = DataTransactionScript::<Operation>::from_json(&json).unwrap();
     let error = match replay(&script) {
         Ok(_) => panic!("unsupported script version replayed"),
@@ -144,7 +211,7 @@ fn unsupported_trace_file_version_is_a_graceful_error() {
     let json = SerializedScenario::from_scenario(first.scenario())
         .to_json()
         .unwrap()
-        .replace("\"formatVersion\": 2", "\"formatVersion\": 99");
+        .replace("\"formatVersion\": 3", "\"formatVersion\": 99");
     let trace_file = SerializedScenario::from_json(&json).unwrap();
     let error = match trace_file.into_scenario() {
         Ok(_) => panic!("unsupported trace version loaded"),

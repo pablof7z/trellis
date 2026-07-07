@@ -51,6 +51,7 @@ function routePath(route) {
 
 const htmlFiles = walk(root).filter((path) => extname(path) === ".html");
 const errors = [];
+const traceFormatVersion = 3;
 const flightRecorderTraces = [
   ["normal-session.json", { closeCommand: true }],
   ["seeded-leak.json", { failingInvariant: true, missingCloseOnRemovedDiff: true }],
@@ -105,9 +106,10 @@ function validateFlightRecorderTrace(file, expectations) {
     return;
   }
 
-  if (traceFile.formatVersion !== 2) {
+  if (traceFile.formatVersion !== traceFormatVersion) {
     errors.push(`Unsupported trace format in ${file}: ${traceFile.formatVersion}`);
   }
+  validateLabelRegistry(file, traceFile.labelRegistry);
   if (!Array.isArray(traceFile.steps) || traceFile.steps.length === 0) {
     errors.push(`Trace has no steps: ${file}`);
     return;
@@ -161,5 +163,36 @@ function validateFlightRecorderTrace(file, expectations) {
   }
   if (expectations.childBeforeParentClose && !hasChildBeforeParentClose) {
     errors.push(`${file} must close child scope resources before parent scope resources`);
+  }
+}
+
+function validateLabelRegistry(file, registry) {
+  if (!registry || typeof registry !== "object" || Array.isArray(registry)) {
+    errors.push(`${file} labelRegistry must be an object`);
+    return;
+  }
+  for (const [field, keyField] of [
+    ["nodes", "id"],
+    ["scopes", "id"],
+    ["resources", "key"],
+    ["outputs", "key"],
+  ]) {
+    const entries = registry[field];
+    if (!Array.isArray(entries)) {
+      errors.push(`${file} labelRegistry.${field} must be an array`);
+      continue;
+    }
+    entries.forEach((entry, index) => {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+        errors.push(`${file} labelRegistry.${field}[${index}] must be an object`);
+        return;
+      }
+      if (entry[keyField] == null) {
+        errors.push(`${file} labelRegistry.${field}[${index}].${keyField} is required`);
+      }
+      if (typeof entry.label !== "string" || entry.label.length === 0) {
+        errors.push(`${file} labelRegistry.${field}[${index}].label must be a non-empty string`);
+      }
+    });
   }
 }

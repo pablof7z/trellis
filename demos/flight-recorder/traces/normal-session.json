@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 3,
   "provenance": {
     "sourceType": "bundledFixture",
     "generator": "unknown",
@@ -263,5 +263,42 @@
         ]
       }
     }
-  ]
+  ],
+  "labelRegistry": {
+    "nodes": [
+      {
+        "id": 1,
+        "label": "contacts/filter"
+      },
+      {
+        "id": 2,
+        "label": "relay/demand"
+      },
+      {
+        "id": 3,
+        "label": "node/3"
+      }
+    ],
+    "scopes": [
+      {
+        "id": 1,
+        "label": "contacts/session"
+      }
+    ],
+    "resources": [
+      {
+        "key": "relay:wss://nos.lol?filter=contacts",
+        "label": "relay:wss://nos.lol?filter=contacts"
+      },
+      {
+        "key": "relay:wss://relay.damus.io?filter=contacts",
+        "label": "relay:wss://relay.damus.io?filter=contacts"
+      },
+      {
+        "key": "relay:wss://relay.primal.net?filter=follows",
+        "label": "relay:wss://relay.primal.net?filter=follows"
+      }
+    ],
+    "outputs": []
+  }
 }

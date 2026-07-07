@@ -35,6 +35,7 @@ mod graph_support;
 mod host_status;
 mod ids;
 mod input;
+mod labels;
 mod model;
 mod node;
 mod oracle;
@@ -77,6 +78,7 @@ pub use host_status::{
     classify_host_resource_status,
 };
 pub use ids::{NodeId, OutputKey, Revision, ScopeId, TransactionId};
+pub use labels::{GraphLabelRegistry, NodeLabel, OutputLabel, ResourceLabel, ScopeLabel};
 pub use node::{CollectionNode, DerivedNode, InputNode, NodeHandle, NodeKind, NodeMeta};
 pub use oracle::FullRecomputeCheck;
 pub use output::{MaterializedOutput, OutputContext, OutputMeta, OutputOptions};

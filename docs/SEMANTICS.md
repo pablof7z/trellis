@@ -275,6 +275,13 @@ and collection member payloads are not required to appear in the core trace.
 redaction, and snapshot-friendly dumps on top of the core trace without making
 core depend on a snapshot or serialization framework.
 
+Graph ids in traces are structural, not self-describing. `Graph::label_registry`
+exports a deterministic `GraphLabelRegistry` that maps node ids, scope ids,
+resource keys, and output keys to diagnostic labels. Labels come from existing
+node, scope, and output debug names, plus resource keys for currently live
+resources. Hosts MAY augment or redact the registry before export. A label MUST
+NOT define identity and duplicate labels MUST remain valid.
+
 Serialization support for structural trace data is optional and gated by the
 `serde` feature. The default core build does not require `serde`.
 `TransactionResult` can carry application output payloads and is not the stable
@@ -283,11 +290,14 @@ serialized replay boundary.
 A structural trace file is a receipt, not an executable script. Loading a
 `SerializedScenario` can reconstruct the recorded trace sequence for
 inspection, redaction, fixture comparison, and golden-trace drift checks. It
-cannot re-run an application graph by itself because core traces intentionally
-exclude application operations, command payloads, output payloads, and the
-host-owned graph builder. Cross-process re-execution starts from an
-app-defined `DataTransactionScript`, the app's operation decoder, and the same
-app-owned graph construction code that produced the original scenario.
+also carries a label registry so offline readers can render stable labels for
+ids that appear in the trace, including historical resource keys no longer live
+in the final graph. It cannot re-run an application graph by itself because
+core traces intentionally exclude application operations, command payloads,
+output payloads, and the host-owned graph builder. Cross-process re-execution
+starts from an app-defined `DataTransactionScript`, the app's operation decoder,
+and the same app-owned graph construction code that produced the original
+scenario.
 
 ## Equality and propagation
 

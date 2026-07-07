@@ -1,5 +1,5 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 3,
   "provenance": {
     "sourceType": "bundledFixture",
     "generator": "unknown",
@@ -213,5 +213,42 @@
         ]
       }
     }
-  ]
+  ],
+  "labelRegistry": {
+    "nodes": [
+      {
+        "id": 1,
+        "label": "workspace/source"
+      },
+      {
+        "id": 2,
+        "label": "workspace/resources"
+      }
+    ],
+    "scopes": [
+      {
+        "id": 8,
+        "label": "workspace/alpha"
+      },
+      {
+        "id": 9,
+        "label": "workspace/alpha/details"
+      }
+    ],
+    "resources": [
+      {
+        "key": "job:analysis:alpha",
+        "label": "job:analysis:alpha"
+      },
+      {
+        "key": "relay:wss://chat.example/workspace/alpha",
+        "label": "relay:wss://chat.example/workspace/alpha"
+      },
+      {
+        "key": "watcher:file:///alpha/config.toml",
+        "label": "watcher:file:///alpha/config.toml"
+      }
+    ],
+    "outputs": []
+  }
 }

@@ -145,8 +145,8 @@ across revisions.
   typed Trellis input writes, so persistent scripts stay serializable without
   making core guess how to decode application payloads.
 - `SerializedScenario` writes named `TransactionTrace` values with
-  `TRACE_FORMAT_VERSION`. Loading rejects version mismatches explicitly instead
-  of silently treating old trace files as current.
+  `TRACE_FORMAT_VERSION` and a `GraphLabelRegistry`. Loading rejects version
+  mismatches explicitly instead of silently treating old trace files as current.
 - `TrellisHarness` commits exactly one transaction per step, applies resource
   and output ledgers, records invariant-hook results into the step trace, and
   compares final deterministic graph dumps after replay.
@@ -360,11 +360,18 @@ or output frame ordering.
 
 The current golden-trace CI gate is
 `cargo test -p trellis-testing --features serde`. It round-trips the
-`serialized_trace_v2.json` fixture and validates the bundled Flight Recorder
+`serialized_trace_v3.json` fixture and validates the bundled Flight Recorder
 trace files against the current `TRACE_FORMAT_VERSION`. A future standalone CLI
 must preserve the same boundary: a trace-only command can validate, inspect, and
 compare structural receipts, while graph re-execution requires an app-provided
 data script and graph builder.
+
+When serialized traces are intended for offline diagnostics, pass
+`graph.label_registry()` to `SerializedScenario::from_scenario_with_labels`.
+The serializer preserves supplied labels and fills in fallback labels for ids
+referenced by the trace but missing from the final graph snapshot. Redaction and
+symbolication policy remain host-owned: labels help readers avoid interpreting
+bare numeric ids, but they are not graph identity.
 
 ## Compile-Fail Tests
 
