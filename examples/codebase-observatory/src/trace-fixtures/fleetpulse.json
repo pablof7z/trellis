@@ -1,0 +1,705 @@
+{
+  "contract": "trellis.showcase.trace",
+  "format_version": 1,
+  "showcase": "fleetpulse",
+  "script": "revoke-permission",
+  "command": [
+    "cargo",
+    "run",
+    "-p",
+    "trellis-examples",
+    "--example",
+    "fleetpulse",
+    "--",
+    "--script",
+    "revoke-permission"
+  ],
+  "replay": {
+    "status": "passed",
+    "compared_runs": 2,
+    "reason": null
+  },
+  "seeded_bug": {
+    "status": "not_included",
+    "issue": "#93",
+    "reason": "seeded bug capsules are tracked separately"
+  },
+  "steps": [
+    {
+      "name": "revoke-permission",
+      "host_statuses": [],
+      "trace": {
+        "transaction_id": 3,
+        "revision": 3,
+        "staged_input_changes": [
+          {
+            "node": 1,
+            "outcome": "Unchanged"
+          },
+          {
+            "node": 2,
+            "outcome": "Changed"
+          },
+          {
+            "node": 3,
+            "outcome": "Unchanged"
+          }
+        ],
+        "changed_inputs": [
+          2
+        ],
+        "dirty_roots": [
+          2
+        ],
+        "recomputed_derived_nodes": [],
+        "changed_derived_nodes": [],
+        "recomputed_collection_nodes": [
+          4,
+          5,
+          6
+        ],
+        "changed_collection_nodes": [
+          4,
+          5,
+          6
+        ],
+        "collection_diffs": [
+          {
+            "node": 4,
+            "kind": "Set",
+            "added": 0,
+            "removed": 1,
+            "updated": 0,
+            "unchanged": 1
+          },
+          {
+            "node": 5,
+            "kind": "Set",
+            "added": 0,
+            "removed": 2,
+            "updated": 0,
+            "unchanged": 2
+          },
+          {
+            "node": 6,
+            "kind": "Set",
+            "added": 0,
+            "removed": 4,
+            "updated": 0,
+            "unchanged": 0
+          }
+        ],
+        "resource_commands": [
+          {
+            "key": [
+              "fleet",
+              "topic",
+              "plant-7",
+              "pump-2",
+              "temperature"
+            ],
+            "scope": 3,
+            "kind": "Close",
+            "transition_policy": "Close"
+          },
+          {
+            "key": [
+              "fleet",
+              "topic",
+              "plant-7",
+              "pump-2",
+              "vibration"
+            ],
+            "scope": 3,
+            "kind": "Close",
+            "transition_policy": "Close"
+          },
+          {
+            "key": [
+              "fleet",
+              "alert",
+              "pump-2-overheat"
+            ],
+            "scope": 3,
+            "kind": "Close",
+            "transition_policy": "Close"
+          },
+          {
+            "key": [
+              "fleet",
+              "alert",
+              "pump-2-vibration"
+            ],
+            "scope": 3,
+            "kind": "Close",
+            "transition_policy": "Close"
+          }
+        ],
+        "output_frames": [
+          {
+            "output_key": 1,
+            "scope": 1,
+            "transaction_id": 3,
+            "revision": 3,
+            "kind": "Delta"
+          }
+        ],
+        "scope_events": [],
+        "audit_log": [
+          {
+            "transaction_id": 3,
+            "revision": 3,
+            "event": {
+              "InputUnchanged": 1
+            }
+          },
+          {
+            "transaction_id": 3,
+            "revision": 3,
+            "event": {
+              "InputChanged": 2
+            }
+          },
+          {
+            "transaction_id": 3,
+            "revision": 3,
+            "event": {
+              "InputUnchanged": 3
+            }
+          },
+          {
+            "transaction_id": 3,
+            "revision": 3,
+            "event": {
+              "CollectionChanged": 4
+            }
+          },
+          {
+            "transaction_id": 3,
+            "revision": 3,
+            "event": {
+              "CollectionChanged": 5
+            }
+          },
+          {
+            "transaction_id": 3,
+            "revision": 3,
+            "event": {
+              "CollectionChanged": 6
+            }
+          }
+        ],
+        "audit_explanations": {
+          "transaction_id": 3,
+          "revision": 3,
+          "level": "Summary",
+          "node_changes": [
+            {
+              "node": 2,
+              "transaction_id": 3,
+              "revision": 3,
+              "event": {
+                "InputChanged": 2
+              },
+              "input_causes": [],
+              "dependency_paths": []
+            },
+            {
+              "node": 4,
+              "transaction_id": 3,
+              "revision": 3,
+              "event": {
+                "CollectionChanged": 4
+              },
+              "input_causes": [],
+              "dependency_paths": []
+            },
+            {
+              "node": 5,
+              "transaction_id": 3,
+              "revision": 3,
+              "event": {
+                "CollectionChanged": 5
+              },
+              "input_causes": [],
+              "dependency_paths": []
+            },
+            {
+              "node": 6,
+              "transaction_id": 3,
+              "revision": 3,
+              "event": {
+                "CollectionChanged": 6
+              },
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ],
+          "resource_commands": [
+            {
+              "key": [
+                "fleet",
+                "alert",
+                "pump-2-overheat"
+              ],
+              "scope": 3,
+              "transaction_id": 3,
+              "revision": 3,
+              "kind": "Close",
+              "cause": {
+                "Planner": {
+                  "collection": 6
+                }
+              },
+              "collection_diffs": [
+                6
+              ],
+              "changed_nodes": [
+                2,
+                4,
+                5,
+                6
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            },
+            {
+              "key": [
+                "fleet",
+                "alert",
+                "pump-2-vibration"
+              ],
+              "scope": 3,
+              "transaction_id": 3,
+              "revision": 3,
+              "kind": "Close",
+              "cause": {
+                "Planner": {
+                  "collection": 6
+                }
+              },
+              "collection_diffs": [
+                6
+              ],
+              "changed_nodes": [
+                2,
+                4,
+                5,
+                6
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            },
+            {
+              "key": [
+                "fleet",
+                "topic",
+                "plant-7",
+                "pump-2",
+                "temperature"
+              ],
+              "scope": 3,
+              "transaction_id": 3,
+              "revision": 3,
+              "kind": "Close",
+              "cause": {
+                "Planner": {
+                  "collection": 6
+                }
+              },
+              "collection_diffs": [
+                6
+              ],
+              "changed_nodes": [
+                2,
+                4,
+                5,
+                6
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            },
+            {
+              "key": [
+                "fleet",
+                "topic",
+                "plant-7",
+                "pump-2",
+                "vibration"
+              ],
+              "scope": 3,
+              "transaction_id": 3,
+              "revision": 3,
+              "kind": "Close",
+              "cause": {
+                "Planner": {
+                  "collection": 6
+                }
+              },
+              "collection_diffs": [
+                6
+              ],
+              "changed_nodes": [
+                2,
+                4,
+                5,
+                6
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ],
+          "output_frames": [
+            {
+              "output_key": 1,
+              "scope": 1,
+              "transaction_id": 3,
+              "revision": 3,
+              "kind": "Delta",
+              "dependencies": [
+                1,
+                2,
+                4,
+                3
+              ],
+              "changed_dependencies": [
+                2,
+                4
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ]
+        },
+        "phase_trace": [
+          "StageOperations",
+          "ValidateTransaction",
+          "CommitCanonicalInputs",
+          "MarkDirtyNodes",
+          "RecomputeDerivedNodes",
+          "RecomputeCollectionNodes",
+          "ComputeStructuralDiffs",
+          "ResolveScopeLifecycle",
+          "ProduceResourcePlans",
+          "ProduceOutputFrames",
+          "CommitGraphRevision",
+          "ReturnTransactionResult"
+        ],
+        "invariant_results": [
+          {
+            "name": "incremental_equals_full_recompute",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "late-closed-topic-status",
+      "host_statuses": [
+        {
+          "target": "topic/plant-7/pump-2/Temperature",
+          "status": "Late:Open",
+          "command_revision": 2
+        }
+      ],
+      "trace": {
+        "transaction_id": 4,
+        "revision": 4,
+        "staged_input_changes": [
+          {
+            "node": 1,
+            "outcome": "Unchanged"
+          },
+          {
+            "node": 2,
+            "outcome": "Unchanged"
+          },
+          {
+            "node": 3,
+            "outcome": "Changed"
+          }
+        ],
+        "changed_inputs": [
+          3
+        ],
+        "dirty_roots": [
+          3
+        ],
+        "recomputed_derived_nodes": [],
+        "changed_derived_nodes": [],
+        "recomputed_collection_nodes": [],
+        "changed_collection_nodes": [],
+        "collection_diffs": [],
+        "resource_commands": [],
+        "output_frames": [
+          {
+            "output_key": 1,
+            "scope": 1,
+            "transaction_id": 4,
+            "revision": 4,
+            "kind": "Delta"
+          }
+        ],
+        "scope_events": [],
+        "audit_log": [
+          {
+            "transaction_id": 4,
+            "revision": 4,
+            "event": {
+              "InputUnchanged": 1
+            }
+          },
+          {
+            "transaction_id": 4,
+            "revision": 4,
+            "event": {
+              "InputUnchanged": 2
+            }
+          },
+          {
+            "transaction_id": 4,
+            "revision": 4,
+            "event": {
+              "InputChanged": 3
+            }
+          }
+        ],
+        "audit_explanations": {
+          "transaction_id": 4,
+          "revision": 4,
+          "level": "Summary",
+          "node_changes": [
+            {
+              "node": 3,
+              "transaction_id": 4,
+              "revision": 4,
+              "event": {
+                "InputChanged": 3
+              },
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ],
+          "resource_commands": [],
+          "output_frames": [
+            {
+              "output_key": 1,
+              "scope": 1,
+              "transaction_id": 4,
+              "revision": 4,
+              "kind": "Delta",
+              "dependencies": [
+                1,
+                2,
+                4,
+                3
+              ],
+              "changed_dependencies": [
+                3
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ]
+        },
+        "phase_trace": [
+          "StageOperations",
+          "ValidateTransaction",
+          "CommitCanonicalInputs",
+          "MarkDirtyNodes",
+          "RecomputeDerivedNodes",
+          "RecomputeCollectionNodes",
+          "ComputeStructuralDiffs",
+          "ResolveScopeLifecycle",
+          "ProduceResourcePlans",
+          "ProduceOutputFrames",
+          "CommitGraphRevision",
+          "ReturnTransactionResult"
+        ],
+        "invariant_results": [
+          {
+            "name": "incremental_equals_full_recompute",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "close-dashboard",
+      "host_statuses": [],
+      "trace": {
+        "transaction_id": 5,
+        "revision": 5,
+        "staged_input_changes": [],
+        "changed_inputs": [],
+        "dirty_roots": [],
+        "recomputed_derived_nodes": [],
+        "changed_derived_nodes": [],
+        "recomputed_collection_nodes": [],
+        "changed_collection_nodes": [],
+        "collection_diffs": [],
+        "resource_commands": [
+          {
+            "key": [
+              "fleet",
+              "topic",
+              "plant-7",
+              "pump-1",
+              "vibration"
+            ],
+            "scope": 2,
+            "kind": "Close",
+            "transition_policy": "Close"
+          },
+          {
+            "key": [
+              "fleet",
+              "topic",
+              "plant-7",
+              "pump-1",
+              "temperature"
+            ],
+            "scope": 2,
+            "kind": "Close",
+            "transition_policy": "Close"
+          }
+        ],
+        "output_frames": [
+          {
+            "output_key": 1,
+            "scope": 1,
+            "transaction_id": 5,
+            "revision": 5,
+            "kind": {
+              "Clear": "ScopeClosed"
+            }
+          }
+        ],
+        "scope_events": [
+          {
+            "scope": 2,
+            "kind": "Closed"
+          },
+          {
+            "scope": 3,
+            "kind": "Closed"
+          },
+          {
+            "scope": 1,
+            "kind": "Closed"
+          }
+        ],
+        "audit_log": [
+          {
+            "transaction_id": 5,
+            "revision": 5,
+            "event": {
+              "ScopeClosed": 2
+            }
+          },
+          {
+            "transaction_id": 5,
+            "revision": 5,
+            "event": {
+              "ScopeClosed": 3
+            }
+          },
+          {
+            "transaction_id": 5,
+            "revision": 5,
+            "event": {
+              "ScopeClosed": 1
+            }
+          }
+        ],
+        "audit_explanations": {
+          "transaction_id": 5,
+          "revision": 5,
+          "level": "Summary",
+          "node_changes": [],
+          "resource_commands": [
+            {
+              "key": [
+                "fleet",
+                "topic",
+                "plant-7",
+                "pump-1",
+                "temperature"
+              ],
+              "scope": 2,
+              "transaction_id": 5,
+              "revision": 5,
+              "kind": "Close",
+              "cause": {
+                "ScopeClosed": {
+                  "scope": 2
+                }
+              },
+              "collection_diffs": [],
+              "changed_nodes": [],
+              "input_causes": [],
+              "dependency_paths": []
+            },
+            {
+              "key": [
+                "fleet",
+                "topic",
+                "plant-7",
+                "pump-1",
+                "vibration"
+              ],
+              "scope": 2,
+              "transaction_id": 5,
+              "revision": 5,
+              "kind": "Close",
+              "cause": {
+                "ScopeClosed": {
+                  "scope": 2
+                }
+              },
+              "collection_diffs": [],
+              "changed_nodes": [],
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ],
+          "output_frames": [
+            {
+              "output_key": 1,
+              "scope": 1,
+              "transaction_id": 5,
+              "revision": 5,
+              "kind": {
+                "Clear": "ScopeClosed"
+              },
+              "dependencies": [],
+              "changed_dependencies": [],
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ]
+        },
+        "phase_trace": [
+          "StageOperations",
+          "ValidateTransaction",
+          "CommitCanonicalInputs",
+          "MarkDirtyNodes",
+          "RecomputeDerivedNodes",
+          "RecomputeCollectionNodes",
+          "ComputeStructuralDiffs",
+          "ResolveScopeLifecycle",
+          "ProduceResourcePlans",
+          "ProduceOutputFrames",
+          "CommitGraphRevision",
+          "ReturnTransactionResult"
+        ],
+        "invariant_results": [
+          {
+            "name": "incremental_equals_full_recompute",
+            "passed": true
+          }
+        ]
+      }
+    }
+  ]
+}

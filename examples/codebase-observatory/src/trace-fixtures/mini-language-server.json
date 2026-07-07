@@ -1,0 +1,303 @@
+{
+  "contract": "trellis.showcase.trace",
+  "format_version": 1,
+  "showcase": "mini-language-server",
+  "script": "delete-file",
+  "command": [
+    "cargo",
+    "run",
+    "-p",
+    "trellis-examples",
+    "--example",
+    "mini_language_server",
+    "--",
+    "--script",
+    "delete-file"
+  ],
+  "replay": {
+    "status": "passed",
+    "compared_runs": 2,
+    "reason": null
+  },
+  "seeded_bug": {
+    "status": "not_included",
+    "issue": "#93",
+    "reason": "seeded bug capsules are tracked separately"
+  },
+  "steps": [
+    {
+      "name": "delete-file",
+      "host_statuses": [],
+      "trace": {
+        "transaction_id": 2,
+        "revision": 2,
+        "staged_input_changes": [
+          {
+            "node": 1,
+            "outcome": "Changed"
+          }
+        ],
+        "changed_inputs": [
+          1
+        ],
+        "dirty_roots": [
+          1
+        ],
+        "recomputed_derived_nodes": [
+          3
+        ],
+        "changed_derived_nodes": [
+          3
+        ],
+        "recomputed_collection_nodes": [
+          4
+        ],
+        "changed_collection_nodes": [
+          4
+        ],
+        "collection_diffs": [
+          {
+            "node": 4,
+            "kind": "Set",
+            "added": 0,
+            "removed": 1,
+            "updated": 0,
+            "unchanged": 0
+          }
+        ],
+        "resource_commands": [
+          {
+            "key": [
+              "watch",
+              "a.tl"
+            ],
+            "scope": 1,
+            "kind": "Close",
+            "transition_policy": "Close"
+          }
+        ],
+        "output_frames": [
+          {
+            "output_key": 1,
+            "scope": 1,
+            "transaction_id": 2,
+            "revision": 2,
+            "kind": "Delta"
+          }
+        ],
+        "scope_events": [],
+        "audit_log": [
+          {
+            "transaction_id": 2,
+            "revision": 2,
+            "event": {
+              "InputChanged": 1
+            }
+          },
+          {
+            "transaction_id": 2,
+            "revision": 2,
+            "event": {
+              "DerivedChanged": 3
+            }
+          },
+          {
+            "transaction_id": 2,
+            "revision": 2,
+            "event": {
+              "CollectionChanged": 4
+            }
+          }
+        ],
+        "audit_explanations": {
+          "transaction_id": 2,
+          "revision": 2,
+          "level": "Summary",
+          "node_changes": [
+            {
+              "node": 1,
+              "transaction_id": 2,
+              "revision": 2,
+              "event": {
+                "InputChanged": 1
+              },
+              "input_causes": [],
+              "dependency_paths": []
+            },
+            {
+              "node": 3,
+              "transaction_id": 2,
+              "revision": 2,
+              "event": {
+                "DerivedChanged": 3
+              },
+              "input_causes": [],
+              "dependency_paths": []
+            },
+            {
+              "node": 4,
+              "transaction_id": 2,
+              "revision": 2,
+              "event": {
+                "CollectionChanged": 4
+              },
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ],
+          "resource_commands": [
+            {
+              "key": [
+                "watch",
+                "a.tl"
+              ],
+              "scope": 1,
+              "transaction_id": 2,
+              "revision": 2,
+              "kind": "Close",
+              "cause": {
+                "Planner": {
+                  "collection": 4
+                }
+              },
+              "collection_diffs": [
+                4
+              ],
+              "changed_nodes": [
+                1,
+                3,
+                4
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ],
+          "output_frames": [
+            {
+              "output_key": 1,
+              "scope": 1,
+              "transaction_id": 2,
+              "revision": 2,
+              "kind": "Delta",
+              "dependencies": [
+                1,
+                4
+              ],
+              "changed_dependencies": [
+                1,
+                4
+              ],
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ]
+        },
+        "phase_trace": [
+          "StageOperations",
+          "ValidateTransaction",
+          "CommitCanonicalInputs",
+          "MarkDirtyNodes",
+          "RecomputeDerivedNodes",
+          "RecomputeCollectionNodes",
+          "ComputeStructuralDiffs",
+          "ResolveScopeLifecycle",
+          "ProduceResourcePlans",
+          "ProduceOutputFrames",
+          "CommitGraphRevision",
+          "ReturnTransactionResult"
+        ],
+        "invariant_results": [
+          {
+            "name": "incremental_equals_full_recompute",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "close-workspace",
+      "host_statuses": [],
+      "trace": {
+        "transaction_id": 3,
+        "revision": 3,
+        "staged_input_changes": [],
+        "changed_inputs": [],
+        "dirty_roots": [],
+        "recomputed_derived_nodes": [],
+        "changed_derived_nodes": [],
+        "recomputed_collection_nodes": [],
+        "changed_collection_nodes": [],
+        "collection_diffs": [],
+        "resource_commands": [],
+        "output_frames": [
+          {
+            "output_key": 1,
+            "scope": 1,
+            "transaction_id": 3,
+            "revision": 3,
+            "kind": {
+              "Clear": "ScopeClosed"
+            }
+          }
+        ],
+        "scope_events": [
+          {
+            "scope": 1,
+            "kind": "Closed"
+          }
+        ],
+        "audit_log": [
+          {
+            "transaction_id": 3,
+            "revision": 3,
+            "event": {
+              "ScopeClosed": 1
+            }
+          }
+        ],
+        "audit_explanations": {
+          "transaction_id": 3,
+          "revision": 3,
+          "level": "Summary",
+          "node_changes": [],
+          "resource_commands": [],
+          "output_frames": [
+            {
+              "output_key": 1,
+              "scope": 1,
+              "transaction_id": 3,
+              "revision": 3,
+              "kind": {
+                "Clear": "ScopeClosed"
+              },
+              "dependencies": [],
+              "changed_dependencies": [],
+              "input_causes": [],
+              "dependency_paths": []
+            }
+          ]
+        },
+        "phase_trace": [
+          "StageOperations",
+          "ValidateTransaction",
+          "CommitCanonicalInputs",
+          "MarkDirtyNodes",
+          "RecomputeDerivedNodes",
+          "RecomputeCollectionNodes",
+          "ComputeStructuralDiffs",
+          "ResolveScopeLifecycle",
+          "ProduceResourcePlans",
+          "ProduceOutputFrames",
+          "CommitGraphRevision",
+          "ReturnTransactionResult"
+        ],
+        "invariant_results": [
+          {
+            "name": "incremental_equals_full_recompute",
+            "passed": true
+          }
+        ]
+      }
+    }
+  ]
+}

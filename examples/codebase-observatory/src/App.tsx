@@ -5,14 +5,17 @@ import { EditorPane } from "./EditorPane";
 import { ProjectExplorer } from "./ProjectExplorer";
 import { RuntimePanel } from "./RuntimePanel";
 import { ObservatoryPanel } from "./ObservatoryPanel";
+import { TraceViewer } from "./TraceViewer";
 
 const showcaseStepIndex = 1;
+type AppView = "runtime" | "traces";
 
 export default function App() {
   const [engine, setEngine] = useState<EngineApi | null>(null);
   const [state, setState] = useState<AppState | null>(null);
   const [scenarioIndex, setScenarioIndex] = useState(showcaseStepIndex);
   const [faultsOpen, setFaultsOpen] = useState(false);
+  const [view, setView] = useState<AppView>("traces");
 
   useEffect(() => {
     loadEngine().then((api) => {
@@ -57,22 +60,18 @@ export default function App() {
   const diagnostics = flattenDiagnostics(state);
   const scenarioText = scenarioStatus(scenarioIndex);
 
+  if (view === "traces") {
+    return (
+      <main className="app-shell trace-app">
+        <Topbar state={state} trace={trace} failures={failures.length} view={view} setView={setView} />
+        <TraceViewer />
+      </main>
+    );
+  }
+
   return (
     <main className="app-shell">
-      <header className="topbar">
-        <div>
-          <h1>trellis observatory</h1>
-          <p>
-            {state.inputs.activeBranch} · {state.inputs.compilerConfig} config · {state.inputs.activeEditor ?? "no editor"} · tx {trace.txId}
-          </p>
-        </div>
-        <div className="status-strip">
-          <span className={`mode ${state.mode}`}>{state.mode === "trellis" ? "[TRELLIS]" : "[CALLBACKS]"}</span>
-          <span className={failures.length ? "badge fail" : "badge pass"}>
-            {failures.length ? `[FAIL] ${failures.length}` : "[PASS] invariants"}
-          </span>
-        </div>
-      </header>
+      <Topbar state={state} trace={trace} failures={failures.length} view={view} setView={setView} />
 
       <section className="scenario-bar">
         <div className="scenario-copy">
@@ -120,6 +119,43 @@ export default function App() {
       </section>
       <RuntimePanel state={state} />
     </main>
+  );
+}
+
+function Topbar({
+  state,
+  trace,
+  failures,
+  view,
+  setView,
+}: {
+  state: AppState;
+  trace: ReturnType<typeof latestTrace>;
+  failures: number;
+  view: AppView;
+  setView: (view: AppView) => void;
+}) {
+  return (
+    <header className="topbar">
+      <div>
+        <h1>trellis observatory</h1>
+        <p>
+          {state.inputs.activeBranch} · {state.inputs.compilerConfig} config · {state.inputs.activeEditor ?? "no editor"} · tx {trace.txId}
+        </p>
+      </div>
+      <div className="topbar-actions">
+        <button className={view === "traces" ? "active" : ""} aria-pressed={view === "traces"} onClick={() => setView("traces")}>
+          Trace viewer
+        </button>
+        <button className={view === "runtime" ? "active" : ""} aria-pressed={view === "runtime"} onClick={() => setView("runtime")}>
+          Runtime lab
+        </button>
+        <span className={`mode ${state.mode}`}>{state.mode === "trellis" ? "[TRELLIS]" : "[CALLBACKS]"}</span>
+        <span className={failures ? "badge fail" : "badge pass"}>
+          {failures ? `[FAIL] ${failures}` : "[PASS] invariants"}
+        </span>
+      </div>
+    </header>
   );
 }
 
