@@ -125,6 +125,9 @@ across revisions.
   generations, closed-scope leaks, and stale/duplicate/late status classes.
 - `FakeHost` converts emitted resource plans into explicit host status events
   that tests feed back through normal canonical input APIs.
+- `HostConformanceLedger` records previewed plans, committed plans, declared
+  host executors, applied host effects, and host statuses so applications can
+  prove the host seam separately from graph correctness.
 - `OutputLedger` applies materialized output frames and checks monotonic
   revisions, clear/rebaseline coherence, and closed-scope terminal-frame rules.
 - Audit helpers assert resource commands and output frames are explainable from
@@ -181,8 +184,10 @@ For richer apps, register checks at the level where the app has supplied the
 required hooks: fixed scenarios for trace replay, `ResourceLedger` for lifecycle
 checks, `OutputLedger` for output coherence, `FullRecomputeOracle` for
 incremental/full equivalence, and generated sequence checks when the
-`proptest` feature is enabled. If a required level has no registered check or
-explicit unsupported reason, the runner reports that level as unsupported.
+`proptest` feature is enabled. Register `ConformanceLevel::HostSeam` only when
+the app records previewed plans, committed plans, and actual host effect sites.
+If a required level has no registered check or explicit unsupported reason, the
+runner reports that level as unsupported.
 
 The release-gate examples in `crates/trellis-testing/tests/release_gate.rs`
 cover:
@@ -193,6 +198,34 @@ cover:
 - output deltas/rebaselines match current truth;
 - incremental state is checked against full recompute after transactions;
 - stale host status after scope changes does not mutate graph ownership.
+
+## Host-Seam Conformance
+
+Graph correctness does not prove host correctness. A graph can pass replay,
+oracle, resource-ledger, and output-ledger checks while the host still has a
+bypass path that opens a socket, starts a job, writes a file, or publishes an
+event without first receiving a previewed and committed Trellis plan.
+
+Use `HostConformanceLedger` at application executor seams:
+
+```rust
+let mut host = HostConformanceLedger::new();
+host.declare_executor("subscription-executor");
+host.record_preview("join workspace", &previewed_result);
+host.record_commit("join workspace", &committed_result);
+host.record_effects_from_commit(
+    "join workspace",
+    "subscription-executor",
+    &committed_result,
+);
+host.assert_host_seam_conforms().unwrap();
+```
+
+Applications with scan hooks can also call `record_effect_site` for every
+static or runtime effect site they discover. `assert_effects_use_declared_executors`
+then fails if an effect site or recorded effect sits outside the declared
+executors. Keep this check separate from graph conformance: a failure means the
+host boundary is unsafe even if Trellis graph invariants are green.
 
 The crate is not a mocking framework, async runtime, domain fixture library,
 snapshot framework, property-testing framework, UI harness, database harness, or
