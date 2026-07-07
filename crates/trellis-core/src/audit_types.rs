@@ -1,6 +1,6 @@
 use crate::{
-    AuditEvent, NodeId, OutputFrameKindTrace, OutputKey, ResourceCommandKind, ResourceKey,
-    Revision, ScopeId, TransactionId,
+    AuditEvent, AuditExplanationLevel, NodeId, OutputFrameKindTrace, OutputKey,
+    ResourceCommandKind, ResourceKey, Revision, ScopeId, TransactionId,
 };
 use std::collections::BTreeMap;
 
@@ -20,6 +20,52 @@ impl AuditState {
         self.output_frames.clear();
         self.pending_resource_causes.clear();
         self.pending_resource_coalescences.clear();
+    }
+}
+
+/// Explanation records retained by a single transaction receipt.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AuditExplanations {
+    /// Transaction that produced these explanations.
+    pub transaction_id: TransactionId,
+    /// Graph revision after the transaction committed.
+    pub revision: Revision,
+    /// Explanation depth requested for the transaction.
+    pub level: AuditExplanationLevel,
+    /// Node-change explanations keyed by node id.
+    pub node_changes: BTreeMap<NodeId, NodeChangeExplanation>,
+    /// Resource-command explanations keyed by resource key.
+    pub resource_commands: BTreeMap<ResourceKey, ResourceCommandExplanation>,
+    /// Output-frame explanations keyed by output key.
+    pub output_frames: BTreeMap<OutputKey, OutputFrameExplanation>,
+}
+
+impl Default for AuditExplanations {
+    fn default() -> Self {
+        Self {
+            transaction_id: TransactionId::default(),
+            revision: Revision::default(),
+            level: AuditExplanationLevel::Disabled,
+            node_changes: BTreeMap::new(),
+            resource_commands: BTreeMap::new(),
+            output_frames: BTreeMap::new(),
+        }
+    }
+}
+
+impl AuditExplanations {
+    /// Returns an empty explanation receipt for the requested transaction.
+    pub(crate) fn with_level(
+        transaction_id: TransactionId,
+        revision: Revision,
+        level: AuditExplanationLevel,
+    ) -> Self {
+        Self {
+            transaction_id,
+            revision,
+            level,
+            ..Self::default()
+        }
     }
 }
 

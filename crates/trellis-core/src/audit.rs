@@ -1,8 +1,8 @@
 use crate::{
-    AuditEvent, AuditExplanationLevel, Graph, GraphError, GraphResult, NodeChangeExplanation,
-    NodeHandle, NodeId, OutputFrameExplanation, OutputFrameKindTrace, OutputKey,
-    ResourceCommandCause, ResourceCommandExplanation, ResourceCommandKind, ResourceKey, ScopeId,
-    ScopeResourceInventory, TransactionResult,
+    AuditEvent, AuditExplanationLevel, AuditExplanations, Graph, GraphError, GraphResult,
+    NodeChangeExplanation, NodeHandle, NodeId, OutputFrameExplanation, OutputFrameKindTrace,
+    OutputKey, ResourceCommandCause, ResourceCommandExplanation, ResourceCommandKind, ResourceKey,
+    ScopeId, ScopeResourceInventory, TransactionResult,
 };
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
@@ -53,13 +53,15 @@ impl<C> Graph<C> {
         &mut self,
         result: &TransactionResult<C>,
         level: AuditExplanationLevel,
-    ) {
+    ) -> AuditExplanations {
         let causes = std::mem::take(&mut self.audit.pending_resource_causes);
         if level == AuditExplanationLevel::Disabled {
             self.audit.clear_explanations();
-            return;
+            return AuditExplanations::with_level(result.transaction_id, result.revision, level);
         }
 
+        let mut explanations =
+            AuditExplanations::with_level(result.transaction_id, result.revision, level);
         let changed_inputs = result.changed_inputs.clone();
         let changed_nodes = changed_nodes(result);
         let downstream = (level == AuditExplanationLevel::DependencyPaths)
@@ -69,17 +71,16 @@ impl<C> Graph<C> {
                 let dependency_paths =
                     paths_from_inputs_to_targets(downstream.as_ref(), &changed_inputs, &[node]);
                 let input_causes = input_causes_from_paths(&dependency_paths);
-                self.audit.node_changes.insert(
+                let explanation = NodeChangeExplanation {
                     node,
-                    NodeChangeExplanation {
-                        node,
-                        transaction_id: entry.transaction_id,
-                        revision: entry.revision,
-                        event: entry.event.clone(),
-                        input_causes,
-                        dependency_paths,
-                    },
-                );
+                    transaction_id: entry.transaction_id,
+                    revision: entry.revision,
+                    event: entry.event.clone(),
+                    input_causes,
+                    dependency_paths,
+                };
+                self.audit.node_changes.insert(node, explanation.clone());
+                explanations.node_changes.insert(node, explanation);
             }
         }
 
@@ -95,21 +96,23 @@ impl<C> Graph<C> {
                 &collection_diffs,
             );
             let input_causes = input_causes_from_paths(&dependency_paths);
-            self.audit.resource_commands.insert(
-                command.key().clone(),
-                ResourceCommandExplanation {
-                    key: command.key().clone(),
-                    scope: command.scope(),
-                    transaction_id: result.transaction_id,
-                    revision: result.revision,
-                    kind: ResourceCommandKind::from_command(command),
-                    cause,
-                    collection_diffs,
-                    changed_nodes: changed_nodes.clone(),
-                    input_causes,
-                    dependency_paths,
-                },
-            );
+            let key = command.key().clone();
+            let explanation = ResourceCommandExplanation {
+                key: key.clone(),
+                scope: command.scope(),
+                transaction_id: result.transaction_id,
+                revision: result.revision,
+                kind: ResourceCommandKind::from_command(command),
+                cause,
+                collection_diffs,
+                changed_nodes: changed_nodes.clone(),
+                input_causes,
+                dependency_paths,
+            };
+            self.audit
+                .resource_commands
+                .insert(key.clone(), explanation.clone());
+            explanations.resource_commands.insert(key, explanation);
         }
 
         for frame in &result.output_frames {
@@ -128,21 +131,25 @@ impl<C> Graph<C> {
                 &changed_dependencies,
             );
             let input_causes = input_causes_from_paths(&dependency_paths);
-            self.audit.output_frames.insert(
-                frame.output_key,
-                OutputFrameExplanation {
-                    output_key: frame.output_key,
-                    scope: frame.scope,
-                    transaction_id: frame.transaction_id,
-                    revision: frame.revision,
-                    kind: OutputFrameKindTrace::from_kind(&frame.kind),
-                    dependencies,
-                    changed_dependencies,
-                    input_causes,
-                    dependency_paths,
-                },
-            );
+            let explanation = OutputFrameExplanation {
+                output_key: frame.output_key,
+                scope: frame.scope,
+                transaction_id: frame.transaction_id,
+                revision: frame.revision,
+                kind: OutputFrameKindTrace::from_kind(&frame.kind),
+                dependencies,
+                changed_dependencies,
+                input_causes,
+                dependency_paths,
+            };
+            self.audit
+                .output_frames
+                .insert(frame.output_key, explanation.clone());
+            explanations
+                .output_frames
+                .insert(frame.output_key, explanation);
         }
+        explanations
     }
 
     fn reverse_dependency_index(&self) -> BTreeMap<NodeId, Vec<NodeId>> {
