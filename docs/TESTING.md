@@ -21,6 +21,40 @@ When performance or benchmark code changes, also run:
 cargo bench -p trellis-bench --bench performance_smoke
 ```
 
+## Site And Demo Gates
+
+GitHub CI runs a dedicated site/demo job on every push and pull request. The job
+installs the Node toolchain and then runs:
+
+```sh
+npm ci
+npm run check
+npm run build:site
+npm run test:observatory
+```
+
+`npm run check` validates static routes, asset links, and bundled Flight
+Recorder trace fixtures. `npm run build:site` copies the public site and runs
+the Observatory Vite production build against the checked-in Leak Duel WASM
+bundle. `npm run test:observatory` runs the Observatory Vitest suite.
+
+The checked-in WASM artifacts are not rebuilt on every PR. Per-PR CI consumes
+them through the site/demo gates above, but source-to-WASM rebuilds require
+`wasm-pack` and a full Rust-to-WASM compile. Treat those rebuilds as a
+manual/release gate until a scheduled or manually dispatched CI workflow owns
+the higher-cost diff check.
+
+When a change touches `crates/trellis-observatory-engine` or generated WASM
+artifacts, rebuild both checked-in bundles and commit the resulting artifacts:
+
+```sh
+npm run build:observatory:wasm
+npm run build:leak-duel:wasm
+npm run check
+npm run build:site
+npm run test:observatory
+```
+
 ## Invariant Coverage
 
 Before adding behavior, identify the invariant in `docs/INVARIANTS.md` that the
