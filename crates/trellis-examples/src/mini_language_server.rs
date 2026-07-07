@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::showcase_trace::{ShowcaseTrace, build_showcase_trace, step_with_oracle};
 use trellis_core::{DependencyList, Graph, ResourceKey};
 
 /// Host command payload for file watcher resources.
@@ -13,7 +14,6 @@ fn key(file: &str) -> ResourceKey {
     ResourceKey::from_segments(["watch", file])
 }
 
-#[cfg(test)]
 fn files(entries: &[(&str, &str)]) -> BTreeMap<String, String> {
     entries
         .iter()
@@ -67,6 +67,8 @@ pub struct MiniLanguageServerExample {
     pub open_file: trellis_core::InputNode<String>,
     /// File contents canonical input.
     pub file_contents: trellis_core::InputNode<BTreeMap<String, String>>,
+    /// Project scope owning watchers and diagnostic output.
+    pub project_scope: trellis_core::ScopeId,
 }
 
 /// Builds the mini language-server proof graph.
@@ -130,7 +132,46 @@ pub fn build_graph(initial_files: BTreeMap<String, String>) -> MiniLanguageServe
         graph,
         open_file,
         file_contents,
+        project_scope: scope,
     }
+}
+
+/// Runs the headless `delete-file` showcase script.
+pub fn delete_file_showcase_trace() -> ShowcaseTrace {
+    build_showcase_trace(
+        "mini-language-server",
+        "delete-file",
+        &[
+            "cargo",
+            "run",
+            "-p",
+            "trellis-examples",
+            "--example",
+            "mini_language_server",
+            "--",
+            "--script",
+            "delete-file",
+        ],
+        || {
+            let mut example = build_graph(files(&[("a.tl", "error"), ("b.tl", "ok")]));
+            let mut steps = Vec::new();
+
+            let mut tx = example.graph.begin_transaction().unwrap();
+            tx.set_input(example.file_contents, files(&[("b.tl", "ok")]))
+                .unwrap();
+            let result = tx.commit().unwrap();
+            drop(tx);
+            steps.push(step_with_oracle("delete-file", &example.graph, &result));
+
+            let mut tx = example.graph.begin_transaction().unwrap();
+            tx.close_scope(example.project_scope).unwrap();
+            let result = tx.commit().unwrap();
+            drop(tx);
+            steps.push(step_with_oracle("close-workspace", &example.graph, &result));
+
+            steps
+        },
+    )
 }
 
 #[cfg(test)]

@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::showcase_trace::{ShowcaseTrace, build_showcase_trace, step_with_oracle};
 use trellis_core::{DependencyList, Graph, ResourceKey};
 
 /// Host command payload for topic subscriptions.
@@ -13,7 +14,6 @@ fn key(topic: &str) -> ResourceKey {
     ResourceKey::from_segments(["topic", topic])
 }
 
-#[cfg(test)]
 fn customer_devices(
     entries: &[(&str, &[(&str, &str)])],
 ) -> BTreeMap<String, BTreeMap<String, String>> {
@@ -112,6 +112,52 @@ pub fn build_graph(
         left_panel,
         right_panel,
     }
+}
+
+/// Runs the headless `revoke-permission` showcase script.
+pub fn revoke_permission_showcase_trace() -> ShowcaseTrace {
+    build_showcase_trace(
+        "fleetpulse",
+        "revoke-permission",
+        &[
+            "cargo",
+            "run",
+            "-p",
+            "trellis-examples",
+            "--example",
+            "fleetpulse",
+            "--",
+            "--script",
+            "revoke-permission",
+        ],
+        || {
+            let mut example = build_graph(
+                Some("acme"),
+                customer_devices(&[("acme", &[("d1", "a"), ("d2", "b")])]),
+            );
+            let mut steps = Vec::new();
+
+            let mut tx = example.graph.begin_transaction().unwrap();
+            tx.set_input(example.device_index, customer_devices(&[]))
+                .unwrap();
+            let result = tx.commit().unwrap();
+            drop(tx);
+            steps.push(step_with_oracle(
+                "revoke-permission",
+                &example.graph,
+                &result,
+            ));
+
+            let mut tx = example.graph.begin_transaction().unwrap();
+            tx.close_scope(example.left_panel).unwrap();
+            tx.close_scope(example.right_panel).unwrap();
+            let result = tx.commit().unwrap();
+            drop(tx);
+            steps.push(step_with_oracle("close-dashboard", &example.graph, &result));
+
+            steps
+        },
+    )
 }
 
 #[cfg(test)]

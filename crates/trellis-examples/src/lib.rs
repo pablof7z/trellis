@@ -10,6 +10,9 @@
 /// Workspace-driven sync proof shape.
 pub mod workspace_sync;
 
+/// Shared headless showcase trace contract.
+pub mod showcase_trace;
+
 /// Mini language-server proof shape.
 pub mod mini_language_server;
 

@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::showcase_trace::{ShowcaseTrace, build_showcase_trace, step_with_oracle};
 use trellis_core::{DependencyList, Graph, ResourceKey};
 
 /// Host command payload for workspace sync windows.
@@ -13,12 +14,10 @@ fn key(project: &str) -> ResourceKey {
     ResourceKey::from_segments(["sync", project])
 }
 
-#[cfg(test)]
 fn set(values: &[&str]) -> BTreeSet<String> {
     values.iter().map(|value| (*value).to_owned()).collect()
 }
 
-#[cfg(test)]
 fn grants(entries: &[(&str, &[&str])]) -> BTreeMap<String, BTreeSet<String>> {
     entries
         .iter()
@@ -41,6 +40,8 @@ pub struct WorkspaceSyncExample {
     pub active_workspace: trellis_core::InputNode<Option<String>>,
     /// Permitted projects canonical input.
     pub permitted_projects: trellis_core::InputNode<BTreeMap<String, BTreeSet<String>>>,
+    /// Workspace scope owning sync resources and board output.
+    pub workspace_scope: trellis_core::ScopeId,
 }
 
 /// Builds the workspace-driven sync proof graph.
@@ -100,7 +101,53 @@ pub fn build_graph(
         graph,
         active_workspace,
         permitted_projects: permitted,
+        workspace_scope: scope,
     }
+}
+
+/// Runs the headless `switch-workspace` showcase script.
+pub fn switch_workspace_showcase_trace() -> ShowcaseTrace {
+    build_showcase_trace(
+        "workspace-sync-board",
+        "switch-workspace",
+        &[
+            "cargo",
+            "run",
+            "-p",
+            "trellis-examples",
+            "--example",
+            "workspace_sync_board",
+            "--",
+            "--script",
+            "switch-workspace",
+        ],
+        || {
+            let mut example = build_graph(
+                Some("one"),
+                grants(&[("one", &["a", "b"]), ("two", &["c"])]),
+            );
+            let mut steps = Vec::new();
+
+            let mut tx = example.graph.begin_transaction().unwrap();
+            tx.set_input(example.active_workspace, Some("two".to_owned()))
+                .unwrap();
+            let result = tx.commit().unwrap();
+            drop(tx);
+            steps.push(step_with_oracle(
+                "switch-workspace",
+                &example.graph,
+                &result,
+            ));
+
+            let mut tx = example.graph.begin_transaction().unwrap();
+            tx.close_scope(example.workspace_scope).unwrap();
+            let result = tx.commit().unwrap();
+            drop(tx);
+            steps.push(step_with_oracle("close-board", &example.graph, &result));
+
+            steps
+        },
+    )
 }
 
 #[cfg(test)]
