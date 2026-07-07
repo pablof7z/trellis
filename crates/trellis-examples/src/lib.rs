@@ -16,6 +16,9 @@ pub mod workspace_sync_board;
 /// Shared headless showcase trace contract.
 pub mod showcase_trace;
 
+/// Shared seeded-bug capsule report contract.
+pub mod seeded_bugs;
+
 /// Mini language-server proof shape.
 pub mod mini_language_server;
 

@@ -179,3 +179,14 @@ Run one capsule by name:
 ```sh
 cargo run -p trellis-observatory-engine --example eval_capsules -- --capsule delete-file-lifecycle
 ```
+
+The flagship Workspace Sync Board and FleetPulse examples expose their
+app-specific seeded-bug capsules through their existing headless runners:
+
+```sh
+cargo run -p trellis-examples --example workspace_sync_board -- --capsules
+cargo run -p trellis-examples --example workspace_sync_board -- --capsule workspace-switch-closes-old-windows
+
+cargo run -p trellis-examples --example fleetpulse -- --capsules
+cargo run -p trellis-examples --example fleetpulse -- --capsule fleet-late-closed-topic-status
+```

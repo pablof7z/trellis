@@ -103,7 +103,7 @@ fn shared_topic_closes_after_last_panel_owner() {
     app.drain_output(handle);
     app.drain_diagnostic_traces();
 
-    let update = app.close_panel_for_test(handle, FleetPanel::Overview);
+    let update = app.close_panel(handle, FleetPanel::Overview);
     assert!(update.emitted_effects > 0);
     let effects = app.drain_effects();
     assert!(!effects.contains(&FleetEffect::Close(pump_2_temp())));
@@ -180,6 +180,43 @@ fn close_tears_down_scopes_resources_and_output() {
             .iter()
             .any(|event| event.kind == trellis_core::ScopeLifecycleKind::Closed)
     );
+}
+
+#[test]
+fn seeded_bug_capsules_are_discoverable_and_detect_failures() {
+    let capsules = available_bug_capsules();
+    assert_eq!(capsules.len(), 4);
+    assert!(capsules.iter().any(|capsule| {
+        capsule.name == "fleet-late-closed-topic-status"
+            && capsule
+                .expected_failure_ids
+                .contains(&"fleet-late-status-audit-only".to_owned())
+    }));
+
+    let reports = run_all_bug_capsules();
+    assert_eq!(reports.len(), 4);
+    for report in reports {
+        assert_eq!(report.status, "pass", "{report:#?}");
+        assert!(report.success_path.passed, "{report:#?}");
+        assert!(!report.seeded_bug_path.passed, "{report:#?}");
+        assert!(report.expected_failures_detected, "{report:#?}");
+        for failure in &report.seeded_bug_path.failed_checks {
+            assert!(failure.failure_text.contains(&failure.source));
+            assert!(failure.failure_text.contains(&report.lifecycle_invariant));
+        }
+    }
+}
+
+#[test]
+fn named_seeded_bug_capsule_runs_independently() {
+    let report = run_bug_capsule("fleet-filter-shrink-unsubscribes-topic").unwrap();
+
+    assert_eq!(report.status, "pass");
+    assert!(report.seeded_bug_path.failed_checks.iter().any(|failure| {
+        failure.id == "fleet-filter-shrink-unsubscribes-topic"
+            && failure.failure_text.contains("ResourceLedger")
+    }));
+    assert!(run_bug_capsule("missing-capsule").is_none());
 }
 
 fn assert_oracle_trace(app: &mut FleetPulseApp) {
