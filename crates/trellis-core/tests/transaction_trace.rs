@@ -1,13 +1,14 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use trellis_core::{
     AuditEvent, CollectionDiffKind, DependencyList, Graph, OutputFrameKindTrace,
-    ResourceCommandKind, ResourceKey, ResourcePlan, StagedInputOutcome,
+    ResourceCommandKind, ResourceKey, ResourcePlan, ResourceTransitionPolicy, StagedInputOutcome,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum Command {
     Open(String),
+    Replace,
 }
 
 fn members(values: &[&str]) -> BTreeSet<String> {
@@ -110,11 +111,19 @@ fn transaction_trace_records_stable_structural_facts() {
         trace
             .resource_commands
             .iter()
-            .map(|command| (&command.key, command.kind))
+            .map(|command| (&command.key, command.kind, command.transition_policy))
             .collect::<Vec<_>>(),
         vec![
-            (&key("a"), ResourceCommandKind::Open),
-            (&key("b"), ResourceCommandKind::Open),
+            (
+                &key("a"),
+                ResourceCommandKind::Open,
+                ResourceTransitionPolicy::Open,
+            ),
+            (
+                &key("b"),
+                ResourceCommandKind::Open,
+                ResourceTransitionPolicy::Open,
+            ),
         ]
     );
     assert_eq!(
@@ -139,5 +148,54 @@ fn transaction_trace_records_stable_structural_facts() {
             })
             .collect::<Vec<_>>(),
         vec![source.id(), mode.id()]
+    );
+}
+
+#[test]
+fn transaction_trace_records_transition_policy_separately_from_operation() {
+    let mut graph = Graph::<Command>::new_with_command_type();
+    let mut tx = graph.begin_transaction().unwrap();
+    let scope = tx.create_scope("scope").unwrap();
+    let source = tx.input::<BTreeMap<String, u64>>("source").unwrap();
+    tx.set_input(source, BTreeMap::from([("a".to_owned(), 1)]))
+        .unwrap();
+    let collection = tx
+        .collection(
+            "demand",
+            DependencyList::new([source.id()]).unwrap(),
+            move |ctx| Ok(ctx.input(source)?.clone()),
+        )
+        .unwrap();
+    tx.map_resource_planner(collection, scope, move |ctx| {
+        let mut plan = ResourcePlan::new();
+        for added in &ctx.diff().added {
+            plan.open(
+                key(&added.value.0),
+                ctx.scope(),
+                Command::Open(added.value.0.clone()),
+            );
+        }
+        for updated in &ctx.diff().updated {
+            plan.replace(key(&updated.key), ctx.scope(), Command::Replace);
+        }
+        Ok(plan)
+    })
+    .unwrap();
+    tx.commit().unwrap();
+    drop(tx);
+
+    let mut tx = graph.begin_transaction().unwrap();
+    tx.set_input(source, BTreeMap::from([("a".to_owned(), 2)]))
+        .unwrap();
+    let result = tx.commit().unwrap();
+    drop(tx);
+
+    assert_eq!(result.trace().resource_commands.len(), 1);
+    let command = &result.trace().resource_commands[0];
+    assert_eq!(command.key, key("a"));
+    assert_eq!(command.kind, ResourceCommandKind::Replace);
+    assert_eq!(
+        command.transition_policy,
+        ResourceTransitionPolicy::ReplaceAtomically
     );
 }

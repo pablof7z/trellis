@@ -320,6 +320,11 @@ Refresh
 Noop
 ```
 
+`ResourceCommandKind` records the graph operation. `ResourceTransitionPolicy`
+records the host transition requirement associated with that operation. They
+are separate structural fields so future policies do not have to overload the
+operation vocabulary.
+
 Allowed transition policy vocabulary SHOULD begin small:
 
 ```text
@@ -338,8 +343,10 @@ Replace is distinct from close plus open. A collection member update MAY emit a
 replace transition, and a source shrink MUST emit deterministic close
 transitions for removed resource keys.
 
-Transition policy MUST appear in structural transaction trace data, not only in
-debug prose.
+Transition policy MUST appear in structural transaction trace data as a
+distinct field from operation, not only in debug prose. Today `Open`, `Close`,
+and `Refresh` map to same-named policies, while operation `Replace` maps to
+policy `ReplaceAtomically`.
 
 Resource plan order MUST be deterministic. Collection-driven plans SHOULD use
 deterministic collection diff order. Scope teardown close commands MUST be

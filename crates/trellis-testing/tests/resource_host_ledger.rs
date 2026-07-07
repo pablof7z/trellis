@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use trellis_core::{
     DependencyList, Graph, HostResourceOutcome, InputNode, ResourceCommandKind,
-    ResourceCommandTrace, ResourceKey, ResourcePlan, Revision, ScopeId,
+    ResourceCommandTrace, ResourceKey, ResourcePlan, ResourceTransitionPolicy, Revision, ScopeId,
 };
 use trellis_testing::{
     FakeHost, HostStatusClass, HostStatusEvent, ResourceLedger, ResourceLedgerError,
@@ -142,16 +142,19 @@ fn resource_ledger_detects_lifecycle_and_status_classes() {
                 key: key(1),
                 scope: target.scope,
                 kind: ResourceCommandKind::Open,
+                transition_policy: ResourceTransitionPolicy::Open,
             },
             ResourceCommandTrace {
                 key: key(2),
                 scope: target.scope,
                 kind: ResourceCommandKind::Open,
+                transition_policy: ResourceTransitionPolicy::Open,
             },
             ResourceCommandTrace {
                 key: key(2),
                 scope: target.scope,
                 kind: ResourceCommandKind::Close,
+                transition_policy: ResourceTransitionPolicy::Close,
             },
         ])
         .unwrap();
@@ -282,6 +285,7 @@ fn resource_ledger_tracks_coalesced_open_owners() {
             key: key(1),
             scope: first,
             kind: ResourceCommandKind::Open,
+            transition_policy: ResourceTransitionPolicy::Open,
         }])
         .unwrap();
 }

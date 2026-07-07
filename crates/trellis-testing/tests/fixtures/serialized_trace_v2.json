@@ -1,5 +1,5 @@
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "steps": [
     {
       "name": "open",
@@ -40,12 +40,14 @@
           {
             "key": "resource:1",
             "scope": 1,
-            "kind": "Open"
+            "kind": "Open",
+            "transition_policy": "Open"
           },
           {
             "key": "resource:2",
             "scope": 1,
-            "kind": "Open"
+            "kind": "Open",
+            "transition_policy": "Open"
           }
         ],
         "output_frames": [],
@@ -122,7 +124,8 @@
           {
             "key": "resource:2",
             "scope": 1,
-            "kind": "Close"
+            "kind": "Close",
+            "transition_policy": "Close"
           }
         ],
         "output_frames": [],

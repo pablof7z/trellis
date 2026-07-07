@@ -76,7 +76,7 @@
           <p><a href="https://github.com/pablof7z/trellis/blob/master/crates/trellis-core/src/transaction_types.rs">TransactionResult source</a> <span class="muted">/</span> <a href="/demos/flight-recorder">Open Flight Recorder</a></p>
         </div>
         <pre class="receipt-code"><code>{
-  "formatVersion": 1,
+  "formatVersion": 2,
   "trace": {
     "transaction_id": 2,
     "revision": 2,
@@ -85,8 +85,8 @@
       {"node": 2, "kind": "Set", "added": 1, "removed": 1}
     ],
     "resource_commands": [
-      {"kind": "Close", "key": "relay:wss://relay.damus.io?filter=contacts"},
-      {"kind": "Open", "key": "relay:wss://relay.primal.net?filter=follows"}
+      {"kind": "Close", "transition_policy": "Close", "key": "relay:wss://relay.damus.io?filter=contacts"},
+      {"kind": "Open", "transition_policy": "Open", "key": "relay:wss://relay.primal.net?filter=follows"}
     ],
     "phase_trace": ["StageOperations", "...", "ReturnTransactionResult"]
   }

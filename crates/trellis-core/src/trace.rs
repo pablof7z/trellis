@@ -99,6 +99,8 @@ pub struct ResourceCommandTrace {
     pub scope: ScopeId,
     /// Command operation.
     pub kind: ResourceCommandKind,
+    /// Host transition policy required by the operation.
+    pub transition_policy: ResourceTransitionPolicy,
 }
 
 impl ResourceCommandTrace {
@@ -107,6 +109,7 @@ impl ResourceCommandTrace {
             key: command.key().clone(),
             scope: command.scope(),
             kind: ResourceCommandKind::from_command(command),
+            transition_policy: ResourceTransitionPolicy::from_command(command),
         }
     }
 }
@@ -133,6 +136,38 @@ impl ResourceCommandKind {
             ResourceCommand::Replace { .. } => Self::Replace,
             ResourceCommand::Refresh { .. } => Self::Refresh,
         }
+    }
+}
+
+/// Resource transition policy without application payload.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum ResourceTransitionPolicy {
+    /// Open a resource.
+    Open,
+    /// Close a resource.
+    Close,
+    /// Replace a resource using the host's native replacement operation.
+    ReplaceAtomically,
+    /// Refresh a resource.
+    Refresh,
+    /// No external transition.
+    Noop,
+}
+
+impl ResourceTransitionPolicy {
+    /// Returns the default transition policy for a structural command kind.
+    pub fn from_kind(kind: ResourceCommandKind) -> Self {
+        match kind {
+            ResourceCommandKind::Open => Self::Open,
+            ResourceCommandKind::Close => Self::Close,
+            ResourceCommandKind::Replace => Self::ReplaceAtomically,
+            ResourceCommandKind::Refresh => Self::Refresh,
+        }
+    }
+
+    pub(crate) fn from_command<C>(command: &ResourceCommand<C>) -> Self {
+        Self::from_kind(ResourceCommandKind::from_command(command))
     }
 }
 

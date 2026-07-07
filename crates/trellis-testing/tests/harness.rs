@@ -2,7 +2,8 @@ use std::collections::BTreeSet;
 
 use trellis_core::{
     DependencyList, Graph, OutputFrameKindTrace, OutputFrameTrace, ResourceCommandKind,
-    ResourceCommandTrace, ResourceKey, ResourcePlan, Revision, ScopeId, TransactionId,
+    ResourceCommandTrace, ResourceKey, ResourcePlan, ResourceTransitionPolicy, Revision, ScopeId,
+    TransactionId,
 };
 use trellis_testing::{ScenarioTarget, TraceRedactor, TransactionScript, TrellisHarness};
 
@@ -41,6 +42,7 @@ fn command_trace(value: u8, scope: ScopeId, kind: ResourceCommandKind) -> Resour
         key: key(value),
         scope,
         kind,
+        transition_policy: ResourceTransitionPolicy::from_kind(kind),
     }
 }
 
