@@ -298,7 +298,7 @@ compared against a full recompute. If the engine ever lies, you can catch it.
 - `trellis-adapter`: runtime-neutral boundary for applying returned plans and
   emitting returned frames outside graph propagation.
 - `trellis-examples`: proof examples — Workspace Sync Board, a mini language
-  server, a telemetry dashboard, and a wrapper-friendly protocol subscription
+  server, FleetPulse, and a wrapper-friendly protocol subscription
   engine.
 - `trellis-bench`: benchmark smoke coverage for propagation, diffs, teardown,
   output, oracle, and replay paths.
@@ -310,7 +310,7 @@ into the runtime:
 
 - Workspace Sync Board;
 - mini language server diagnostics;
-- telemetry dashboard subscriptions;
+- FleetPulse telemetry dashboard;
 - wrapper-friendly protocol subscription API (dynamic per-session scopes,
   shared resources, and a host command loop).
 

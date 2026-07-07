@@ -370,16 +370,19 @@ Required invariants:
 - watcher demand follows project graph changes;
 - incremental diagnostics equal full project analysis for supported cases.
 
-### Example 3: telemetry dashboard subscriptions
+### Example 3: FleetPulse telemetry dashboard
 
-A fleet dashboard subscribes to telemetry only for devices visible under the current customer, site, filter, and permission state.
+A fleet dashboard subscribes to telemetry only for devices visible under the
+current user, customer, site, filter, and permission state.
 
 ```text
-selected customer/site/filter
+current user
+ -> permission set
+ -> selected customer/site/filter
  -> visible device set
- -> topic subscription set
- -> resource plan
- -> dashboard output
+ -> topic and alert-stream subscription sets
+ -> resource plans
+ -> dashboard cards, alerts, and status output
 ```
 
 Canonical inputs:
@@ -389,12 +392,15 @@ Canonical inputs:
 - user permissions;
 - device inventory;
 - dashboard filter state;
+- alert rules;
+- host-reported topic status;
 - incoming telemetry facts.
 
 Derived nodes:
 
 - visible devices;
 - desired telemetry topics;
+- desired alert streams;
 - dashboard card rows;
 - alert summaries.
 
@@ -402,12 +408,15 @@ Resource plans:
 
 - subscribe to added telemetry topics;
 - unsubscribe from removed topics;
+- open and close alert streams;
 - keep shared topics alive while at least one live scope owns them.
 
 Output frames:
 
 - dashboard baseline;
 - card updates;
+- alert updates;
+- status frames for host reports;
 - clear frames for revoked devices;
 - rebaseline frames after filter changes.
 
@@ -416,7 +425,8 @@ Required invariants:
 - filter shrink unsubscribes removed topics;
 - permission revocation clears unauthorized cards;
 - empty visible-device set subscribes to nothing;
-- shared resource ownership is explicit and deterministic.
+- shared resource ownership is explicit and deterministic;
+- late status for a closed topic is classified without resurrecting demand.
 
 ## First implementation target
 

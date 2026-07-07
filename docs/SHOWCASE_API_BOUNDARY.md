@@ -126,7 +126,7 @@ to invalidate. It drains typed output frames.
 
 ## FleetPulse Telemetry Dashboard
 
-The telemetry dashboard showcase should expose a wrapper shaped like:
+The FleetPulse telemetry dashboard showcase exposes a wrapper shaped like:
 
 ```text
 open_fleet_dashboard(params) -> FleetDashboardHandle

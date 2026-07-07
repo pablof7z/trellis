@@ -1,8 +1,8 @@
 use trellis_core::{OutputFrameKindTrace, ScopeLifecycleKind};
 use trellis_examples::{
+    fleetpulse::revoke_permission_showcase_trace,
     mini_language_server::delete_file_showcase_trace,
     showcase_trace::{SHOWCASE_TRACE_CONTRACT, SHOWCASE_TRACE_FORMAT_VERSION, ShowcaseTrace},
-    telemetry_dashboard::revoke_permission_showcase_trace,
     workspace_sync_board::switch_workspace_showcase_trace,
 };
 
@@ -12,6 +12,7 @@ fn workspace_sync_script_emits_contract_trace() {
     assert_common_contract(&trace, "workspace-sync-board", "switch-workspace");
     assert_eq!(trace.steps[0].name, "switch-workspace");
     assert!(trace.steps[0].trace.resource_commands.len() >= 3);
+    assert!(trace.steps.iter().all(|step| step.host_statuses.is_empty()));
     assert_has_material_output(&trace);
     assert_has_closed_scope(&trace);
     assert_json_round_trips(&trace);
@@ -23,6 +24,7 @@ fn mini_language_server_script_emits_contract_trace() {
     assert_common_contract(&trace, "mini-language-server", "delete-file");
     assert_eq!(trace.steps[0].name, "delete-file");
     assert!(!trace.steps[0].trace.resource_commands.is_empty());
+    assert!(trace.steps.iter().all(|step| step.host_statuses.is_empty()));
     assert_has_material_output(&trace);
     assert_has_closed_scope(&trace);
     assert_json_round_trips(&trace);
@@ -33,6 +35,8 @@ fn fleetpulse_script_emits_contract_trace() {
     let trace = revoke_permission_showcase_trace();
     assert_common_contract(&trace, "fleetpulse", "revoke-permission");
     assert_eq!(trace.steps[0].name, "revoke-permission");
+    assert_eq!(trace.steps[1].name, "late-closed-topic-status");
+    assert!(!trace.steps[1].host_statuses.is_empty());
     assert!(!trace.steps[0].trace.resource_commands.is_empty());
     assert_has_material_output(&trace);
     assert_has_closed_scope(&trace);
@@ -48,7 +52,7 @@ fn assert_common_contract(trace: &ShowcaseTrace, showcase: &str, script: &str) {
     assert_eq!(trace.replay.compared_runs, 2);
     assert_eq!(trace.seeded_bug.status, "not_included");
     assert_eq!(trace.seeded_bug.issue, "#93");
-    assert_eq!(trace.steps.len(), 2);
+    assert!(trace.steps.len() >= 2);
     assert!(
         trace
             .command
@@ -56,7 +60,6 @@ fn assert_common_contract(trace: &ShowcaseTrace, showcase: &str, script: &str) {
     );
 
     for step in &trace.steps {
-        assert!(step.host_statuses.is_empty());
         assert!(
             step.trace
                 .invariant_results

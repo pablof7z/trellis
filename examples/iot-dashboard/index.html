@@ -3,26 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A Trellis example for MQTT fleet dashboards and scoped topic subscriptions.">
-  <title>IoT Dashboard Example - Trellis</title>
+  <meta name="description" content="A Trellis showcase for FleetPulse telemetry dashboards and scoped topic subscriptions.">
+  <title>FleetPulse Telemetry - Trellis</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
   <header class="site-header"><div class="nav-wrap"><a class="brand" href="/"><svg class="mark" aria-hidden="true" viewBox="0 0 28 28" focusable="false"><path d="M9.5 1v26M18.5 1v26M1 9.5h26M1 18.5h26"/><rect class="mark-node" x="16" y="7" width="5" height="5"/></svg><span>trellis</span></a><nav class="nav-links" aria-label="Primary"><a href="/guide">Guide</a><a href="/examples" aria-current="page">Examples</a><a href="/docs">Docs</a><a href="https://github.com/pablof7z/trellis">GitHub</a></nav></div></header>
   <main>
-    <section class="container page-hero"><span class="eyebrow">Example 3</span><h1>MQTT fleet dashboard</h1><p class="lead">The selected site and filters derive visible devices, topic subscriptions, telemetry streams, and dashboard card output.</p></section>
+    <section class="container page-hero"><span class="eyebrow">Example 3</span><h1>FleetPulse telemetry</h1><p class="lead">A clean domain wrapper turns customer, site, permission, filter, alert, and host-status events into typed effects and dashboard frames.</p></section>
     <section class="section"><div class="container content">
       <article>
-        <pre><code>selected_site
+        <pre><code>current_user
+ -&gt; permissions
+ -&gt; selected_site
  -&gt; visible_devices
- -&gt; topic_subscriptions
- -&gt; telemetry_streams
- -&gt; dashboard_cards #88</code></pre>
+ -&gt; topic and alert streams
+ -&gt; dashboard cards, alerts, and status frames</code></pre>
         <div class="grid two">
-          <div class="card"><h3>Problem</h3><p>Filter shrink must unsubscribe topics. Empty device sets must subscribe to nothing.</p></div>
-          <div class="card"><h3>Trace</h3><p>Before {pump-1, pump-2}. After {pump-2, pump-3}. Plan closes pump-1, opens pump-3, and keeps pump-2.</p></div>
-          <div class="card"><h3>Invariant</h3><p>An empty source never broadens to all devices. Fallback dashboards must be explicit nodes.</p></div>
+          <div class="card"><h3>Domain API</h3><p><code>FleetPulseApp</code> exposes typed filter, permission, host-status, effect, frame, and close methods while Trellis stays private.</p></div>
+          <div class="card"><h3>Trace</h3><p>The headless script records permission-revoke closes, a late closed-topic status, output deltas, scope events, and oracle status.</p></div>
+          <div class="card"><h3>Invariant</h3><p>Empty device sets fail closed, permission shrink clears cards, and late status does not resurrect demand.</p></div>
           <div class="card"><h3>Shared demand</h3><p>A topic remains active while two panels still own the same resource key.</p></div>
         </div>
       </article>

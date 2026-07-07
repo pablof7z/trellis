@@ -62,26 +62,40 @@ Covered behavior:
 - import edge changes move affected files, watcher demand, and diagnostics;
 - incremental result is checked against full recompute.
 
-## Telemetry Dashboard
+## FleetPulse Telemetry Dashboard
 
-File: `crates/trellis-examples/src/telemetry_dashboard.rs`
+File: `crates/trellis-examples/src/fleetpulse/`
+
+This is the flagship telemetry showcase and supersedes the compact
+`telemetry_dashboard.rs` proof module for product-facing API decisions. It
+exposes `FleetPulseApp` with `open_fleet_dashboard`,
+`apply_filter_change`, `apply_permission_change`, `apply_host_status`,
+`drain_effects`, `drain_output`, and `close`; Trellis graph handles,
+resource keys, scope ids, and output keys remain private.
 
 Shape:
 
 ```text
-selected customer
+current user
+ -> permission set
+ -> selected customer/site/filter
  -> visible device set
- -> topic subscription set
- -> resource plan
- -> telemetry card output
+ -> topic and alert-stream subscription sets
+ -> resource plans
+ -> telemetry card, alert, and status frames
 ```
 
 Covered behavior:
 
 - filter shrink unsubscribes removed topics;
-- empty customer/device set subscribes to nothing;
+- permission revoke clears unauthorized cards and alert streams;
+- empty customer/device set subscribes to nothing and opens no wildcard;
 - shared topic remains live while another panel needs it;
+- late host status for a closed topic is classified and ignored;
 - incremental result is checked against full recompute.
+
+Compact proof: `crates/trellis-examples/src/telemetry_dashboard.rs` keeps the
+smallest topic-subscription graph shape for invariant tests.
 
 ## Headless Showcase Traces
 
