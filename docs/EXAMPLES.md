@@ -108,6 +108,7 @@ cargo run -p trellis-examples --example workspace_sync_board -- --script switch-
 cargo run -p trellis-examples --example mini_language_server -- --script delete-file
 cargo run -p trellis-examples --example fleetpulse -- --script revoke-permission
 cargo run -p trellis-examples --example plugin_host -- --script capability-lifecycle
+cargo run -p trellis-examples --example market_desk -- --script market-lifecycle
 ```
 
 The JSON includes the showcase name, script name, reproduction command,
@@ -156,6 +157,26 @@ supported workspace changes reopening allowed capabilities, plugin disable
 closing scoped behavior, output clearing, and full-recompute oracle checks on
 every step. The example also exposes a seeded capsule for stale capabilities
 left open after plugin disable.
+
+## MarketDesk Live Market-Data Terminal
+
+File: `crates/trellis-examples/src/market_desk/`
+
+```sh
+cargo run -p trellis-examples --example market_desk -- --script market-lifecycle
+```
+
+MarketDesk is a secondary showcase for market-data terminals. A workspace
+watchlist, open chart panels, user entitlements, and host quote metadata derive
+quote feeds, trade feeds, order-book depth feeds, candle streams, and
+materialized terminal output. Quote feeds can be shared by the grid and chart
+scopes while depth and candle resources stay chart-owned.
+
+The script shows symbol rotation closing removed feeds, chart open starting
+depth/candle subscriptions, entitlement revoke closing forbidden feeds and
+clearing rows, large watchlist churn producing a high-volume resource diff, and
+workspace close clearing all scoped streams and output. The example also exposes
+a seeded capsule for stale feeds/output after entitlement revoke.
 
 ## Trellis Observatory Showcase Lab
 

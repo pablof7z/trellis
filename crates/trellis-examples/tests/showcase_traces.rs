@@ -2,6 +2,7 @@ use trellis_core::{OutputFrameKindTrace, ScopeLifecycleKind};
 use trellis_examples::{
     collab_canvas::document_lifecycle_showcase_trace,
     fleetpulse::revoke_permission_showcase_trace,
+    market_desk::market_lifecycle_showcase_trace,
     mini_language_server::delete_file_showcase_trace,
     plugin_host::capability_lifecycle_showcase_trace,
     showcase_trace::{SHOWCASE_TRACE_CONTRACT, SHOWCASE_TRACE_FORMAT_VERSION, ShowcaseTrace},
@@ -64,6 +65,19 @@ fn plugin_host_script_emits_contract_trace() {
     assert_eq!(trace.steps[0].name, "manifest-change");
     assert_eq!(trace.steps[5].name, "disable-plugin");
     assert!(!trace.steps[0].trace.resource_commands.is_empty());
+    assert_has_material_output(&trace);
+    assert_has_closed_scope(&trace);
+    assert_json_round_trips(&trace);
+}
+
+#[test]
+fn market_desk_script_emits_contract_trace() {
+    let trace = market_lifecycle_showcase_trace();
+    assert_common_contract(&trace, "market-desk", "market-lifecycle");
+    assert_eq!(trace.steps[0].name, "rotate-watchlist");
+    assert_eq!(trace.steps[3].name, "high-frequency-churn");
+    assert_eq!(trace.steps[4].name, "close-workspace");
+    assert!(!trace.steps[3].trace.resource_commands.is_empty());
     assert_has_material_output(&trace);
     assert_has_closed_scope(&trace);
     assert_json_round_trips(&trace);
