@@ -3,6 +3,7 @@ use trellis_examples::{
     collab_canvas::document_lifecycle_showcase_trace,
     fleetpulse::revoke_permission_showcase_trace,
     mini_language_server::delete_file_showcase_trace,
+    plugin_host::capability_lifecycle_showcase_trace,
     showcase_trace::{SHOWCASE_TRACE_CONTRACT, SHOWCASE_TRACE_FORMAT_VERSION, ShowcaseTrace},
     workspace_sync_board::switch_workspace_showcase_trace,
 };
@@ -50,6 +51,18 @@ fn collab_canvas_script_emits_contract_trace() {
     assert_common_contract(&trace, "collab-canvas", "document-lifecycle");
     assert_eq!(trace.steps[0].name, "show-attachment");
     assert_eq!(trace.steps[2].name, "hide-attachment");
+    assert!(!trace.steps[0].trace.resource_commands.is_empty());
+    assert_has_material_output(&trace);
+    assert_has_closed_scope(&trace);
+    assert_json_round_trips(&trace);
+}
+
+#[test]
+fn plugin_host_script_emits_contract_trace() {
+    let trace = capability_lifecycle_showcase_trace();
+    assert_common_contract(&trace, "plugin-host", "capability-lifecycle");
+    assert_eq!(trace.steps[0].name, "manifest-change");
+    assert_eq!(trace.steps[5].name, "disable-plugin");
     assert!(!trace.steps[0].trace.resource_commands.is_empty());
     assert_has_material_output(&trace);
     assert_has_closed_scope(&trace);

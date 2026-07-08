@@ -107,6 +107,7 @@ interactive showcase UI. Each command prints pretty JSON using the shared
 cargo run -p trellis-examples --example workspace_sync_board -- --script switch-workspace
 cargo run -p trellis-examples --example mini_language_server -- --script delete-file
 cargo run -p trellis-examples --example fleetpulse -- --script revoke-permission
+cargo run -p trellis-examples --example plugin_host -- --script capability-lifecycle
 ```
 
 The JSON includes the showcase name, script name, reproduction command,
@@ -134,6 +135,27 @@ The script shows attachment visibility opening and closing hydration, embedded
 documents opening and closing subdocument rooms, document close clearing editor
 output, and full-recompute oracle checks on every step. The example also exposes
 a seeded capsule for stale attachment hydration/output invalidation.
+
+## PluginHost Capability Lifecycle
+
+File: `crates/trellis-examples/src/plugin_host/`
+
+```sh
+cargo run -p trellis-examples --example plugin_host -- --script capability-lifecycle
+```
+
+PluginHost is a secondary showcase for desktop-app plugin runtimes. An enabled
+plugin manifest derives command palette entries, shell panels, file watchers,
+background workers, IPC channels, and typed shell output. Workspace kind and
+permission grants are app-owned inputs; Trellis stays behind `PluginHostApp`
+domain operations.
+
+The script shows manifest contribution diffs, permission revocation closing
+hidden capabilities, unsupported workspace changes removing all contributions,
+supported workspace changes reopening allowed capabilities, plugin disable
+closing scoped behavior, output clearing, and full-recompute oracle checks on
+every step. The example also exposes a seeded capsule for stale capabilities
+left open after plugin disable.
 
 ## Trellis Observatory Showcase Lab
 
