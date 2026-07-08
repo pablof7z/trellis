@@ -40,6 +40,9 @@ pub mod market_desk;
 /// PhotoStream smart-album hydrator secondary showcase.
 pub mod photo_stream;
 
+/// SearchOps live search/index dashboard secondary showcase.
+pub mod search_ops;
+
 /// Wrapper-friendly protocol subscription proof shape.
 pub mod protocol_subscription;
 
