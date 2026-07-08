@@ -111,6 +111,7 @@ cargo run -p trellis-examples --example plugin_host -- --script capability-lifec
 cargo run -p trellis-examples --example market_desk -- --script market-lifecycle
 cargo run -p trellis-examples --example photo_stream -- --script smart-album-lifecycle
 cargo run -p trellis-examples --example search_ops -- --script search-lifecycle
+cargo run -p trellis-examples --example pipeline_lab -- --script pipeline-lifecycle
 ```
 
 The JSON includes the showcase name, script name, reproduction command,
@@ -219,6 +220,27 @@ cache work, permission revoke clearing unauthorized rows, corpus changes
 replacing shard readers, and search close clearing all scoped resources and
 output. The example also exposes a seeded capsule for stale search work/results
 after permission revoke.
+
+## PipelineLab Visual Data-Pipeline Previewer
+
+File: `crates/trellis-examples/src/pipeline_lab/`
+
+```sh
+cargo run -p trellis-examples --example pipeline_lab -- --script pipeline-lifecycle
+```
+
+PipelineLab is a secondary showcase for visual ETL/data-pipeline builders. The
+app-owned pipeline graph, selected preview panels, hidden panel state, source
+credentials, and host job statuses derive downstream invalidation sets, source
+connections, preview query resources, compute jobs, and materialized graph and
+preview output.
+
+The script shows transform edits canceling downstream jobs and rebaselining
+preview output, host job failure arriving as canonical input without resource
+churn, panel hiding closing only panel preview resources, source credential
+revoke closing unauthorized pipeline work and clearing previews, and scope close
+clearing remaining resources and output. The example also exposes a seeded
+capsule for stale connections/jobs/previews after credential revoke.
 
 ## Trellis Observatory Showcase Lab
 

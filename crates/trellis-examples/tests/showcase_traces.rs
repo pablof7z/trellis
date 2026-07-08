@@ -5,6 +5,7 @@ use trellis_examples::{
     market_desk::market_lifecycle_showcase_trace,
     mini_language_server::delete_file_showcase_trace,
     photo_stream::smart_album_lifecycle_showcase_trace,
+    pipeline_lab::pipeline_lifecycle_showcase_trace,
     plugin_host::capability_lifecycle_showcase_trace,
     search_ops::search_lifecycle_showcase_trace,
     showcase_trace::{SHOWCASE_TRACE_CONTRACT, SHOWCASE_TRACE_FORMAT_VERSION, ShowcaseTrace},
@@ -106,6 +107,25 @@ fn search_ops_script_emits_contract_trace() {
     assert_eq!(trace.steps[1].name, "page-window");
     assert_eq!(trace.steps[4].name, "close-search");
     assert!(!trace.steps[0].trace.resource_commands.is_empty());
+    assert_has_material_output(&trace);
+    assert_has_closed_scope(&trace);
+    assert_json_round_trips(&trace);
+}
+
+#[test]
+fn pipeline_lab_script_emits_contract_trace() {
+    let trace = pipeline_lifecycle_showcase_trace();
+    assert_common_contract(&trace, "pipeline-lab", "pipeline-lifecycle");
+    assert_eq!(trace.steps[0].name, "transform-edit");
+    assert_eq!(trace.steps[1].name, "job-failure");
+    assert_eq!(trace.steps[4].name, "close-pipeline");
+    assert!(!trace.steps[0].trace.resource_commands.is_empty());
+    assert!(
+        trace
+            .steps
+            .iter()
+            .any(|step| !step.host_statuses.is_empty())
+    );
     assert_has_material_output(&trace);
     assert_has_closed_scope(&trace);
     assert_json_round_trips(&trace);
