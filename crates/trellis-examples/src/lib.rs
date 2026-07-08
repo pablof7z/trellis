@@ -46,6 +46,9 @@ pub mod search_ops;
 /// PipelineLab visual data-pipeline previewer secondary showcase.
 pub mod pipeline_lab;
 
+/// ControlPlane Lite desired-state reconciler secondary showcase.
+pub mod control_plane_lite;
+
 /// Wrapper-friendly protocol subscription proof shape.
 pub mod protocol_subscription;
 

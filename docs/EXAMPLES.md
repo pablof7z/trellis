@@ -112,6 +112,7 @@ cargo run -p trellis-examples --example market_desk -- --script market-lifecycle
 cargo run -p trellis-examples --example photo_stream -- --script smart-album-lifecycle
 cargo run -p trellis-examples --example search_ops -- --script search-lifecycle
 cargo run -p trellis-examples --example pipeline_lab -- --script pipeline-lifecycle
+cargo run -p trellis-examples --example control_plane_lite -- --script control-plane-lifecycle
 ```
 
 The JSON includes the showcase name, script name, reproduction command,
@@ -241,6 +242,26 @@ churn, panel hiding closing only panel preview resources, source credential
 revoke closing unauthorized pipeline work and clearing previews, and scope close
 clearing remaining resources and output. The example also exposes a seeded
 capsule for stale connections/jobs/previews after credential revoke.
+
+## ControlPlane Lite Desired-State Reconciler
+
+File: `crates/trellis-examples/src/control_plane_lite/`
+
+```sh
+cargo run -p trellis-examples --example control_plane_lite -- --script control-plane-lifecycle
+```
+
+ControlPlane Lite is a secondary showcase for local Kubernetes-like
+controllers. Desired app config derives worker processes, port bindings,
+volumes, secrets, retry jobs from host resource status, and materialized status
+conditions. Trellis produces auditable resource lifecycle plans; the app wrapper
+still owns domain policy and typed host effects.
+
+The script shows config changes replacing rollout resources, host resource
+failure arriving as canonical input that opens retry demand and degraded status,
+resource recovery closing retry demand, and scope close deleting owned resources
+and clearing output. The example also exposes a seeded capsule for missing retry
+demand/degraded status after resource failure.
 
 ## Trellis Observatory Showcase Lab
 

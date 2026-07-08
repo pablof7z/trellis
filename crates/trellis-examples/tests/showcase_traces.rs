@@ -1,6 +1,7 @@
 use trellis_core::{OutputFrameKindTrace, ScopeLifecycleKind};
 use trellis_examples::{
     collab_canvas::document_lifecycle_showcase_trace,
+    control_plane_lite::control_plane_lifecycle_showcase_trace,
     fleetpulse::revoke_permission_showcase_trace,
     market_desk::market_lifecycle_showcase_trace,
     mini_language_server::delete_file_showcase_trace,
@@ -119,6 +120,25 @@ fn pipeline_lab_script_emits_contract_trace() {
     assert_eq!(trace.steps[0].name, "transform-edit");
     assert_eq!(trace.steps[1].name, "job-failure");
     assert_eq!(trace.steps[4].name, "close-pipeline");
+    assert!(!trace.steps[0].trace.resource_commands.is_empty());
+    assert!(
+        trace
+            .steps
+            .iter()
+            .any(|step| !step.host_statuses.is_empty())
+    );
+    assert_has_material_output(&trace);
+    assert_has_closed_scope(&trace);
+    assert_json_round_trips(&trace);
+}
+
+#[test]
+fn control_plane_lite_script_emits_contract_trace() {
+    let trace = control_plane_lifecycle_showcase_trace();
+    assert_common_contract(&trace, "control-plane-lite", "control-plane-lifecycle");
+    assert_eq!(trace.steps[0].name, "config-change");
+    assert_eq!(trace.steps[1].name, "resource-failed");
+    assert_eq!(trace.steps[3].name, "close-controller");
     assert!(!trace.steps[0].trace.resource_commands.is_empty());
     assert!(
         trace
