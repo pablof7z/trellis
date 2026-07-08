@@ -109,6 +109,7 @@ cargo run -p trellis-examples --example mini_language_server -- --script delete-
 cargo run -p trellis-examples --example fleetpulse -- --script revoke-permission
 cargo run -p trellis-examples --example plugin_host -- --script capability-lifecycle
 cargo run -p trellis-examples --example market_desk -- --script market-lifecycle
+cargo run -p trellis-examples --example photo_stream -- --script smart-album-lifecycle
 ```
 
 The JSON includes the showcase name, script name, reproduction command,
@@ -177,6 +178,26 @@ depth/candle subscriptions, entitlement revoke closing forbidden feeds and
 clearing rows, large watchlist churn producing a high-volume resource diff, and
 workspace close clearing all scoped streams and output. The example also exposes
 a seeded capsule for stale feeds/output after entitlement revoke.
+
+## PhotoStream Smart Album Hydrator
+
+File: `crates/trellis-examples/src/photo_stream/`
+
+```sh
+cargo run -p trellis-examples --example photo_stream -- --script smart-album-lifecycle
+```
+
+PhotoStream is a secondary showcase for photo-library hydration. A smart album
+rule, visible viewport, cloud availability, and storage policy derive CPU
+thumbnail decode jobs, disk metadata hydration jobs, cloud downloads,
+memory-backed high-resolution previews, and bounded grid output.
+
+The script shows album rule changes canceling removed jobs and starting added
+jobs, viewport scroll reconciling offscreen/on-screen high-res work, storage
+pressure dropping optional cloud/high-res resources, a large album expansion
+producing collection diffs while output stays viewport-bounded, and scope close
+clearing all jobs and grid output. The example also exposes a seeded capsule for
+stale optional work under storage pressure.
 
 ## Trellis Observatory Showcase Lab
 

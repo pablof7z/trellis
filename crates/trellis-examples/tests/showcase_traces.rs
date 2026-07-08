@@ -4,6 +4,7 @@ use trellis_examples::{
     fleetpulse::revoke_permission_showcase_trace,
     market_desk::market_lifecycle_showcase_trace,
     mini_language_server::delete_file_showcase_trace,
+    photo_stream::smart_album_lifecycle_showcase_trace,
     plugin_host::capability_lifecycle_showcase_trace,
     showcase_trace::{SHOWCASE_TRACE_CONTRACT, SHOWCASE_TRACE_FORMAT_VERSION, ShowcaseTrace},
     workspace_sync_board::switch_workspace_showcase_trace,
@@ -78,6 +79,19 @@ fn market_desk_script_emits_contract_trace() {
     assert_eq!(trace.steps[3].name, "high-frequency-churn");
     assert_eq!(trace.steps[4].name, "close-workspace");
     assert!(!trace.steps[3].trace.resource_commands.is_empty());
+    assert_has_material_output(&trace);
+    assert_has_closed_scope(&trace);
+    assert_json_round_trips(&trace);
+}
+
+#[test]
+fn photo_stream_script_emits_contract_trace() {
+    let trace = smart_album_lifecycle_showcase_trace();
+    assert_common_contract(&trace, "photo-stream", "smart-album-lifecycle");
+    assert_eq!(trace.steps[0].name, "rule-change");
+    assert_eq!(trace.steps[3].name, "large-album-diff");
+    assert_eq!(trace.steps[4].name, "close-album");
+    assert!(!trace.steps[3].trace.collection_diffs.is_empty());
     assert_has_material_output(&trace);
     assert_has_closed_scope(&trace);
     assert_json_round_trips(&trace);
