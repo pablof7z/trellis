@@ -34,6 +34,9 @@ pub mod collab_canvas;
 /// PluginHost capability lifecycle secondary showcase.
 pub mod plugin_host;
 
+/// MarketDesk live market-data terminal secondary showcase.
+pub mod market_desk;
+
 /// Wrapper-friendly protocol subscription proof shape.
 pub mod protocol_subscription;
 
