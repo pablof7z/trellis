@@ -51,6 +51,8 @@ mod resource;
 mod resource_build;
 mod resource_key;
 mod resource_reconcile;
+mod resource_reconcile_aggregate;
+mod resource_reconcile_apply;
 mod scope;
 mod scope_lifecycle;
 mod topology;

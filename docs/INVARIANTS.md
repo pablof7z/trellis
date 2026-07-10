@@ -201,6 +201,22 @@ Evidence:
 - `crates/trellis-examples/src/fleetpulse/tests.rs::shared_topic_closes_after_last_panel_owner`
 - `crates/trellis-examples/src/telemetry_dashboard.rs::shared_topic_closes_after_last_panel`
 
+## Shared Resources Have One Payload
+
+All final owners of a shared resource key must agree on one payload. Ownership
+handoff must be resolved from aggregate final desired state, not planner
+registration order. A shared-owner `Replace` or `Refresh` that would leave any
+final owner desiring a different payload must fail the transaction without
+partial ownership or payload mutation.
+
+Evidence:
+
+- `crates/trellis-core/tests/resource_shared_handoff.rs::same_payload_handoff_does_not_emit_host_churn_in_any_planner_order`
+- `crates/trellis-core/tests/resource_shared_handoff.rs::changed_payload_handoff_is_canonical_in_any_planner_order`
+- `crates/trellis-core/tests/resource_shared_handoff.rs::shared_owner_replace_requires_payload_agreement`
+- `crates/trellis-core/tests/resource_shared_handoff.rs::shared_owner_refresh_requires_payload_agreement`
+- `crates/trellis-core/tests/resource_reconcile_semantics.rs::divergent_payload_open_fails_without_partial_owner_state`
+
 ## Output Frames Are Revisioned
 
 Every output frame must carry output key, scope, transaction id, revision, frame

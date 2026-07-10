@@ -2,6 +2,7 @@
 
 Status: Accepted
 Date: 2026-07-03
+Amended: 2026-07-10
 
 ## Context
 
@@ -49,10 +50,18 @@ does not interpret payloads; it only requires that equality be decidable,
 which is the minimum needed to distinguish "shared demand" from "conflicting
 demand".
 
-`Replace` and `Refresh` semantics are unchanged: they require ownership and
-pass through. A `Replace` emitted by one owner of a shared resource replaces
-it for all owners; that is already observable in the plan and is the
-application's coordination problem by design.
+`Replace` and `Refresh` participate in the same aggregate desired-state
+contract. A transaction computes the final owner set and final payload for
+each key before emitting host commands. Every final owner of a key must agree
+on one payload. If a shared owner emits `Replace` or `Refresh` with a payload
+that another final owner does not desire, the transaction fails with the same
+typed payload-conflict error used for divergent `Open`.
+
+Ownership handoff is resolved from aggregate final state, not from planner
+registration order. If one scope stops owning a key while another scope starts
+owning the same key with the same payload in the same transaction, ownership
+moves without host churn. If the payload changes and no old owner remains,
+Trellis emits a deterministic `Close` followed by `Open` for that key.
 
 ## Consequences
 
@@ -61,8 +70,8 @@ What improves:
 - Coalescing becomes auditable: "why was no Open emitted?" has a receipt.
 - The payload-conflict bug class is structurally impossible instead of
   silent.
-- The oracle's owner-set equivalence remains valid unchanged, because
-  coalescing still resolves to the same owner sets.
+- The oracle's owner-set and payload equivalence remains valid because
+  reconciliation commits only an aggregate state all final owners agree on.
 
 What gets worse:
 
@@ -77,6 +86,9 @@ Constraints that follow:
 - Applications that want distinct payloads for overlapping demand must encode
   the distinction in the key. This is ADR 0002's identity rule, now enforced
   rather than assumed.
+- Applications that want one owner to authoritatively update a shared resource
+  must model that authority in their desired inputs so every final owner
+  converges on the same payload, or use separate keys.
 
 ## Alternatives considered
 
@@ -112,6 +124,12 @@ if a real consumer demonstrates the need.
   carrying key and scopes; no partial state (guaranteed by copy-on-commit).
 - Test: coalesced join then last-owner close → single `Close`, correct owner
   attribution.
+- Test: same-payload ownership handoff → owner set changes with no outgoing
+  host command, independent of planner registration order.
+- Test: changed-payload ownership handoff → deterministic `Close` then `Open`,
+  independent of planner registration order.
+- Test: shared-owner `Replace` and `Refresh` with a divergent payload → typed
+  conflict and no partial state.
 - Oracle: replay from baseline reproduces owner sets with coalescing in
   effect.
 - `trellis-testing`: `ResourceLedger` assertion for "no unexplained
