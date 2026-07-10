@@ -119,10 +119,6 @@ impl<C> ResourcePlan<C> {
     pub fn into_commands(self) -> Vec<ResourceCommand<C>> {
         self.commands
     }
-
-    pub(crate) fn append(&mut self, other: ResourcePlan<C>) {
-        self.commands.extend(other.commands);
-    }
 }
 
 impl<C> Default for ResourcePlan<C> {

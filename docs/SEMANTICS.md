@@ -371,7 +371,8 @@ policy `ReplaceAtomically`.
 
 Resource plan order MUST be deterministic. Collection-driven plans SHOULD use
 deterministic collection diff order. Scope teardown close commands MUST be
-ordered by deterministic scope teardown and resource-key order.
+ordered by deterministic scope teardown order and reverse acquisition order
+inside each closing scope.
 
 The core MUST understand resource identity and ownership well enough to produce teardown commands. The core MUST NOT understand domain-specific command payload semantics.
 
@@ -500,6 +501,20 @@ joining scope is recorded as an owner, no second host `Open` command is
 emitted, and the transaction result includes a coalescing trace and audit
 event. Different payloads are a typed transaction failure because the resource
 identity is underspecified.
+
+Resource reconciliation is based on the aggregate final desired state for each
+key in the transaction. Semantically equivalent graph construction MUST NOT
+change whether a same-payload ownership handoff emits host churn or whether a
+changed-payload handoff succeeds. If the final owner set keeps the same payload,
+ownership may move with no host command. If the final owner set has no retained
+owner and the payload changes, the graph emits a deterministic final-owner
+`Close` followed by `Open`.
+
+`Replace` and `Refresh` are not unilateral authority over a shared key. After
+applying all opens, closes, replaces, and refreshes in a transaction, every
+final owner of a key MUST desire the same payload. A shared-owner update that
+would leave another final owner desiring the old payload is a typed payload
+conflict and MUST NOT partially mutate resource ownership or stored payload.
 
 If one scope closes but another live scope still owns the same resource key,
 the graph MUST NOT emit a final close command for that resource.
