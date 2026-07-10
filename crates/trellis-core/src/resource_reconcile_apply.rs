@@ -1,7 +1,7 @@
 use crate::resource_reconcile_aggregate::{
-    EmittedResourceCommand, ResourceCommandIntent, close_scope_for_removed_owners,
-    first_planned_order, first_scope_by_order, first_update_operation, push_emitted_command,
-    push_emitted_command_at, scopes_by_order,
+    EmittedResourceCommand, ResourceCommandIntent, ResourceKeyTransition,
+    close_scope_for_removed_owners, first_planned_order, first_scope_by_order,
+    first_update_operation, push_emitted_command, push_emitted_command_at, scopes_by_order,
 };
 use crate::{
     Graph, ResourceCoalescedTrace, ResourceCommand, ResourceCommandKind, ResourceKey, ScopeId,
@@ -12,13 +12,16 @@ impl<C: Clone + PartialEq> Graph<C> {
     pub(crate) fn emit_canonical_resource_commands(
         &mut self,
         key: ResourceKey,
-        before_owners: &BTreeSet<ScopeId>,
-        before_payload: Option<&C>,
-        final_owners: &BTreeSet<ScopeId>,
-        final_payload: Option<&C>,
-        final_intents: &BTreeMap<ScopeId, ResourceCommandIntent<C>>,
+        transition: ResourceKeyTransition<'_, C>,
         emitted_commands: &mut Vec<EmittedResourceCommand<C>>,
     ) {
+        let ResourceKeyTransition {
+            before_owners,
+            before_payload,
+            final_owners,
+            final_payload,
+            final_intents,
+        } = transition;
         let removed_owners: BTreeSet<_> = before_owners.difference(final_owners).copied().collect();
         let added_owners: BTreeSet<_> = final_owners.difference(before_owners).copied().collect();
         let retained_owners: BTreeSet<_> =

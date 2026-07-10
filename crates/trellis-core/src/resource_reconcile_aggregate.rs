@@ -26,6 +26,14 @@ pub(crate) struct EmittedResourceCommand<C> {
     phase: u8,
 }
 
+pub(crate) struct ResourceKeyTransition<'a, C> {
+    pub(crate) before_owners: &'a BTreeSet<ScopeId>,
+    pub(crate) before_payload: Option<&'a C>,
+    pub(crate) final_owners: &'a BTreeSet<ScopeId>,
+    pub(crate) final_payload: Option<&'a C>,
+    pub(crate) final_intents: &'a BTreeMap<ScopeId, ResourceCommandIntent<C>>,
+}
+
 pub(crate) fn shared_payload<C: Clone + PartialEq>(
     key: &ResourceKey,
     intents: &BTreeMap<ScopeId, ResourceCommandIntent<C>>,

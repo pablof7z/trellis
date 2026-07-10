@@ -1,6 +1,6 @@
 use crate::resource_reconcile_aggregate::{
-    PlannedResourceCommand, ResourceCommandIntent, compare_emitted_commands, push_plan_command,
-    shared_payload,
+    PlannedResourceCommand, ResourceCommandIntent, ResourceKeyTransition, compare_emitted_commands,
+    push_plan_command, shared_payload,
 };
 use crate::{
     Graph, GraphError, GraphResult, ResourceCoalescedTrace, ResourceCommand, ResourceCommandCause,
@@ -106,11 +106,13 @@ impl<C: Clone + PartialEq> Graph<C> {
 
             self.emit_canonical_resource_commands(
                 key.clone(),
-                &before_owners,
-                before_payload.as_ref(),
-                &final_owners,
-                final_payload.as_ref(),
-                &final_intents,
+                ResourceKeyTransition {
+                    before_owners: &before_owners,
+                    before_payload: before_payload.as_ref(),
+                    final_owners: &final_owners,
+                    final_payload: final_payload.as_ref(),
+                    final_intents: &final_intents,
+                },
                 &mut emitted_commands,
             );
             self.apply_canonical_resource_state(key, final_owners, final_payload);
